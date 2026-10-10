@@ -82,6 +82,8 @@ Never point test configuration at the shop database. CI runs SQLite and MariaDB 
 
 `.github/workflows/deploy.yml` runs verified CI before manual deployment from main. Configure staging/production GitHub environments, SSH secrets and variables listed in that workflow. Use a PHP-capable host with MariaDB, HTTPS and document root `current/public`. Provision shared `.env` and writable `shared/storage`, a persistent queue worker, and a cron running `php artisan schedule:run` every minute. Set production `APP_ENV=production`, `APP_DEBUG=false`, correct HTTPS `APP_URL`, database, SMTP, and merchant settings. Rebuild cached configuration after changes.
 
+Release packaging requires a clean committed worktree and frontend assets built from that same commit. Build metadata prevents accidentally pairing old JavaScript with newer PHP code.
+
 The deploy script uploads a release, links shared files, runs migrations, switches the current symlink, restarts queue workers and checks `/ready`. It can restore the previous code symlink on failure; it does not reverse database migrations. Back up the database before deploys and use compatible additive migrations. No host or live deployment has been configured.
 
 Cached dependencies were used because this session cannot resolve external package hosts. Laravel 12.53 has known advisories: update Laravel to at least 12.61.1 and run online Composer/npm audits before production. The security CI job intentionally blocks a release when advisories fail. This project is not yet cleared for a public launch.

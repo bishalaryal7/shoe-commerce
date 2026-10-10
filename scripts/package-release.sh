@@ -5,6 +5,18 @@ if [[ ! -f public/build/manifest.json ]]; then
   printf '%s\n' 'Build frontend assets before packaging.' >&2
   exit 1
 fi
+if [[ -n "$(git status --porcelain)" ]]; then
+  printf '%s\n' 'Commit project changes before packaging a release.' >&2
+  exit 1
+fi
+release_commit="$(git rev-parse HEAD)"
+php -r '
+$revision = json_decode(@file_get_contents("public/build/revision.json"), true);
+if (!is_array($revision) || ($revision["commit"] ?? null) !== $argv[1] || ($revision["dirty"] ?? true)) {
+    fwrite(STDERR, "Frontend assets must be rebuilt from this clean commit before packaging.\n");
+    exit(1);
+}
+' "$release_commit"
 stage="$(mktemp -d)"
 trap 'rm -rf -- "$stage"' EXIT
 git archive HEAD | tar -x -C "$stage"

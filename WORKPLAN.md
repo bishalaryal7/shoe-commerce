@@ -68,3 +68,7 @@ Staff orders/payments now use independent 20-record pagination. Orders support c
 | Production dependency safety | Known cached Laravel advisories documented; CI security gate blocks releases | Online dependency update and clean audits |
 
 The project is not marked complete: missing runtime verification, network/authentication, merchant credentials and hosting remain material. Do not replace these checks with another passing SQLite run. Existing data and local environment are preserved.
+
+## Release consistency review
+
+Revalidated external access: Docker socket connections are still denied and GitHub CLI reports invalid authentication. Added frontend commit metadata and packaging checks that reject uncommitted work or frontend assets from a different commit. This prevents mixing PHP and JavaScript versions in an uploaded release. Live workflow/deployment verification remains unavailable.
