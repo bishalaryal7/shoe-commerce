@@ -41,7 +41,7 @@ Visit `/admin`. Repeat the command for each trusted staff member. Registration c
 
 ## Docker database and moving existing data
 
-This project follows the MariaDB + Adminer Docker workflow. It has its own Compose project and persistent named volume. MariaDB uses host port **3309** and Adminer uses **8100**, leaving the previous book-review ports 3308/8099 available. Ports bind to localhost. Database initialization and readiness checks follow the [official MariaDB image documentation](https://mariadb.com/docs/server/server-management/automated-mariadb-deployment-and-administration/docker-and-mariadb/using-healthcheck-sh).
+This project follows the MariaDB + Adminer Docker workflow. It has its own Compose project and persistent named volume. MariaDB uses host port **3309** and Adminer uses **8101**, leaving the previous book-review ports 3308/8099 available. Ports bind to localhost. Database initialization and readiness checks follow the [official MariaDB image documentation](https://mariadb.com/docs/server/server-management/automated-mariadb-deployment-and-administration/docker-and-mariadb/using-healthcheck-sh).
 
 In your Mac terminal with Docker Desktop running:
 
@@ -56,7 +56,7 @@ php artisan serve
 
 Local `.env` uses `DB_HOST=127.0.0.1`, `DB_PORT=3309`, `DB_USERNAME=laravel`, `DB_PASSWORD=password`, and `CACHE_STORE=file`. These are development credentials. `DB_CONNECTION` stays `sqlite` and `DB_DATABASE` remains unset until the import succeeds, so the source database is still readable. The import sets `DB_CONNECTION=mysql` and `DB_DATABASE=shoe_commerce` automatically. Laravel's MySQL driver connects to this MariaDB server.
 
-Open Adminer at http://localhost:8100:
+Open Adminer at http://localhost:8101:
 
 - System: MySQL
 - Server: `mysql` (Docker service name, not localhost)
