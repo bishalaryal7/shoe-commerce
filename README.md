@@ -1,117 +1,100 @@
 # Shoe Commerce
 
-A Laravel + Vue application for retail shoe customers, wholesale partners, and company staff. The temporary company name is **Sole Supply**; change `APP_NAME` in `.env` when your brand is ready.
-
-## Stack
-
-Laravel 12, Vue 3, TypeScript, Inertia 2, Tailwind CSS, and Laravel Fortify. PHP 8.4+ and Node 22+ are required. SQLite is configured for local development; Laravel also supports MySQL and PostgreSQL.
+Laravel 12 + Vue 3 / TypeScript / Inertia storefront and staff workspace. Main market: Nepal, NPR. PHP 8.4+ and Node 22+ required. Demo catalog prices and images are placeholders; enter actual selling prices before launch.
 
 ## Run on this laptop
-
-Dependencies, the application key, and the demo database are already prepared.
 
 ```bash
 cd ~/Projects/shoe-commerce
 export PATH="/opt/homebrew/opt/php@8.5/bin:$PATH"
-php artisan serve
-```
-
-Open http://127.0.0.1:8000. Built frontend assets are available. For frontend development, run `npm run dev` in a second terminal, or use `composer dev` for the combined development processes.
-
-## Fresh installation
-
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate --seed
-npm ci
+docker compose up -d --wait
+php artisan config:clear
+php artisan migrate
+php artisan storage:link
 npm run build
 php artisan serve
 ```
 
-Register your own account through `/register`. No preset administrator credentials are seeded. To grant a trusted team member staff access:
+Open http://127.0.0.1:8000. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation and unsent mail retries. Use `npm run dev` while editing frontend code.
 
-```bash
-php artisan shop:admin your-email@example.com
+MariaDB persists in the Docker volume. The local `.env` uses MySQL on 127.0.0.1:3309, database `shoe_commerce`, user `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
+
+Mailpit: http://localhost:8026. Local SMTP uses 127.0.0.1:1026. `php artisan shop:mail-test` sends to the private test address configured in `.env`, captured in Mailpit; it does not deliver to Gmail. Configure a real SMTP provider later. `php artisan shop:mail-outbox` retries unsent notifications.
+
+Register your own account, then grant staff access with `php artisan shop:admin your-email@example.com`. Visit `/admin`. No administrator password is seeded.
+
+## What is built
+
+- Responsive storefront, global search, category/size filters, price sorting, product pages, size selection, stock checks and quantity controls.
+- Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
+- Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
+- Customer order history and private signed guest tracking links.
+- Staff product creation, prices, photo uploads, inventory adjustments, order confirmation, payment receipt recording, fulfillment and cancellation.
+- Khalti server-side initiation and authoritative lookup verification. Redirect parameters never mark an order paid.
+- PayPay HMAC integration and isolated JPY sandbox testing. PayPay is excluded from NPR checkout.
+- Transactional email outbox, queued receipts/status updates, retry commands and scheduled reconciliation.
+- Order and inventory audit records. Unsettled payments block stock release; fulfillment requires recorded payment.
+- Authentication, password resets, account settings and two-factor authentication.
+- Automated tests, GitHub quality/security workflows, release packaging and manual SSH deployment workflow.
+
+Shipping is a configured flat amount in minor units; tax is configured in basis points. Defaults are zero. This is not a shipping carrier or jurisdictional tax integration. Reservations require staff cancellation; automatic expiration and a returns/refund processing workflow are not implemented. Refund lookup records provider status but never initiates a refund or automatically restocks.
+
+## Payments
+
+Keep both providers in sandbox while testing. Add merchant keys only to ignored `.env`, then `php artisan config:clear`.
+
+```dotenv
+KHALTI_ENABLED=true
+KHALTI_SANDBOX=true
+KHALTI_SECRET_KEY=your_test_dashboard_secret
+PAYPAY_ENABLED=true
+PAYPAY_SANDBOX=true
+PAYPAY_API_KEY=your_sandbox_key
+PAYPAY_API_SECRET=your_sandbox_secret
+PAYPAY_MERCHANT_ID=your_sandbox_merchant_id
 ```
 
-Visit `/admin`. Repeat the command for each trusted staff member. Registration cannot grant staff access.
+`APP_URL` must be the real reachable callback URL. Khalti appears in NPR checkout only after configuration. Run `php artisan shop:payment-sandbox khalti` or `php artisan shop:payment-sandbox paypay` to create an isolated test session; use the printed reference with `--lookup=REFERENCE` to check it. These attempts do not reserve products or create customer orders. Real provider tests have not run because merchant credentials are absent.
 
-## Docker database and moving existing data
+References: [Khalti ePayment](https://docs.khalti.com/khalti-epayment/), [PayPay authorization](https://www.paypay.ne.jp/opa/doc/v1.0/api_authorization.html), [PayPay dynamic QR](https://www.paypay.ne.jp/opa/doc/v1.0/dynamicqrcode).
 
-This project follows the MariaDB + Adminer Docker workflow. It has its own Compose project and persistent named volume. MariaDB uses host port **3309** and Adminer uses **8101**, leaving the previous book-review ports 3308/8099 available. Ports bind to localhost. Database initialization and readiness checks follow the [official MariaDB image documentation](https://mariadb.com/docs/server/server-management/automated-mariadb-deployment-and-administration/docker-and-mariadb/using-healthcheck-sh).
-
-In your Mac terminal with Docker Desktop running:
-
-```bash
-cd ~/Projects/shoe-commerce
-docker compose up -d --wait
-export PATH="/opt/homebrew/opt/php@8.5/bin:$PATH"
-php artisan config:clear
-php artisan shop:move-to-mysql
-php artisan serve
-```
-
-Local `.env` uses `DB_HOST=127.0.0.1`, `DB_PORT=3309`, `DB_USERNAME=laravel`, `DB_PASSWORD=password`, and `CACHE_STORE=file`. These are development credentials. `DB_CONNECTION` stays `sqlite` and `DB_DATABASE` remains unset until the import succeeds, so the source database is still readable. The import sets `DB_CONNECTION=mysql` and `DB_DATABASE=shoe_commerce` automatically. Laravel's MySQL driver connects to this MariaDB server.
-
-Open Adminer at http://localhost:8101:
-
-- System: MySQL
-- Server: `mysql` (Docker service name, not localhost)
-- Username: `laravel`
-- Password: the `DB_PASSWORD` from `.env`
-- Database: `shoe_commerce`
-
-Run `SELECT COUNT(*) FROM products;` and `SELECT COUNT(*) FROM variants;` in Adminer. The original demo contains 6 products and 60 variants; the import also prints verified counts for every transferred table. Browse `/`, add a size to the bag, and submit an unpaid request. Verify that `orders` and `order_items` contain the request, and that variant stock decreases. Register an account, run `php artisan shop:admin your-email@example.com`, then use `/admin` to test cancellation and stock restoration.
-
-The migration accepts a newly created database or the empty database initialized by Docker. It refuses any target containing tables. It temporarily pauses web requests, makes a consistent SQLite backup under `storage/app/private/database-backups`, migrates MySQL, copies all application tables, compares row counts and every column value, and switches `.env` only after verification. Pause separate workers or scripts writing to SQLite during import. The original SQLite file is preserved. Automated tests continue using an isolated SQLite database.
-
-Use `docker compose stop` to stop the services and `docker compose up -d --wait` to resume. Data persists in `shoe_mysql_data`; do not remove the volume when you want to retain data. Initialization credentials apply only to a new volume; changing `.env` later does not automatically change an existing database user's password.
-
-This execution session cannot access Docker/MySQL sockets, so container startup and the actual import must be run in your terminal. SQL data and local credentials remain outside Git.
-
-## First version
-
-- Responsive Vue storefront with a dark editorial hero, mobile navigation, color and EU-size selection dialogs, search/category/in-stock-size filters, customer-price sorting, and six demo shoe styles.
-- Session-backed bag with quantity controls, stock validation, add-to-bag feedback, wholesale minimum progress, and server-calculated prices.
-- Guest or authenticated order requests, protected confirmation pages, price snapshots, atomic stock reservation, and duplicate-submission protection.
-- Wholesale applications, staff approval/rejection, private approved-partner prices, and a 12-pair minimum across sizes/styles.
-- Dedicated staff workspace with sidebar navigation, summary metrics, currency-formatted product pricing inputs, and controls to edit existing product names/prices/listing status, adjust variant stock, review requests, confirm/fulfill orders, cancel and restore stock, and approve/revoke wholesale accounts.
-- Registration, login, password reset, account settings, and two-factor authentication from the official starter kit.
-
-Prices use integer minor units. `SHOP_CURRENCY=USD` is the temporary display currency; set it before entering real prices. Demo illustrations, catalog entries, prices, and stock are placeholders. Seeding is idempotent and does not reset existing stock.
-
-## Order behavior
-
-Checkout explicitly creates an **unpaid request**, not a paid purchase. Stock is reserved on submission. Our team must contact the buyer, confirm shipping and taxes, and arrange payment. Pending requests remain reserved until staff cancel or fulfill them. Cancelling restores stock once; fulfilled/cancelled orders cannot be reopened.
-
-Retail customers and approved wholesale customers share inventory. An approved account receives wholesale prices throughout the shop; ordering fewer than 12 pairs is rejected. Staff order status does not claim or record payment.
-
-## Before a public launch
-
-Choose the company's country/currency, payment gateway, tax rules, shipping regions/rates, brand assets, and product photography. Remaining work includes online payments and verified webhooks, transactional email delivery, product creation/photo uploads, automatic reservation expiry, customer order history, staff roles/audit logging, returns, and legal/store policies. No hosting deployment is configured. Enable and validate SSR for the public storefront before launch if desired (`npm run build:ssr` and `php artisan inertia:start-ssr`).
-
-Local dependency installation used the laptop's cached official package archives because this execution environment cannot resolve external hosts. Both lockfiles are committed for reproducible installs. The cached Laravel 12.53 release has three advisories in the available metadata; the fixed Laravel 12 versions are not cached. Upgrade Laravel to at least 12.61.1 and run online `composer audit` and `npm audit` before production. A live audit could not run here.
-
-## Verification
+## Tests and CI
 
 ```bash
 php artisan test
 npm run typecheck
+npm run lint:check
+npm run format:check
+vendor/bin/pint --test
 npm run build
 ```
 
-Feature tests cover private pricing, staff authorization, stock shortage rollback, wholesale minimums, server-calculated prices, duplicate requests, a fresh cart after an order, stock restoration, application self-approval prevention, and confirmation-session ownership. The starter authentication/settings tests remain included.
+Default tests force isolated in-memory SQLite, regardless of local `.env`. For isolated MariaDB:
 
-## GitHub
+```bash
+docker compose -f docker-compose.test.yml up -d --wait
+php artisan test --configuration=phpunit.mysql.xml
+```
 
-Once GitHub CLI authentication and network access are available, create a private repository and push:
+Never point test configuration at the shop database. CI runs SQLite and MariaDB on PHP 8.4/8.5, frontend checks/build, and dependency audits. CI has not executed on GitHub yet.
+
+## Deployment preparation
+
+`.github/workflows/deploy.yml` runs verified CI before manual deployment from main. Configure staging/production GitHub environments, SSH secrets and variables listed in that workflow. Use a PHP-capable host with MariaDB, HTTPS and document root `current/public`. Provision shared `.env` and writable `shared/storage`, a persistent queue worker, and a cron running `php artisan schedule:run` every minute. Set production `APP_ENV=production`, `APP_DEBUG=false`, correct HTTPS `APP_URL`, database, SMTP, and merchant settings. Rebuild cached configuration after changes.
+
+The deploy script uploads a release, links shared files, runs migrations, switches the current symlink, restarts queue workers and checks `/ready`. It can restore the previous code symlink on failure; it does not reverse database migrations. Back up the database before deploys and use compatible additive migrations. No host or live deployment has been configured.
+
+Cached dependencies were used because this session cannot resolve external package hosts. Laravel 12.53 has known advisories: update Laravel to at least 12.61.1 and run online Composer/npm audits before production. The security CI job intentionally blocks a release when advisories fail. This project is not yet cleared for a public launch.
+
+## Data and Git
+
+`shop:move-to-mysql` preserves SQLite, backs it up, imports into a new/empty schema and verifies data before switching `.env`. Do not run it again against an already populated MySQL database; use normal migrations for new features. Never remove the Docker volume to update the application.
+
+`.env`, runtime databases, uploaded files, dependencies and generated releases are ignored. Git commits are local; GitHub push is blocked by this session's network and unavailable authentication. When access is restored:
 
 ```bash
 gh auth login -h github.com
 gh repo create shoe-commerce --private --source=. --remote=origin --push
 ```
 
-Do not commit `.env`, runtime databases, generated builds, or dependencies; these are ignored.
+Docker/MySQL, real SMTP, browser preview and live payment callbacks cannot be exercised from this restricted session. Run the startup commands above in the laptop terminal to apply new migrations and inspect the site.

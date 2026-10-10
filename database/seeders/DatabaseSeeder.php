@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 
@@ -21,7 +22,10 @@ class DatabaseSeeder extends Seeder
             $product = Product::firstOrCreate(['slug' => $slug], ['name' => $name, 'category' => $category, 'description' => $description,
                 'image' => '/images/shoe-'.$color.'.svg', 'retail_price' => $retail, 'wholesale_price' => $wholesale]);
             foreach (range(36, 45) as $size) {
-                $product->variants()->firstOrCreate(['sku' => strtoupper($slug).'-'.$size], ['size' => (string) $size, 'color' => $color, 'stock' => 20]);
+                $variant = $product->variants()->firstOrCreate(['sku' => strtoupper($slug).'-'.$size], ['size' => (string) $size, 'color' => $color, 'stock' => 20]);
+                if ($variant->wasRecentlyCreated) {
+                    InventoryMovement::create(['variant_id' => $variant->id, 'quantity' => 20, 'reason' => 'opening_balance']);
+                }
             }
         }
     }

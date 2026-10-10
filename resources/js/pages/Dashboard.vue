@@ -13,6 +13,7 @@ const page = usePage();
                 wholesale program.
             </p>
             <div class="order-actions">
+                <Link href="/orders" class="button outline">Your orders</Link>
                 <Link href="/" class="button dark">Shop the collection ↗</Link
                 ><Link href="/wholesale" class="button outline"
                     >Wholesale program</Link

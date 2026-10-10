@@ -31,3 +31,7 @@ yarn-error.log
 /database/*.sqlite-*
 
 /.env.mysql-switch
+
+/dist
+/test-results.xml
+/.env.staging

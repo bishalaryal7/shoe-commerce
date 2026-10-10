@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend and code quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, gd
+          tools: composer:v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint:check
+      - run: npm run format:check
+      - run: vendor/bin/pint --test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: public/build
+          retention-days: 7
+
+  tests:
+    name: PHP ${{ matrix.php }} / ${{ matrix.database }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+        database: [sqlite, mysql]
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_RANDOM_ROOT_PASSWORD: '1'
+          MARIADB_DATABASE: shoe_commerce_test
+          MARIADB_USER: laravel
+          MARIADB_PASSWORD: ci-test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: ${{ matrix.database }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: ${{ matrix.database == 'sqlite' && ':memory:' || 'shoe_commerce_test' }}
+      DB_USERNAME: laravel
+      DB_PASSWORD: ci-test-password
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pdo_mysql, pdo_sqlite, gd
+          tools: composer:v2
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - name: Test
+        run: |
+          if [ "$DB_CONNECTION" = mysql ]; then
+            vendor/bin/phpunit -c phpunit.mysql.xml --log-junit test-results.xml
+          else
+            vendor/bin/phpunit --log-junit test-results.xml
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.php }}-${{ matrix.database }}
+          path: test-results.xml
+          retention-days: 7
+
+  security:
+    name: Dependency audits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: composer audit --locked
+      - run: npm audit --omit=dev --audit-level=high
+
+  release:
+    name: Build deployable release
+    needs: [frontend, tests, security]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: public/build
+      - run: scripts/package-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shoe-commerce-release
+          path: dist/shoe-commerce.tar.gz
+          retention-days: 14

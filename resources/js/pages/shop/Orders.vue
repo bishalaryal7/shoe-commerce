@@ -1,0 +1,75 @@
+<script setup lang="ts">
+import ShopLayout from '@/layouts/ShopLayout.vue';
+import { money, type CustomerOrder } from '@/types/shop';
+import { Head, Link } from '@inertiajs/vue3';
+import { ArrowRight, ShoppingBag } from 'lucide-vue-next';
+defineProps<{
+    orders: {
+        data: CustomerOrder[];
+        links: { url: string | null; label: string; active: boolean }[];
+    };
+}>();
+</script>
+<template>
+    <Head title="Your orders" /><ShopLayout
+        ><section class="wrap inner-page">
+            <span class="eyebrow">YOUR ACCOUNT</span>
+            <h1>Your orders.</h1>
+            <div v-if="!orders.data.length" class="empty-state">
+                <span class="empty-icon"><ShoppingBag :size="28" /></span>
+                <h2>Your first good find is waiting.</h2>
+                <p>Orders placed while signed in will appear here.</p>
+                <Link href="/" class="button dark"
+                    >Find your next pair <ArrowRight :size="16"
+                /></Link>
+            </div>
+            <article
+                v-for="order in orders.data"
+                :key="order.reference"
+                class="customer-order-card"
+            >
+                <div class="customer-order-meta">
+                    <span>{{
+                        new Date(order.created_at).toLocaleDateString()
+                    }}</span
+                    ><span class="status-pill" :data-status="order.status">{{
+                        order.status.replaceAll('_', ' ')
+                    }}</span
+                    ><span
+                        class="status-pill"
+                        :data-status="order.payment_status"
+                        >{{ order.payment_status }}</span
+                    ><strong>{{ money(order.total, order.currency) }}</strong>
+                </div>
+                <h3>{{ order.items.map((item) => item.name).join(', ') }}</h3>
+                <p>
+                    {{
+                        order.items.reduce(
+                            (sum, item) => sum + item.quantity,
+                            0,
+                        )
+                    }}
+                    pairs · {{ order.reference }}
+                </p>
+                <Link
+                    :href="'/orders/track/' + order.reference"
+                    class="button outline"
+                    >View order <ArrowRight :size="15"
+                /></Link>
+            </article>
+            <nav
+                v-if="orders.links.length > 3"
+                class="pagination"
+                aria-label="Order pages"
+            >
+                <template v-for="(link, i) in orders.links" :key="i"
+                    ><Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="{ active: link.active }"
+                        ><span v-html="link.label" /></Link
+                    ><span v-else v-html="link.label"
+                /></template>
+            </nav></section
+    ></ShopLayout>
+</template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ProductDetails from '@/components/ProductDetails.vue';
 import { money, type Product, type ShopSharedProps } from '@/types/shop';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowUpRight, Plus } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 const props = defineProps<{ product: Product; wholesale: boolean }>();
@@ -28,12 +28,14 @@ const available = computed(() =>
                 :alt="product.name + ' in ' + product.variants[0]?.color"
                 loading="lazy"
             /><span class="quick-view"
-                >View details <ArrowUpRight :size="15"
+                >Quick look <ArrowUpRight :size="15"
             /></span>
         </button>
         <div class="product-title">
             <h3>
-                <button @click="details?.open()">{{ product.name }}</button>
+                <Link :href="'/products/' + product.slug">{{
+                    product.name
+                }}</Link>
             </h3>
             <strong>{{ money(product.price, page.props.currency) }}</strong>
         </div>

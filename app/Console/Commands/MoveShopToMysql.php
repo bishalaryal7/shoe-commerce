@@ -72,7 +72,7 @@ class MoveShopToMysql extends Command
             if ($this->call('migrate', ['--database' => 'mysql', '--force' => true]) !== 0) {
                 throw new RuntimeException('MySQL migrations failed. SQLite remains active.');
             }
-            $tables = ['users', 'password_reset_tokens', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'products', 'variants', 'wholesale_accounts', 'orders', 'order_items', 'sessions'];
+            $tables = ['users', 'password_reset_tokens', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'products', 'variants', 'wholesale_accounts', 'orders', 'order_items', 'payment_attempts', 'order_emails', 'order_events', 'inventory_movements', 'sessions'];
             $sourceTables = array_column($sqlite->select("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'migrations'"), 'name');
             if (array_diff($sourceTables, $tables)) {
                 throw new RuntimeException('Unrecognized source tables found. Import aborted to avoid missing data.');
@@ -96,7 +96,25 @@ class MoveShopToMysql extends Command
                                 $row = (array) $row;
                                 ksort($row);
 
-                                return array_map(fn ($value) => $value === null ? null : (string) $value, $row);
+                                foreach ($row as $key => $value) {
+                                    if (in_array($key, ['payload', 'details'], true) && is_string($value) && is_array(json_decode($value, true))) {
+                                        $canonical = function ($item) use (&$canonical) {
+                                            if (is_array($item)) {
+                                                if (! array_is_list($item)) {
+                                                    ksort($item);
+                                                }
+
+                                                return array_map($canonical, $item);
+                                            }
+
+                                            return $item;
+                                        };
+                                        $value = json_encode($canonical(json_decode($value, true)));
+                                    }
+                                    $row[$key] = $value === null ? null : (string) $value;
+                                }
+
+                                return $row;
                             }, $values);
                         };
                         $original = $normalize($rows);

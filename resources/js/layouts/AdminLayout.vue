@@ -6,6 +6,7 @@ import {
     Boxes,
     Check,
     ChevronRight,
+    CreditCard,
     Footprints,
     LogOut,
     Settings2,
@@ -17,6 +18,7 @@ const page = usePage<ShopSharedProps>();
 const sections = [
     { label: 'Orders', icon: ShoppingBag },
     { label: 'Inventory', icon: Boxes },
+    { label: 'Payments', icon: CreditCard },
     { label: 'Partners', icon: UsersRound },
 ];
 </script>

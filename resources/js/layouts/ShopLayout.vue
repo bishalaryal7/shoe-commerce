@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { ShopSharedProps } from '@/types/shop';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
+    ArrowRight,
     ArrowUpRight,
     Check,
     Footprints,
     Menu,
+    Search,
     ShoppingBag,
     UserRound,
     X,
@@ -15,6 +17,13 @@ const page = usePage<ShopSharedProps>();
 const open = ref(false);
 const user = computed(() => page.props.auth.user);
 const notice = ref('');
+const query = ref(
+    new URL(page.url, 'http://localhost').searchParams.get('q') || '',
+);
+function searchShop() {
+    open.value = false;
+    router.get('/', { q: query.value || undefined }, { preserveState: false });
+}
 let timer: ReturnType<typeof setTimeout>;
 watch(
     () => page.props.flash,
@@ -44,34 +53,18 @@ const current = computed(() => page.url.split('?')[0]);
                     ><span class="brand-symbol"><Footprints :size="22" /></span
                     >{{ page.props.name }}</Link
                 >
-                <nav
-                    id="shop-navigation"
-                    :class="['shop-nav', { open }]"
-                    aria-label="Main navigation"
-                >
-                    <Link
-                        href="/"
-                        :class="{ selected: current === '/' }"
-                        @click="open = false"
-                        >Shop all</Link
-                    >
-                    <Link
-                        href="/?category=Everyday#collection"
-                        @click="open = false"
-                        >Everyday</Link
-                    >
-                    <Link
-                        href="/?category=Running#collection"
-                        @click="open = false"
-                        >Running</Link
-                    >
-                    <Link
-                        href="/wholesale"
-                        :class="{ selected: current === '/wholesale' }"
-                        @click="open = false"
-                        >For businesses <ArrowUpRight :size="13"
-                    /></Link>
-                </nav>
+                <form class="header-search" @submit.prevent="searchShop()">
+                    <Search :size="17" /><input
+                        v-model="query"
+                        type="search"
+                        maxlength="100"
+                        placeholder="Search shoes, styles, your next favorite…"
+                        aria-label="Search the store"
+                    /><button type="submit" aria-label="Search">
+                        <ArrowRight :size="17" />
+                    </button>
+                </form>
+
                 <div class="header-actions">
                     <Link
                         v-if="user?.is_admin"
@@ -85,6 +78,7 @@ const current = computed(() => page.url.split('?')[0]);
                         </summary>
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
+                            ><Link href="/orders">Your orders</Link
                             ><Link href="/dashboard">My account</Link
                             ><Link href="/settings/profile"
                                 >Account settings</Link
@@ -119,6 +113,32 @@ const current = computed(() => page.url.split('?')[0]);
                     </button>
                 </div>
             </div>
+            <nav
+                id="shop-navigation"
+                :class="['shop-nav', 'wrap', { open }]"
+                aria-label="Main navigation"
+            >
+                <Link
+                    href="/"
+                    :class="{ selected: current === '/' }"
+                    @click="open = false"
+                    >Shop all</Link
+                >
+                <Link
+                    href="/?category=Everyday#collection"
+                    @click="open = false"
+                    >Everyday</Link
+                >
+                <Link href="/?category=Running#collection" @click="open = false"
+                    >Running</Link
+                >
+                <Link
+                    href="/wholesale"
+                    :class="{ selected: current === '/wholesale' }"
+                    @click="open = false"
+                    >For businesses <ArrowUpRight :size="13"
+                /></Link>
+            </nav>
         </header>
         <Transition name="toast"
             ><div v-if="notice" class="shop-toast" role="status">
