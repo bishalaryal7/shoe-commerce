@@ -39,21 +39,38 @@ php artisan shop:admin your-email@example.com
 
 Visit `/admin`. Repeat the command for each trusted staff member. Registration cannot grant staff access.
 
-## Move the existing data to MySQL
+## Docker database and moving existing data
 
-MySQL is installed and running on this laptop. The app remains on SQLite until the import succeeds. Run in your own terminal:
+This project follows the MariaDB + Adminer Docker workflow. It has its own Compose project and persistent named volume. MariaDB uses host port **3309** and Adminer uses **8100**, leaving the previous book-review ports 3308/8099 available. Ports bind to localhost. Database initialization and readiness checks follow the [official MariaDB image documentation](https://mariadb.com/docs/server/server-management/automated-mariadb-deployment-and-administration/docker-and-mariadb/using-healthcheck-sh).
+
+In your Mac terminal with Docker Desktop running:
 
 ```bash
 cd ~/Projects/shoe-commerce
+docker compose up -d --wait
 export PATH="/opt/homebrew/opt/php@8.5/bin:$PATH"
+php artisan config:clear
 php artisan shop:move-to-mysql
+php artisan serve
 ```
 
-The command connects using the MySQL configuration in `.env` (`DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, and optionally `DB_SOCKET`). The local defaults are `127.0.0.1:3306`, user `root`, and an empty password. If your local account needs a password, enter it in `.env` before running; keep `DB_CONNECTION=sqlite` and do not set `DB_DATABASE` before the import. Do not share credentials in chat.
+Local `.env` uses `DB_HOST=127.0.0.1`, `DB_PORT=3309`, `DB_USERNAME=laravel`, `DB_PASSWORD=password`, and `CACHE_STORE=file`. These are development credentials. `DB_CONNECTION` stays `sqlite` and `DB_DATABASE` remains unset until the import succeeds, so the source database is still readable. The import sets `DB_CONNECTION=mysql` and `DB_DATABASE=shoe_commerce` automatically. Laravel's MySQL driver connects to this MariaDB server.
 
-It creates a new `shoe_commerce` database, temporarily pauses web requests, writes a consistent SQLite backup under `storage/app/private/database-backups`, runs MySQL migrations, copies all application tables including customers/orders/stock, verifies row counts and column values, and switches `.env` only after successful verification. It preserves the original SQLite file, and never overwrites an existing MySQL database. If that database already exists, select a new name with `--database=shoe_commerce_v2`. Pause any separate workers or scripts writing to SQLite during migration; maintenance mode pauses web traffic only.
+Open Adminer at http://localhost:8100:
 
-The current execution sandbox blocks both local MySQL sockets and TCP connections, so the import must be run from your terminal. SQL data stays outside Git. Test environments continue to use isolated SQLite databases.
+- System: MySQL
+- Server: `mysql` (Docker service name, not localhost)
+- Username: `laravel`
+- Password: the `DB_PASSWORD` from `.env`
+- Database: `shoe_commerce`
+
+Run `SELECT COUNT(*) FROM products;` and `SELECT COUNT(*) FROM variants;` in Adminer. The original demo contains 6 products and 60 variants; the import also prints verified counts for every transferred table. Browse `/`, add a size to the bag, and submit an unpaid request. Verify that `orders` and `order_items` contain the request, and that variant stock decreases. Register an account, run `php artisan shop:admin your-email@example.com`, then use `/admin` to test cancellation and stock restoration.
+
+The migration accepts a newly created database or the empty database initialized by Docker. It refuses any target containing tables. It temporarily pauses web requests, makes a consistent SQLite backup under `storage/app/private/database-backups`, migrates MySQL, copies all application tables, compares row counts and every column value, and switches `.env` only after verification. Pause separate workers or scripts writing to SQLite during import. The original SQLite file is preserved. Automated tests continue using an isolated SQLite database.
+
+Use `docker compose stop` to stop the services and `docker compose up -d --wait` to resume. Data persists in `shoe_mysql_data`; do not remove the volume when you want to retain data. Initialization credentials apply only to a new volume; changing `.env` later does not automatically change an existing database user's password.
+
+This execution session cannot access Docker/MySQL sockets, so container startup and the actual import must be run in your terminal. SQL data and local credentials remain outside Git.
 
 ## First version
 

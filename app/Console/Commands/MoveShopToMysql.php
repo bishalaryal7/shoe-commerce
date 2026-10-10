@@ -47,9 +47,13 @@ class MoveShopToMysql extends Command
             $server = DB::connection('mysql_server');
             $existing = $server->selectOne('SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?', [$database]);
             if ($existing) {
-                throw new RuntimeException('Target database already exists. Use --database with a new name; existing databases are never overwritten.');
+                $tableCount = $server->selectOne('SELECT COUNT(*) AS total FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$database]);
+                if ((int) $tableCount->total !== 0) {
+                    throw new RuntimeException('Target database contains tables. Import refused to protect existing data.');
+                }
+            } else {
+                $server->statement("CREATE DATABASE `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             }
-            $server->statement("CREATE DATABASE `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             config(['database.connections.mysql.database' => $database]);
             DB::purge('mysql');
             if (! $wasDown) {
