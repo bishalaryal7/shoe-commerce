@@ -24,8 +24,12 @@ const subtotal = props.lines.reduce(
 <template>
     <Head title="Order request" /><ShopLayout
         ><section class="wrap inner-page">
-            <div class="eyebrow">ONE STEP CLOSER</div>
-            <h1>Request your order.</h1>
+            <div class="checkout-steps">
+                <span>01 · Your bag</span
+                ><span class="active">02 · Your details</span
+                ><span>03 · Request received</span>
+            </div>
+            <h1>Let’s make it yours.</h1>
             <div class="checkout-grid">
                 <form
                     class="form-card"

@@ -139,7 +139,47 @@ class CommerceTest extends TestCase
         $this->get('/checkout')->assertOk();
         $newToken = session('checkout_token');
         $this->assertNotSame($token, $newToken);
-        $this->post('/checkout',$this->payload($newToken))->assertRedirect();
-        $this->assertSame(2,Order::count());
+        $this->post('/checkout', $this->payload($newToken))->assertRedirect();
+        $this->assertSame(2, Order::count());
+    }
+
+    public function test_catalog_filters_only_sizes_with_stock(): void
+    {
+        $product = Product::first();
+        $product->variants()->where('size', '36')->update(['stock' => 0]);
+        $this->get('/?size=36')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('products.total', 5)
+            ->where('products.data.0.name', 'Pace Runner'));
+        $this->get('/?size=37')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('products.total', 6));
+    }
+
+    public function test_catalog_sorts_by_the_customers_actual_price(): void
+    {
+        $this->get('/?sort=price_low')->assertInertia(fn (Assert $page) => $page
+            ->where('products.data.0.name', 'Daily Knit')->where('products.data.0.price', 7900));
+        $this->get('/?sort=price_high')->assertInertia(fn (Assert $page) => $page
+            ->where('products.data.0.name', 'Trail Form'));
+        $product = Product::where('slug', 'city-low')->first();
+        $product->update(['wholesale_price' => 100]);
+        $user = User::factory()->create();
+        WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Partner', 'phone' => '12345', 'status' => 'approved']);
+        $this->actingAs($user)->get('/?sort=price_low')->assertInertia(fn (Assert $page) => $page
+            ->where('products.data.0.name', 'City Low')->where('products.data.0.price', 100));
+    }
+
+    public function test_bag_quantity_changes_preserve_stock_until_checkout(): void
+    {
+        $this->withSession(['cart' => [1 => 1], 'checkout_token' => (string) Str::uuid()])
+            ->patch('/cart/1', ['quantity' => 3])->assertRedirect()
+            ->assertSessionHas('cart.1', 3)->assertSessionMissing('checkout_token');
+        $this->assertDatabaseHas('variants', ['id' => 1, 'stock' => 20]);
+        $this->patch('/cart/1', ['quantity' => 21])->assertSessionHasErrors('quantity')->assertSessionHas('cart.1', 3);
+        $this->patch('/cart/1', ['quantity' => 0])->assertSessionHasErrors('quantity')->assertSessionHas('cart.1', 3);
+    }
+
+    public function test_bag_quantity_cannot_add_an_unselected_variant(): void
+    {
+        $this->patch('/cart/1', ['quantity' => 1])->assertNotFound();
     }
 }

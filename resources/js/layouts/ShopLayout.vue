@@ -1,83 +1,163 @@
 <script setup lang="ts">
+import type { ShopSharedProps } from '@/types/shop';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, Menu, ShoppingBag, X } from 'lucide-vue-next';
-import { ref } from 'vue';
-const page = usePage();
+import {
+    ArrowUpRight,
+    Check,
+    Footprints,
+    Menu,
+    ShoppingBag,
+    UserRound,
+    X,
+} from 'lucide-vue-next';
+import { computed, onUnmounted, ref, watch } from 'vue';
+const page = usePage<ShopSharedProps>();
 const open = ref(false);
+const user = computed(() => page.props.auth.user);
+const notice = ref('');
+let timer: ReturnType<typeof setTimeout>;
+watch(
+    () => page.props.flash,
+    (flash) => {
+        const message = flash.success;
+        clearTimeout(timer);
+        notice.value = message || '';
+        if (message) timer = setTimeout(() => (notice.value = ''), 6500);
+    },
+    { immediate: true },
+);
+onUnmounted(() => clearTimeout(timer));
+const current = computed(() => page.url.split('?')[0]);
 </script>
 <template>
     <div class="store">
+        <a class="skip-link" href="#main-content">Skip to content</a>
         <div class="announcement">
-            GOOD SHOES. EVERY DAY.
-            <span>Retail & wholesale, all in one place.</span>
+            <span>Everyday pairs. Business possibilities.</span
+            ><Link href="/wholesale"
+                >Explore wholesale <ArrowUpRight :size="12"
+            /></Link>
         </div>
-        <header class="shop-header wrap">
-            <Link href="/" class="wordmark"
-                >{{ page.props.name }}<span class="brand-dot">®</span></Link
-            >
-            <nav :class="['shop-nav', { open }]" aria-label="Main navigation">
-                <Link href="/" @click="open = false">Shop all</Link>
-                <Link href="/?category=Everyday" @click="open = false"
-                    >Everyday</Link
+        <header class="header-shell">
+            <div class="shop-header wrap">
+                <Link href="/" class="wordmark"
+                    ><span class="brand-symbol"><Footprints :size="22" /></span
+                    >{{ page.props.name }}</Link
                 >
-                <Link href="/?category=Running" @click="open = false"
-                    >Running</Link
+                <nav
+                    id="shop-navigation"
+                    :class="['shop-nav', { open }]"
+                    aria-label="Main navigation"
                 >
-                <Link href="/wholesale" @click="open = false"
-                    >Wholesale <ArrowUpRight :size="14"
-                /></Link>
-            </nav>
-            <div class="header-actions">
-                <Link
-                    v-if="(page.props.auth as any)?.user?.is_admin"
-                    href="/admin"
-                    >Admin</Link
-                >
-                <Link v-if="!(page.props.auth as any)?.user" href="/login"
-                    >Sign in</Link
-                >
-                <Link v-else href="/logout" method="post" as="button"
-                    >Sign out</Link
-                >
-                <Link href="/cart" class="bag" aria-label="Shopping bag"
-                    ><ShoppingBag :size="20" /><span>{{
-                        page.props.cartCount || 0
-                    }}</span></Link
-                >
-                <button
-                    class="mobile-menu"
-                    @click="open = !open"
-                    :aria-expanded="open"
-                    aria-label="Toggle navigation"
-                >
-                    <X v-if="open" :size="22" /><Menu v-else :size="22" />
-                </button>
+                    <Link
+                        href="/"
+                        :class="{ selected: current === '/' }"
+                        @click="open = false"
+                        >Shop all</Link
+                    >
+                    <Link
+                        href="/?category=Everyday#collection"
+                        @click="open = false"
+                        >Everyday</Link
+                    >
+                    <Link
+                        href="/?category=Running#collection"
+                        @click="open = false"
+                        >Running</Link
+                    >
+                    <Link
+                        href="/wholesale"
+                        :class="{ selected: current === '/wholesale' }"
+                        @click="open = false"
+                        >For businesses <ArrowUpRight :size="13"
+                    /></Link>
+                </nav>
+                <div class="header-actions">
+                    <Link
+                        v-if="user?.is_admin"
+                        href="/admin"
+                        class="admin-shortcut"
+                        >Workspace</Link
+                    >
+                    <details v-if="user" class="account-menu">
+                        <summary aria-label="Account menu">
+                            <UserRound :size="19" /><span>Account</span>
+                        </summary>
+                        <div class="account-dropdown">
+                            <strong>{{ user.name }}</strong
+                            ><Link href="/dashboard">My account</Link
+                            ><Link href="/settings/profile"
+                                >Account settings</Link
+                            ><Link v-if="user.is_admin" href="/admin"
+                                >Team workspace</Link
+                            ><Link href="/logout" method="post" as="button"
+                                >Sign out</Link
+                            >
+                        </div>
+                    </details>
+                    <Link v-else href="/login" class="account-link"
+                        ><UserRound :size="19" /><span>Sign in</span></Link
+                    >
+                    <Link
+                        href="/cart"
+                        class="bag"
+                        :aria-label="
+                            'Shopping bag, ' + page.props.cartCount + ' pairs'
+                        "
+                        ><ShoppingBag :size="20" /><span>{{
+                            page.props.cartCount
+                        }}</span></Link
+                    >
+                    <button
+                        class="mobile-menu"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        aria-controls="shop-navigation"
+                        aria-label="Toggle navigation"
+                    >
+                        <X v-if="open" :size="21" /><Menu v-else :size="21" />
+                    </button>
+                </div>
             </div>
         </header>
-        <div
-            v-if="(page.props.flash as any)?.success"
-            role="status"
-            class="flash wrap"
-        >
-            {{ (page.props.flash as any).success }}
-        </div>
-        <main><slot /></main>
+        <Transition name="toast"
+            ><div v-if="notice" class="shop-toast" role="status">
+                <span class="toast-check"><Check :size="17" /></span>
+                <div>
+                    <strong>{{ notice }}</strong
+                    ><Link href="/cart">View your bag →</Link>
+                </div>
+                <button @click="notice = ''" aria-label="Dismiss notification">
+                    <X :size="17" />
+                </button></div
+        ></Transition>
+        <main id="main-content" tabindex="-1"><slot /></main>
         <footer class="shop-footer wrap">
             <div>
                 <Link href="/" class="wordmark"
-                    >{{ page.props.name }}<span class="brand-dot">®</span></Link
+                    ><span class="brand-symbol"><Footprints :size="22" /></span
+                    >{{ page.props.name }}</Link
                 >
-                <p>For your next step. And every step after.</p>
+                <p>A little more comfort.<br />A lot more possibility.</p>
             </div>
-            <div>
-                <Link href="/">Shop the collection</Link
-                ><Link href="/wholesale">Become a wholesale partner ↗</Link
-                ><Link href="/login">Your account</Link>
+            <div class="footer-links">
+                <strong>Find your next step</strong
+                ><Link href="/">Shop all shoes</Link
+                ><Link href="/wholesale">Wholesale partners</Link
+                ><Link :href="user ? '/dashboard' : '/login'"
+                    >Your account</Link
+                >
             </div>
-            <small
-                >© {{ new Date().getFullYear() }} {{ page.props.name }}. All
-                rights reserved.</small
-            >
+            <div class="footer-note">
+                <span class="eyebrow">FOR EVERY WAY YOU MOVE</span>
+                <p>From one perfect pair<br />to your next bulk order.</p>
+            </div>
+            <div class="footer-bottom">
+                <span
+                    >© {{ new Date().getFullYear() }}
+                    {{ page.props.name }}</span
+                ><span>Retail & wholesale · All in one place</span>
+            </div>
         </footer>
     </div>
 </template>

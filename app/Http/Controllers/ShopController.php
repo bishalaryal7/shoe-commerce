@@ -12,12 +12,25 @@ class ShopController extends Controller
 {
     public function index(Request $request, Cart $cart)
     {
-        $filters = $request->validate(['q' => 'nullable|string|max:100', 'category' => 'nullable|in:Everyday,Running,Outdoor']);
+        $filters = $request->validate([
+            'q' => 'nullable|string|max:100',
+            'category' => 'nullable|in:Everyday,Running,Outdoor',
+            'size' => 'nullable|in:36,37,38,39,40,41,42,43,44,45',
+            'sort' => 'nullable|in:featured,price_low,price_high,name',
+        ]);
         $wholesale = $cart->wholesale($request);
         $products = Product::with('variants')->where('active', true)
             ->when($filters['q'] ?? null, fn ($q, $term) => $q->where('name', 'like', '%'.$term.'%'))
             ->when($filters['category'] ?? null, fn ($q, $category) => $q->where('category', $category))
-            ->orderBy('id')->paginate(12)->withQueryString();
+            ->when($filters['size'] ?? null, fn ($q, $size) => $q->whereHas('variants', fn ($v) => $v->where('size', $size)->where('stock', '>', 0)));
+        $priceColumn = $wholesale ? 'wholesale_price' : 'retail_price';
+        match ($filters['sort'] ?? 'featured') {
+            'price_low' => $products->orderBy($priceColumn),
+            'price_high' => $products->orderByDesc($priceColumn),
+            'name' => $products->orderBy('name'),
+            default => $products->orderBy('id'),
+        };
+        $products = $products->orderBy('id')->paginate(12)->withQueryString();
         $products->through(function ($product) use ($wholesale) {
             $data = $product->toArray();
             $data['price'] = $wholesale ? $product->wholesale_price : $product->retail_price;
@@ -48,6 +61,21 @@ class ShopController extends Controller
         $request->session()->put('cart', $cart);
 
         return back()->with('success', 'Added to your bag.');
+    }
+
+    public function update(Request $request, Variant $variant)
+    {
+        $data = $request->validate(['quantity' => 'required|integer|min:1|max:999']);
+        $cart = $request->session()->get('cart', []);
+        abort_unless(isset($cart[$variant->id]) && $variant->product->active, 404);
+        if ($data['quantity'] > $variant->stock) {
+            return back()->withErrors(['quantity' => 'That quantity is no longer available. Please choose fewer pairs.']);
+        }
+        $cart[$variant->id] = $data['quantity'];
+        $request->session()->forget('checkout_token');
+        $request->session()->put('cart', $cart);
+
+        return back();
     }
 
     public function remove(Request $request, Variant $variant)

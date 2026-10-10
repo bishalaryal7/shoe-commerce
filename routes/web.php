@@ -10,6 +10,7 @@ use Inertia\Inertia;
 Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/cart', [ShopController::class, 'cart'])->name('cart');
 Route::post('/cart', [ShopController::class, 'add'])->name('cart.add');
+Route::patch('/cart/{variant}', [ShopController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{variant}', [ShopController::class, 'remove'])->name('cart.remove');
 Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');

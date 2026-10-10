@@ -1,3 +1,5 @@
+import type { AppPageProps } from '@/types';
+
 export interface Variant {
     id: number;
     sku: string;
@@ -35,3 +37,9 @@ export function money(amount: number, currency = 'USD') {
         currency,
     }).format(amount / 100);
 }
+
+export type ShopSharedProps = AppPageProps<{
+    currency: string;
+    cartCount: number;
+    flash: { success?: string };
+}>;

@@ -74,11 +74,11 @@ This execution session cannot access Docker/MySQL sockets, so container startup 
 
 ## First version
 
-- Responsive catalog with category filters, search, sizes EU 36–45, and six demo shoe styles.
-- Session-backed bag with stock validation and server-calculated prices.
+- Responsive Vue storefront with a dark editorial hero, mobile navigation, color and EU-size selection dialogs, search/category/in-stock-size filters, customer-price sorting, and six demo shoe styles.
+- Session-backed bag with quantity controls, stock validation, add-to-bag feedback, wholesale minimum progress, and server-calculated prices.
 - Guest or authenticated order requests, protected confirmation pages, price snapshots, atomic stock reservation, and duplicate-submission protection.
 - Wholesale applications, staff approval/rejection, private approved-partner prices, and a 12-pair minimum across sizes/styles.
-- Staff workspace to edit existing product names/prices/listing status, adjust variant stock, review requests, confirm/fulfill orders, cancel and restore stock, and approve/revoke wholesale accounts.
+- Dedicated staff workspace with sidebar navigation, summary metrics, currency-formatted product pricing inputs, and controls to edit existing product names/prices/listing status, adjust variant stock, review requests, confirm/fulfill orders, cancel and restore stock, and approve/revoke wholesale accounts.
 - Registration, login, password reset, account settings, and two-factor authentication from the official starter kit.
 
 Prices use integer minor units. `SHOP_CURRENCY=USD` is the temporary display currency; set it before entering real prices. Demo illustrations, catalog entries, prices, and stock are placeholders. Seeding is idempotent and does not reset existing stock.

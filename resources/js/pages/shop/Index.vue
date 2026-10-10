@@ -7,94 +7,155 @@ import {
     ArrowRight,
     ArrowUpRight,
     Footprints,
-    Handshake,
+    Layers3,
     PackageCheck,
     Search,
+    SlidersHorizontal,
+    X,
 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 const props = defineProps<{
     products: {
         data: Product[];
+        total: number;
         links: { url: string | null; label: string; active: boolean }[];
     };
-    filters: { q?: string; category?: string };
+    filters: { q?: string; category?: string; size?: string; sort?: string };
     wholesale: boolean;
 }>();
 const search = ref(props.filters.q || '');
-function filter(category?: string) {
+const size = ref(props.filters.size || '');
+const sort = ref(props.filters.sort || 'featured');
+const loading = ref(false);
+const hasFilters = computed(
+    () =>
+        !!(
+            props.filters.q ||
+            props.filters.category ||
+            props.filters.size ||
+            (props.filters.sort && props.filters.sort !== 'featured')
+        ),
+);
+function filter(category = props.filters.category) {
     router.get(
         '/',
-        { q: search.value || undefined, category },
-        { preserveState: true, preserveScroll: true },
+        {
+            q: search.value || undefined,
+            category,
+            size: size.value || undefined,
+            sort: sort.value,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => (loading.value = true),
+            onFinish: () => (loading.value = false),
+        },
     );
+}
+function reset() {
+    search.value = '';
+    size.value = '';
+    sort.value = 'featured';
+    filter('');
 }
 </script>
 <template>
-    <Head title="Shoes for every step"
+    <Head title="Find your next favorite pair"
         ><meta
             name="description"
-            content="Explore everyday sneakers, running shoes, and outdoor footwear. Shop individual pairs or join our wholesale program."
+            content="Shop everyday sneakers, running shoes, and outdoor footwear. Find your size, shop individual pairs, or apply for wholesale prices."
     /></Head>
     <ShopLayout>
         <section class="hero wrap">
-            <div class="hero-copy">
-                <div class="eyebrow">
-                    <span class="tiny-dot"></span> YOUR NEXT CHAPTER STARTS HERE
+            <div class="hero-panel">
+                <div class="hero-copy">
+                    <span class="hero-badge"
+                        ><span class="tiny-dot"></span> FOR EVERY WAY YOU
+                        MOVE</span
+                    >
+                    <h1>Your everyday.<br />A little <em>better.</em></h1>
+                    <p>
+                        Find your next favorite pair. From the morning commute
+                        to wherever the weekend takes you.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#collection" class="button lime"
+                            >Find my pair <ArrowUpRight :size="18" /></a
+                        ><Link href="/wholesale" class="hero-secondary"
+                            >Buying in bulk? <ArrowRight :size="16"
+                        /></Link>
+                    </div>
+                    <div class="hero-caption">
+                        <span class="caption-line"></span> GOOD SHOES. NO
+                        OVERTHINKING.
+                    </div>
                 </div>
-                <h1>Find your<br />next <em>step.</em></h1>
-                <p>
-                    Everyday essentials. Weekend adventures.<br />Shoes that
-                    move with you, wherever you’re headed.
-                </p>
-                <a href="#collection" class="button dark"
-                    >Explore the collection <ArrowUpRight :size="19"
-                /></a>
-                <div class="hero-caption">
-                    MADE FOR MOVEMENT. CHOSEN BY YOU.
+                <div class="hero-visual">
+                    <span class="hero-stamp">THE EVERYDAY<br />EDIT / 01</span
+                    ><span class="hero-outline-word" aria-hidden="true"
+                        >MOVE</span
+                    >
+                    <div class="hero-circle"></div>
+                    <img
+                        src="/images/shoe-cream.svg"
+                        alt="Cream everyday sneaker illustration"
+                        class="hero-shoe"
+                        fetchpriority="high"
+                    />
+                    <div class="hero-product">
+                        <span class="mini-label">A FRESH PERSPECTIVE</span
+                        ><strong>Comfort looks good on you.</strong>
+                    </div>
+                    <span class="hero-visual-arrow"
+                        ><ArrowUpRight :size="25"
+                    /></span>
                 </div>
-            </div>
-            <div class="hero-visual">
-                <span class="hero-stamp">EVERYDAY<br />IN MOTION</span>
-                <div class="hero-circle"></div>
-                <img
-                    src="/images/shoe-cream.svg"
-                    alt="Cream City Low sneaker illustration"
-                    class="hero-shoe"
-                />
-                <div class="hero-product">
-                    <span>THE EVERYDAY COLLECTION</span
-                    ><strong>City Low <ArrowUpRight :size="20" /></strong>
-                </div>
-                <span class="hero-index">01 / 06</span>
             </div>
         </section>
         <section class="benefits wrap">
             <div>
-                <Footprints :size="21" /><span>Comfort in every step</span>
+                <span class="benefit-icon"><Footprints :size="19" /></span
+                ><span
+                    ><strong>Find your fit</strong
+                    ><small>Sizes EU 36–45</small></span
+                >
             </div>
-            <div><PackageCheck :size="21" /><span>Sizes EU 36–45</span></div>
-            <div><Handshake :size="21" /><span>Retail & wholesale</span></div>
+            <div>
+                <span class="benefit-icon"><Layers3 :size="19" /></span
+                ><span
+                    ><strong>One pair or a dozen</strong
+                    ><small>Retail & wholesale</small></span
+                >
+            </div>
+            <div>
+                <span class="benefit-icon"><PackageCheck :size="19" /></span
+                ><span
+                    ><strong>Easy to order</strong
+                    ><small>Your team confirms the details</small></span
+                >
+            </div>
         </section>
         <section id="collection" class="collection wrap">
             <div class="section-heading">
                 <div>
-                    <div class="eyebrow">THE ROTATION</div>
+                    <span class="eyebrow">YOUR NEXT FAVORITES</span>
                     <h2>
                         {{
                             wholesale
-                                ? 'Your wholesale collection'
-                                : 'Good shoes. Great days.'
+                                ? 'Your partner collection.'
+                                : 'Meet your new rotation.'
                         }}
                     </h2>
                 </div>
-                <span>{{
-                    wholesale
-                        ? 'Partner pricing · 12 pair minimum'
-                        : 'Find a pair that feels like you.'
-                }}</span>
+                <span v-if="wholesale" class="wholesale-pill"
+                    >Wholesale pricing · 12 pair minimum</span
+                ><span v-else class="collection-caption"
+                    >A pair for every kind of day.</span
+                >
             </div>
-            <div class="filter-bar">
-                <div class="filter-tabs">
+            <div class="collection-tools">
+                <div class="filter-tabs" aria-label="Shoe categories">
                     <button
                         v-for="category in [
                             'All shoes',
@@ -107,29 +168,80 @@ function filter(category?: string) {
                             active:
                                 (filters.category || 'All shoes') === category,
                         }"
+                        :aria-pressed="
+                            (filters.category || 'All shoes') === category
+                        "
                         @click="
-                            filter(
-                                category === 'All shoes' ? undefined : category,
-                            )
+                            filter(category === 'All shoes' ? '' : category)
                         "
                     >
                         {{ category }}
                     </button>
                 </div>
-                <form
-                    class="search-field"
-                    @submit.prevent="filter(filters.category)"
-                >
+                <form class="search-field" @submit.prevent="filter()">
                     <Search :size="17" /><input
                         v-model="search"
-                        placeholder="Find your pair"
-                        aria-label="Search shoes"
-                    /><button type="submit" aria-label="Submit search">
+                        type="search"
+                        maxlength="100"
+                        placeholder="Search your next pair…"
+                        aria-label="Search shoe names"
+                    /><button
+                        type="submit"
+                        class="search-submit"
+                        aria-label="Search"
+                    >
                         <ArrowRight :size="16" />
                     </button>
                 </form>
             </div>
-            <div class="product-grid">
+            <div class="catalog-toolbar">
+                <span class="result-count" role="status"
+                    >{{
+                        loading
+                            ? 'Finding your shoes…'
+                            : products.total +
+                              (products.total === 1 ? ' style' : ' styles')
+                    }}<button
+                        v-if="hasFilters"
+                        class="clear-filters"
+                        @click="reset()"
+                    >
+                        Clear filters <X :size="12" /></button
+                ></span>
+                <div class="catalog-selects">
+                    <label
+                        ><SlidersHorizontal :size="14" /><span class="sr-only"
+                            >Filter by EU size</span
+                        ><select v-model="size" @change="filter()">
+                            <option value="">All sizes</option>
+                            <option
+                                v-for="n in 10"
+                                :key="n"
+                                :value="String(n + 35)"
+                            >
+                                EU {{ n + 35 }}
+                            </option>
+                        </select></label
+                    ><label
+                        ><span class="sr-only">Sort products</span
+                        ><select v-model="sort" @change="filter()">
+                            <option value="featured">Featured</option>
+                            <option value="price_low">
+                                Price: low to high
+                            </option>
+                            <option value="price_high">
+                                Price: high to low
+                            </option>
+                            <option value="name">Name: A–Z</option>
+                        </select></label
+                    >
+                </div>
+            </div>
+            <div
+                class="product-grid"
+                :class="{ 'is-loading': loading }"
+                :aria-busy="loading"
+            >
                 <ProductCard
                     v-for="product in products.data"
                     :key="product.id"
@@ -138,16 +250,14 @@ function filter(category?: string) {
                 />
             </div>
             <div v-if="!products.data.length" class="empty-state">
-                <h3>No shoes found.</h3>
-                <p>Try a different search or category.</p>
-                <button
-                    class="button dark"
-                    @click="
-                        search = '';
-                        filter();
-                    "
-                >
-                    Show all shoes
+                <span class="empty-icon"><Search :size="29" /></span>
+                <h3>No matches this time.</h3>
+                <p>
+                    Try another name, size, or category. Your next pair is out
+                    there.
+                </p>
+                <button class="button dark" @click="reset()">
+                    Reset filters <ArrowRight :size="16" />
                 </button>
             </div>
             <nav
@@ -160,27 +270,33 @@ function filter(category?: string) {
                         v-if="link.url"
                         :href="link.url"
                         :class="{ active: link.active }"
+                        :aria-current="link.active ? 'page' : undefined"
                         ><span v-html="link.label" /></Link
                     ><span v-else v-html="link.label"
                 /></template>
             </nav>
         </section>
         <section class="wholesale-banner wrap">
-            <div>
-                <div class="eyebrow">LET’S GROW TOGETHER</div>
-                <h2>Great shoes.<br />Better business.</h2>
-                <p>
-                    Stock your shelves with something worth stepping into.<br />Apply
-                    for partner pricing and easy bulk ordering.
-                </p>
-                <Link href="/wholesale" class="button dark"
-                    >Become a partner <ArrowUpRight :size="18"
-                /></Link>
-            </div>
-            <div class="partner-art">
-                <span>GOOD<br /><em>COMPANY.</em></span>
-                <div class="partner-circle">
-                    12+<small>PAIRS PER ORDER</small>
+            <div class="partner-panel">
+                <div>
+                    <span class="eyebrow">GOOD BUSINESS STARTS HERE</span>
+                    <h2>Your shelves.<br /><em>Our next chapter.</em></h2>
+                    <p>
+                        More pairs. More possibilities. Apply for private
+                        partner pricing, mix your sizes, and build your next
+                        bulk order.
+                    </p>
+                    <Link href="/wholesale" class="button dark"
+                        >Let’s work together <ArrowUpRight :size="18"
+                    /></Link>
+                </div>
+                <div class="partner-art">
+                    <span class="partner-large">12<span>+</span></span
+                    ><span class="partner-caption">PAIRS TO GET STARTED</span>
+                    <div class="partner-tags">
+                        <span>Mix your styles</span><span>Find your sizes</span
+                        ><span>Grow together ↗</span>
+                    </div>
                 </div>
             </div>
         </section>

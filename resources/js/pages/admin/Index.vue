@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import ShopLayout from '@/layouts/ShopLayout.vue';
+import ProductEditor from '@/components/ProductEditor.vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import { money, type Product } from '@/types/shop';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -58,10 +59,27 @@ function stock(id: number, event: Event) {
 }
 </script>
 <template>
-    <Head title="Team dashboard" /><ShopLayout
+    <Head title="Team dashboard" /><AdminLayout v-model:tab="tab"
         ><section class="wrap inner-page admin-page">
             <div class="eyebrow">TEAM WORKSPACE</div>
-            <h1>A good day for business.</h1>
+            <h1>
+                {{
+                    tab === 'Orders'
+                        ? 'Orders, at a glance.'
+                        : tab === 'Inventory'
+                          ? 'Keep your shelves moving.'
+                          : 'Good partners. Better business.'
+                }}
+            </h1>
+            <p class="workspace-description">
+                {{
+                    tab === 'Orders'
+                        ? 'Review requests and keep every next step on track.'
+                        : tab === 'Inventory'
+                          ? 'Manage your collection, pricing, and available sizes.'
+                          : 'Review applications and manage your wholesale relationships.'
+                }}
+            </p>
             <div class="stats-grid">
                 <div
                     v-for="(value, key) in stats"
@@ -71,16 +89,6 @@ function stock(id: number, event: Event) {
                     <span>{{ key }}</span
                     ><strong>{{ value }}</strong>
                 </div>
-            </div>
-            <div class="filter-tabs admin-tabs">
-                <button
-                    v-for="name in ['Orders', 'Inventory', 'Partners']"
-                    :key="name"
-                    :class="{ active: tab === name }"
-                    @click="tab = name"
-                >
-                    {{ name }}
-                </button>
             </div>
             <p
                 v-for="(error, key) in page.props.errors"
@@ -174,47 +182,10 @@ function stock(id: number, event: Event) {
                     class="admin-card"
                 >
                     <h3>{{ product.name }}</h3>
-                    <form
-                        class="price-form"
-                        @submit.prevent="
-                            patch('/admin/products/' + product.id, {
-                                name: product.name,
-                                retail_price: product.retail_price,
-                                wholesale_price: product.wholesale_price,
-                                active: product.active,
-                            })
-                        "
-                    >
-                        <label
-                            >Name<input
-                                v-model="product.name"
-                                required
-                                maxlength="150" /></label
-                        ><label
-                            >Retail (minor units)<input
-                                v-model.number="product.retail_price"
-                                type="number"
-                                min="1"
-                                max="100000000"
-                                required /></label
-                        ><label
-                            >Wholesale (minor units)<input
-                                v-model.number="product.wholesale_price"
-                                type="number"
-                                min="1"
-                                max="100000000"
-                                required /></label
-                        ><label class="checkbox-label"
-                            ><input v-model="product.active" type="checkbox" />
-                            Listed</label
-                        ><button class="button dark" :disabled="busy">
-                            Save product
-                        </button>
-                    </form>
+                    <ProductEditor :product="product" />
                     <p class="muted">
-                        Stock changes save when you leave the field. Amounts are
-                        in minor units: 8900 =
-                        {{ money(8900, page.props.currency as string) }}.
+                        Available pairs by size. Stock changes save when you
+                        leave a field.
                     </p>
                     <div class="variant-grid">
                         <label
@@ -289,6 +260,6 @@ function stock(id: number, event: Event) {
                     </div>
                 </article>
             </div>
-        </section></ShopLayout
+        </section></AdminLayout
     >
 </template>

@@ -1,68 +1,62 @@
 <script setup lang="ts">
-import { money, type Product } from '@/types/shop';
-import { useForm, usePage } from '@inertiajs/vue3';
-import { Plus } from 'lucide-vue-next';
-import { computed } from 'vue';
+import ProductDetails from '@/components/ProductDetails.vue';
+import { money, type Product, type ShopSharedProps } from '@/types/shop';
+import { usePage } from '@inertiajs/vue3';
+import { ArrowUpRight, Plus } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 const props = defineProps<{ product: Product; wholesale: boolean }>();
-const page = usePage();
-const form = useForm({ variant_id: '', quantity: 1 });
+const page = usePage<ShopSharedProps>();
+const details = ref<InstanceType<typeof ProductDetails> | null>(null);
 const available = computed(() =>
     props.product.variants.filter((v) => v.stock > 0),
 );
-function add() {
-    form.post('/cart', { preserveScroll: true });
-}
 </script>
 <template>
     <article class="product-card">
-        <div class="product-image">
+        <button
+            type="button"
+            class="product-image"
+            :data-color="product.variants[0]?.color"
+            :aria-label="'View ' + product.name + ' and choose a size'"
+            @click="details?.open()"
+        >
             <span class="category-label">{{ product.category }}</span
+            ><span v-if="!available.length" class="sold-out-label"
+                >Sold out</span
             ><img
                 :src="product.image"
                 :alt="product.name + ' in ' + product.variants[0]?.color"
                 loading="lazy"
-            /><span class="image-note">{{ product.variants[0]?.color }}</span>
-        </div>
+            /><span class="quick-view"
+                >View details <ArrowUpRight :size="15"
+            /></span>
+        </button>
         <div class="product-title">
-            <h3>{{ product.name }}</h3>
-            <span>{{
-                money(product.price, page.props.currency as string)
-            }}</span>
+            <h3>
+                <button @click="details?.open()">{{ product.name }}</button>
+            </h3>
+            <strong>{{ money(product.price, page.props.currency) }}</strong>
+        </div>
+        <div class="product-meta">
+            <span
+                >{{ product.variants[0]?.color }}
+                <span class="meta-dot">·</span>
+                {{ available.length }} sizes</span
+            ><span v-if="wholesale" class="partner-price">Partner price</span>
         </div>
         <p>{{ product.description }}</p>
-        <form @submit.prevent="add" class="product-controls">
-            <select
-                v-model="form.variant_id"
-                :aria-label="'Choose size for ' + product.name"
-                required
-            >
-                <option disabled value="">Select EU size</option>
-                <option v-for="v in available" :key="v.id" :value="v.id">
-                    EU {{ v.size }}
-                </option>
-            </select>
-            <input
-                v-if="wholesale"
-                v-model="form.quantity"
-                type="number"
-                min="1"
-                max="999"
-                aria-label="Pairs"
-            />
-            <button
-                class="add-button"
-                :disabled="form.processing || !available.length"
-                type="submit"
-            >
-                <Plus :size="16" />{{ available.length ? 'Add' : 'Sold out' }}
-            </button>
-        </form>
-        <p
-            v-if="form.errors.quantity || form.errors.variant_id"
-            class="field-error"
-            role="alert"
+        <button
+            type="button"
+            class="choose-size-button"
+            @click="details?.open()"
+            :disabled="!available.length"
         >
-            {{ form.errors.quantity || form.errors.variant_id }}
-        </p>
+            {{ available.length ? 'Choose your size' : 'Currently unavailable'
+            }}<Plus v-if="available.length" :size="17" /></button
+        ><ProductDetails
+            ref="details"
+            :product="product"
+            :wholesale="wholesale"
+        />
     </article>
 </template>

@@ -8,7 +8,10 @@ const page = usePage();
 <template>
     <Head title="Request received" /><ShopLayout
         ><section class="wrap inner-page received">
-            <div class="eyebrow">THANK YOU</div>
+            <div class="checkout-steps" style="justify-content: center">
+                <span>01 · Your bag</span><span>02 · Your details</span
+                ><span class="active">03 · Request received</span>
+            </div>
             <h1>Your next step<br />is on its way.</h1>
             <p>
                 We received your order request. No payment has been
