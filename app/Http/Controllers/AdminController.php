@@ -21,13 +21,32 @@ use Inertia\Inertia;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('admin/Index', [
+        $filters = $request->validate([
+            'search' => 'nullable|string|max:150',
+            'status' => 'nullable|in:pending_confirmation,confirmed,fulfilled,cancelled',
+            'payment' => 'nullable|in:unpaid,pending,paid,review,refunded',
+        ]);
+        $orders = Order::with(['items', 'events.actor:id,name'])->latest('id');
+        if (! empty($filters['search'])) {
+            $search = '%'.$filters['search'].'%';
+            $orders->where(function ($query) use ($search) {
+                $query->where('reference', 'like', $search)->orWhere('name', 'like', $search)->orWhere('email', 'like', $search)->orWhere('phone', 'like', $search);
+            });
+        }
+        if (! empty($filters['status'])) {
+            $orders->where('status', $filters['status']);
+        }
+        if (! empty($filters['payment'])) {
+            $orders->where('payment_status', $filters['payment']);
+        }
+
+        return Inertia::render('admin/Index', ['filters' => $filters,
             'products' => Product::with('variants')->orderBy('id')->get()->makeVisible('wholesale_price'),
-            'orders' => Order::with('items')->latest()->limit(50)->get(),
+            'orders' => $orders->paginate(20, ['*'], 'orders_page')->withQueryString(),
             'applications' => WholesaleAccount::with('user:id,name,email')->orderBy('status')->get(),
-            'payments' => PaymentAttempt::latest()->limit(50)->get(),
+            'payments' => PaymentAttempt::latest('id')->paginate(20, ['*'], 'payments_page')->withQueryString(),
             'integrations' => ['khalti' => app(KhaltiGateway::class)->available(), 'paypay' => app(PayPayGateway::class)->available(), 'mail' => config('mail.default'), 'pendingEmails' => OrderEmail::whereNull('sent_at')->count()],
             'stats' => ['orders' => Order::count(), 'pending' => Order::where('status', 'pending_confirmation')->count(),
                 'stock' => Variant::sum('stock'), 'applications' => WholesaleAccount::where('status', 'pending')->count()],

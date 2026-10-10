@@ -16,6 +16,11 @@ class Order extends Model
         return ['paid_at' => 'datetime'];
     }
 
+    public function events(): HasMany
+    {
+        return $this->hasMany(OrderEvent::class)->orderBy('id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);

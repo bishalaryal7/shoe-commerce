@@ -17,7 +17,10 @@ Route::get('/ready', function () {
         DB::select('SELECT 1');
         $ready = Schema::hasColumn('orders', 'payment_status')
             && Schema::hasTable('payment_attempts')
-            && Schema::hasTable('order_emails');
+            && Schema::hasTable('order_emails')
+            && Schema::hasTable('order_events')
+            && Schema::hasTable('inventory_movements')
+            && Schema::hasColumn('orders', 'offline_payment_reference');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {

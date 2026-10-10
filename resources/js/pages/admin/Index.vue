@@ -4,7 +4,7 @@ import ProductEditor from '@/components/ProductEditor.vue';
 import ProductPhoto from '@/components/ProductPhoto.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { money, type Product } from '@/types/shop';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 type Order = {
     id: number;
@@ -20,6 +20,13 @@ type Order = {
     total: number;
     payment_status: string;
     payment_method: string;
+    events: {
+        id: number;
+        event: string;
+        created_at: string;
+        actor: { name: string } | null;
+        details: Record<string, string | number> | null;
+    }[];
     items: {
         id: number;
         name: string;
@@ -36,11 +43,17 @@ type Application = {
     status: string;
     user: { name: string; email: string };
 };
-defineProps<{
+type Paginated<T> = {
+    data: T[];
+    links: { url: string | null; label: string; active: boolean }[];
+    total: number;
+};
+const props = defineProps<{
     products: Product[];
-    orders: Order[];
+    orders: Paginated<Order>;
+    filters: { search?: string; status?: string; payment?: string };
     applications: Application[];
-    payments: {
+    payments: Paginated<{
         id: number;
         reference: string;
         provider: string;
@@ -49,7 +62,7 @@ defineProps<{
         currency: string;
         status: string;
         sandbox: boolean;
-    }[];
+    }>;
     integrations: {
         khalti: boolean;
         paypay: boolean;
@@ -65,6 +78,18 @@ defineProps<{
 }>();
 const page = usePage();
 const tab = ref('Orders');
+const filters = ref({
+    search: props.filters.search ?? '',
+    status: props.filters.status ?? '',
+    payment: props.filters.payment ?? '',
+});
+function filterOrders() {
+    router.get('/admin', filters.value, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
 const busy = ref(false);
 const receipts = ref<Record<number, string>>({});
 function post(url: string, data: Record<string, any> = {}) {
@@ -97,7 +122,9 @@ function stock(id: number, event: Event) {
                         ? 'Orders, at a glance.'
                         : tab === 'Inventory'
                           ? 'Keep your shelves moving.'
-                          : 'Good partners. Better business.'
+                          : tab === 'Payments'
+                            ? 'Every payment, accounted for.'
+                            : 'Good partners. Better business.'
                 }}
             </h1>
             <p class="workspace-description">
@@ -106,7 +133,9 @@ function stock(id: number, event: Event) {
                         ? 'Review requests and keep every next step on track.'
                         : tab === 'Inventory'
                           ? 'Manage your collection, pricing, and available sizes.'
-                          : 'Review applications and manage your wholesale relationships.'
+                          : tab === 'Payments'
+                            ? 'Check provider status and monitor your integrations.'
+                            : 'Review applications and manage your wholesale relationships.'
                 }}
             </p>
             <div class="stats-grid">
@@ -128,15 +157,69 @@ function stock(id: number, event: Event) {
                 {{ error }}
             </p>
             <div v-if="tab === 'Orders'">
+                <form class="order-actions" @submit.prevent="filterOrders">
+                    <label
+                        >Find an order<input
+                            v-model="filters.search"
+                            maxlength="150"
+                            placeholder="Reference, customer, email or phone"
+                    /></label>
+                    <label
+                        >Order status<select v-model="filters.status">
+                            <option value="">All statuses</option>
+                            <option
+                                v-for="status in [
+                                    'pending_confirmation',
+                                    'confirmed',
+                                    'fulfilled',
+                                    'cancelled',
+                                ]"
+                                :key="status"
+                                :value="status"
+                            >
+                                {{ status.replaceAll('_', ' ') }}
+                            </option>
+                        </select></label
+                    >
+                    <label
+                        >Payment<select v-model="filters.payment">
+                            <option value="">All payments</option>
+                            <option
+                                v-for="status in [
+                                    'unpaid',
+                                    'pending',
+                                    'paid',
+                                    'review',
+                                    'refunded',
+                                ]"
+                                :key="status"
+                                :value="status"
+                            >
+                                {{ status }}
+                            </option>
+                        </select></label
+                    >
+                    <button class="button dark">Search</button>
+                    <button
+                        type="button"
+                        class="text-button"
+                        @click="
+                            filters = { search: '', status: '', payment: '' };
+                            filterOrders();
+                        "
+                    >
+                        Reset
+                    </button>
+                </form>
                 <p class="muted">
-                    Latest 50 orders. Fulfillment requires verified online
-                    payment or a recorded offline receipt.
+                    {{ orders.total }} matching orders. Fulfillment requires
+                    verified online payment or a recorded offline receipt.
                 </p>
-                <div v-if="!orders.length" class="empty-state">
+                <div v-if="!orders.data.length" class="empty-state">
                     No order requests yet.
                 </div>
                 <article
-                    v-for="order in orders"
+                    v-for="order in orders.data"
                     :key="order.id"
                     class="admin-card"
                 >
@@ -159,6 +242,41 @@ function stock(id: number, event: Event) {
                         <span>{{ item.name }} · EU {{ item.size }}</span
                         ><span>{{ item.quantity }} pairs · {{ item.sku }}</span>
                     </div>
+                    <details class="order-audit">
+                        <summary>Order history</summary>
+                        <div
+                            v-for="event in order.events"
+                            :key="event.id"
+                            class="summary-line"
+                        >
+                            <span
+                                >{{ event.event.replaceAll('_', ' ')
+                                }}<small
+                                    >{{
+                                        event.actor?.name ?? 'System / customer'
+                                    }}
+                                    ·
+                                    {{
+                                        new Date(
+                                            event.created_at,
+                                        ).toLocaleString()
+                                    }}</small
+                                ><small v-if="event.details">{{
+                                    Object.entries(event.details)
+                                        .map(
+                                            ([key, value]) =>
+                                                key.replaceAll('_', ' ') +
+                                                ': ' +
+                                                value,
+                                        )
+                                        .join(' · ')
+                                }}</small></span
+                            >
+                        </div>
+                        <p v-if="!order.events.length" class="muted">
+                            No recorded events for this older order.
+                        </p>
+                    </details>
                     <p class="muted">
                         Payment: {{ order.payment_status }} ·
                         {{ order.payment_method }}
@@ -241,6 +359,22 @@ function stock(id: number, event: Event) {
                     </div>
                 </article>
             </div>
+            <nav
+                v-if="tab === 'Orders' && orders.links.length > 3"
+                class="pagination"
+                aria-label="Staff order pages"
+            >
+                <template v-for="(link, i) in orders.links" :key="i"
+                    ><Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="{ active: link.active }"
+                        preserve-state
+                        preserve-scroll
+                        ><span v-html="link.label" /></Link
+                    ><span v-else v-html="link.label"
+                /></template>
+            </nav>
             <div v-if="tab === 'Payments'">
                 <div class="admin-card">
                     <h3>Integrations</h3>
@@ -264,12 +398,12 @@ function stock(id: number, event: Event) {
                     </p>
                 </div>
                 <p class="muted">
-                    Latest 50 attempts. Verification asks the provider for its
-                    authoritative status. Sandbox attempts do not represent live
-                    payments.
+                    {{ payments.total }} attempts. Verification asks the
+                    provider for its authoritative status. Sandbox attempts do
+                    not represent live payments.
                 </p>
                 <article
-                    v-for="payment in payments"
+                    v-for="payment in payments.data"
                     :key="payment.id"
                     class="admin-card"
                 >
@@ -295,6 +429,22 @@ function stock(id: number, event: Event) {
                     </p>
                 </article>
             </div>
+            <nav
+                v-if="tab === 'Payments' && payments.links.length > 3"
+                class="pagination"
+                aria-label="Payment attempt pages"
+            >
+                <template v-for="(link, i) in payments.links" :key="i"
+                    ><Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="{ active: link.active }"
+                        preserve-state
+                        preserve-scroll
+                        ><span v-html="link.label" /></Link
+                    ><span v-else v-html="link.label"
+                /></template>
+            </nav>
             <div v-if="tab === 'Inventory'" class="admin-products">
                 <ProductCreate />
                 <article
