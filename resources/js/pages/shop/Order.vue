@@ -16,11 +16,19 @@ const props = defineProps<{
     order: CustomerOrder;
     paymentOptions: PaymentOption[];
     accessUrl: string | null;
+    resumePayment: { url: string; provider: string; sandbox: boolean } | null;
 }>();
 const page = usePage();
 const form = useForm({ provider: 'khalti', access_url: props.accessUrl });
 const check = useForm({ access_url: props.accessUrl });
 const copied = ref(false);
+const cancelForm = useForm({ access_url: props.accessUrl });
+const confirmCancel = ref(false);
+const canCancel = computed(
+    () =>
+        props.order.status === 'pending_confirmation' &&
+        props.order.payment_status === 'unpaid',
+);
 const paid = computed(() => props.order.payment_status === 'paid');
 const stage = computed(() =>
     props.order.status === 'fulfilled'
@@ -197,6 +205,17 @@ function pay(provider: 'khalti' | 'paypay') {
                     >
                         {{ error }}
                     </p>
+                    <a
+                        v-if="resumePayment"
+                        :href="resumePayment.url"
+                        class="button dark full"
+                        ><CreditCard :size="16" />Continue
+                        {{ resumePayment.provider }} checkout<span
+                            v-if="resumePayment.sandbox"
+                            class="sandbox-badge"
+                            >Test</span
+                        ></a
+                    >
                     <button
                         v-for="option in paymentOptions"
                         :key="option.id"
@@ -230,6 +249,50 @@ function pay(provider: 'khalti' | 'paypay') {
                                 : 'Check payment status'
                         }}
                     </button>
+                    <div v-if="canCancel" class="summary-note">
+                        <div v-if="confirmCancel">
+                            <p>
+                                Cancel this order and release your reserved
+                                shoes?
+                            </p>
+                            <button
+                                class="button full outline"
+                                :disabled="cancelForm.processing"
+                                @click="
+                                    cancelForm.post(
+                                        '/orders/' +
+                                            order.reference +
+                                            '/cancel',
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                (confirmCancel = false),
+                                        },
+                                    )
+                                "
+                            >
+                                {{
+                                    cancelForm.processing
+                                        ? 'Cancelling…'
+                                        : 'Yes, cancel order'
+                                }}
+                            </button>
+                            <button
+                                class="text-button"
+                                :disabled="cancelForm.processing"
+                                @click="confirmCancel = false"
+                            >
+                                Keep my order
+                            </button>
+                        </div>
+                        <button
+                            v-else
+                            class="text-button"
+                            @click="confirmCancel = true"
+                        >
+                            Cancel unpaid order
+                        </button>
+                    </div>
                     <div class="summary-note">
                         <PackageCheck :size="17" /><span
                             >You can follow your order’s progress here

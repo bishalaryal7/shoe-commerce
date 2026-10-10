@@ -39,3 +39,13 @@ No live merchant keys, SMTP account, or hosting configured. Do not invent comple
 - Production archive built and inspected: dependencies/assets included; local environment, databases and uploads excluded.
 - Actual MySQL migration attempted but blocked by sandbox socket permissions. User host port is currently 3340 and preserved.
 - Main marketplace changes committed locally; no GitHub remote or push available.
+
+## Follow-up review
+
+- Customer cancellation added with explicit confirmation; signed guest access and unrelated-user denial tested.
+- Unexpired provider checkout can be resumed without another payment attempt.
+- Partial refunds block fulfillment and add a staff review audit event; completed refunds cannot regress to pending.
+- PayPay POST signing tested against actual transmitted JSON and headers.
+- Email jobs deduplicate queued outbox dispatches while retaining delivery retries.
+
+Follow-up validation: 85 tests passed (458 assertions); TypeScript, ESLint, formatting and production build passed.

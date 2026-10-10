@@ -28,7 +28,7 @@ Register your own account, then grant staff access with `php artisan shop:admin 
 - Responsive storefront, global search, category/size filters, price sorting, product pages, size selection, stock checks and quantity controls.
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
-- Customer order history and private signed guest tracking links.
+- Customer order history, private signed guest tracking links, unpaid order cancellation and resuming unexpired provider checkout.
 - Staff product creation, prices, photo uploads, inventory adjustments, order confirmation, payment receipt recording, fulfillment and cancellation.
 - Khalti server-side initiation and authoritative lookup verification. Redirect parameters never mark an order paid.
 - PayPay HMAC integration and isolated JPY sandbox testing. PayPay is excluded from NPR checkout.
@@ -37,7 +37,7 @@ Register your own account, then grant staff access with `php artisan shop:admin 
 - Authentication, password resets, account settings and two-factor authentication.
 - Automated tests, GitHub quality/security workflows, release packaging and manual SSH deployment workflow.
 
-Shipping is a configured flat amount in minor units; tax is configured in basis points. Defaults are zero. This is not a shipping carrier or jurisdictional tax integration. Reservations require staff cancellation; automatic expiration and a returns/refund processing workflow are not implemented. Refund lookup records provider status but never initiates a refund or automatically restocks.
+Shipping is a configured flat amount in minor units; tax is configured in basis points. Defaults are zero. This is not a shipping carrier or jurisdictional tax integration. Reservations require staff cancellation; automatic expiration and a returns/refund processing workflow are not implemented. Refund lookup records provider status but never initiates a refund or automatically restocks. Partial refunds hold fulfillment for staff review.
 
 ## Payments
 

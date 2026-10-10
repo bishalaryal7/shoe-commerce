@@ -79,7 +79,7 @@ class OrderPayments
             $order = $locked->order_id ? Order::lockForUpdate()->findOrFail($locked->order_id) : null;
             $valid = ($result['id'] ?? null) === $locked->provider_id && (string) ($result['amount'] ?? '') === (string) $locked->amount && ($result['currency'] ?? null) === $locked->currency;
             if (! $valid || (($result['status'] ?? null) === 'paid' && empty($result['transaction_id']))) {
-                if ($locked->status === 'paid') {
+                if (in_array($locked->status, ['paid', 'refunded'], true)) {
                     Log::warning('A verified payment returned inconsistent lookup data.', ['attempt_id' => $locked->id]);
 
                     return 'review';
@@ -98,6 +98,15 @@ class OrderPayments
             }
             if (($result['status'] ?? null) === 'refunded' && (! $locked->transaction_id || ($result['transaction_id'] ?? null) !== $locked->transaction_id)) {
                 Log::warning('Refund lookup does not match the verified transaction.', ['attempt_id' => $locked->id]);
+
+                return 'review';
+            }
+            if ($locked->status === 'paid' && ($result['status'] ?? null) === 'review') {
+                $locked->update(['status' => 'review', 'verified_at' => now()]);
+                if ($order) {
+                    $order->update(['payment_status' => 'review']);
+                    OrderEvent::create(['order_id' => $order->id, 'event' => 'payment_review_required', 'details' => ['provider' => $locked->provider, 'attempt_reference' => $locked->reference]]);
+                }
 
                 return 'review';
             }

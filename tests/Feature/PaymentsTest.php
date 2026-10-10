@@ -243,4 +243,69 @@ class PaymentsTest extends TestCase
         $this->assertSame('refunded', app(OrderPayments::class)->verify($attempt));
         $this->assertSame(1, OrderEmail::where('order_id', $order->id)->where('event', 'refunded')->count());
     }
+
+    public function test_guest_can_cancel_an_unpaid_order_once_using_private_tracking_access(): void
+    {
+        $order = $this->order();
+        $url = URL::temporarySignedRoute('orders.track', now()->addMinutes(30), ['reference' => $order->reference]);
+        $this->withSession(['last_order_reference' => null])->post('/orders/'.$order->reference.'/cancel', ['access_url' => $url])->assertRedirect();
+        $this->assertSame('cancelled', $order->fresh()->status);
+        $this->assertDatabaseHas('variants', ['id' => 1, 'stock' => 20]);
+        $this->assertDatabaseHas('inventory_movements', ['order_id' => $order->id, 'quantity' => 2, 'reason' => 'order_cancelled']);
+        $this->post('/orders/'.$order->reference.'/cancel', ['access_url' => $url])->assertStatus(422);
+        $this->assertDatabaseHas('variants', ['id' => 1, 'stock' => 20]);
+    }
+
+    public function test_unrelated_customer_cannot_cancel_or_release_another_order(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $order = $this->order();
+        $this->actingAs(User::factory()->create())->post('/orders/'.$order->reference.'/cancel')->assertForbidden();
+        $this->assertSame('pending_confirmation', $order->fresh()->status);
+        $this->assertDatabaseHas('variants', ['id' => 1, 'stock' => 18]);
+    }
+
+    public function test_partial_refund_holds_fulfillment_for_staff_review(): void
+    {
+        $order = $this->order();
+        $this->initiate();
+        $attempt = app(OrderPayments::class)->start($order, 'khalti');
+        Http::fake(['*epayment/lookup/' => Http::sequence()
+            ->push(['pidx' => 'test-pidx', 'total_amount' => 17800, 'status' => 'Completed', 'transaction_id' => 'test-transaction'])
+            ->push(['pidx' => 'test-pidx', 'total_amount' => 17800, 'status' => 'Partially Refunded', 'transaction_id' => 'test-transaction'])]);
+        $this->assertSame('paid', app(OrderPayments::class)->verify($attempt));
+        $this->assertSame('review', app(OrderPayments::class)->verify($attempt));
+        $this->assertSame('review', $order->fresh()->payment_status);
+        $this->actingAs(User::factory()->create(['is_admin' => true]))->patch('/admin/orders/'.$order->id, ['status' => 'fulfilled'])->assertStatus(422);
+        $this->assertDatabaseHas('variants', ['id' => 1, 'stock' => 18]);
+    }
+
+    public function test_pending_checkout_can_be_resumed_until_expiry_without_another_attempt(): void
+    {
+        $order = $this->order();
+        $this->initiate();
+        $attempt = app(OrderPayments::class)->start($order, 'khalti');
+        $url = URL::temporarySignedRoute('orders.track', now()->addHour(), ['reference' => $order->reference]);
+        $this->get($url)->assertInertia(fn (Assert $p) => $p->where('resumePayment.url', $attempt->payment_url)->has('paymentOptions', 0));
+        $attempt->update(['expires_at' => now()->subMinute()]);
+        $this->get($url)->assertInertia(fn (Assert $p) => $p->where('resumePayment', null));
+        $this->assertSame(1, PaymentAttempt::count());
+    }
+
+    public function test_paypay_post_signature_covers_the_exact_transmitted_json(): void
+    {
+        $attempt = PaymentAttempt::create(['reference' => (string) Str::uuid(), 'provider' => 'paypay', 'amount' => 100, 'currency' => 'JPY', 'sandbox' => true]);
+        Http::fake(['*v2/codes' => Http::response(['resultInfo' => ['code' => 'SUCCESS'], 'data' => ['url' => 'https://qr.paypay.ne.jp/test', 'expiryDate' => now()->addMinutes(30)->timestamp]])]);
+        app(PayPayGateway::class)->initiate($attempt);
+        Http::assertSent(function ($request) use ($attempt) {
+            $parts = explode(':', $request->header('Authorization')[0]);
+            $expected = app(PayPayGateway::class)->authorization('/v2/codes', 'POST', $request->body(), $parts[3], $parts[4]);
+
+            return $request->method() === 'POST' && $request->hasHeader('Content-Type', 'application/json')
+                && $request->hasHeader('X-ASSUME-MERCHANT', 'test-merchant')
+                && $request->header('Authorization')[0] === $expected
+                && $request['merchantPaymentId'] === $attempt->reference
+                && $request['amount'] === ['amount' => 100, 'currency' => 'JPY'];
+        });
+    }
 }
