@@ -39,6 +39,22 @@ php artisan shop:admin your-email@example.com
 
 Visit `/admin`. Repeat the command for each trusted staff member. Registration cannot grant staff access.
 
+## Move the existing data to MySQL
+
+MySQL is installed and running on this laptop. The app remains on SQLite until the import succeeds. Run in your own terminal:
+
+```bash
+cd ~/Projects/shoe-commerce
+export PATH="/opt/homebrew/opt/php@8.5/bin:$PATH"
+php artisan shop:move-to-mysql
+```
+
+The command connects using the MySQL configuration in `.env` (`DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, and optionally `DB_SOCKET`). The local defaults are `127.0.0.1:3306`, user `root`, and an empty password. If your local account needs a password, enter it in `.env` before running; keep `DB_CONNECTION=sqlite` and do not set `DB_DATABASE` before the import. Do not share credentials in chat.
+
+It creates a new `shoe_commerce` database, temporarily pauses web requests, writes a consistent SQLite backup under `storage/app/private/database-backups`, runs MySQL migrations, copies all application tables including customers/orders/stock, verifies row counts and column values, and switches `.env` only after successful verification. It preserves the original SQLite file, and never overwrites an existing MySQL database. If that database already exists, select a new name with `--database=shoe_commerce_v2`. Pause any separate workers or scripts writing to SQLite during migration; maintenance mode pauses web traffic only.
+
+The current execution sandbox blocks both local MySQL sockets and TCP connections, so the import must be run from your terminal. SQL data stays outside Git. Test environments continue to use isolated SQLite databases.
+
 ## First version
 
 - Responsive catalog with category filters, search, sizes EU 36–45, and six demo shoe styles.
