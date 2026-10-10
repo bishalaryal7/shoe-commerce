@@ -30,3 +30,12 @@
 ## External limits
 
 No live merchant keys, SMTP account, or hosting configured. Do not invent completed payments, email deliveries, deployments, or GitHub workflow runs. The cached Laravel package has known advisories; online package refresh is required before a public launch. No sandbox escalation is available. User Docker configuration was modified externally; preserve host settings when fixing a demonstrable mapping error.
+
+## Latest verification
+
+- 80 automated tests passed, 416 assertions, isolated SQLite.
+- TypeScript, ESLint, Prettier, Pint and production frontend build passed.
+- Workflow/Compose YAML parsed; deployment scripts passed Bash syntax checks.
+- Production archive built and inspected: dependencies/assets included; local environment, databases and uploads excluded.
+- Actual MySQL migration attempted but blocked by sandbox socket permissions. User host port is currently 3340 and preserved.
+- Main marketplace changes committed locally; no GitHub remote or push available.

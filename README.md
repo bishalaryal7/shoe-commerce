@@ -17,7 +17,7 @@ php artisan serve
 
 Open http://127.0.0.1:8000. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation and unsent mail retries. Use `npm run dev` while editing frontend code.
 
-MariaDB persists in the Docker volume. The local `.env` uses MySQL on 127.0.0.1:3309, database `shoe_commerce`, user `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
+MariaDB persists in the Docker volume. The local `.env` selects the host port through `DB_PORT` (currently 3340); Docker forwards it to MariaDB port 3306. Database: `shoe_commerce`, user: `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
 
 Mailpit: http://localhost:8026. Local SMTP uses 127.0.0.1:1026. `php artisan shop:mail-test` sends to the private test address configured in `.env`, captured in Mailpit; it does not deliver to Gmail. Configure a real SMTP provider later. `php artisan shop:mail-outbox` retries unsent notifications.
 
