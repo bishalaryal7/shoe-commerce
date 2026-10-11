@@ -89,6 +89,8 @@ export const fixtures = {
                     title: 'धेरै आरामदायी',
                     body: 'यो जुत्ता दिनभरि लगाउँदा पनि सहज लाग्यो।',
                     created_at: '2026-10-11T10:00:00Z',
+                    helpful_count: 0,
+                    voted_helpful: false,
                 },
             ],
             links,

@@ -22,7 +22,7 @@ class ProductReviewRepository
     public function own(User $user, Product $product): ?array
     {
         $review = DB::table('product_reviews')->where('user_id', $user->id)->where('product_id', $product->id)
-            ->first(['rating', 'fit', 'title', 'body']);
+            ->first(['id', 'rating', 'fit', 'title', 'body']);
 
         return $review ? (array) $review : null;
     }
@@ -41,10 +41,49 @@ class ProductReviewRepository
         ];
     }
 
-    public function listing(Product $product)
+    public function listing(Product $product, ?User $user)
     {
-        return DB::table('product_reviews')->where('product_id', $product->id)->orderByDesc('id')
+        $page = DB::table('product_reviews')->where('product_id', $product->id)->orderByDesc('id')
             ->paginate(5, ['id', 'rating', 'fit', 'title', 'body', 'created_at'], 'reviews_page')->withQueryString();
+        $ids = $page->getCollection()->pluck('id');
+        $counts = DB::table('product_review_helpful_votes')->whereIn('review_id', $ids)
+            ->selectRaw('review_id, COUNT(*) as total')->groupBy('review_id')->pluck('total', 'review_id');
+        $voted = $user ? DB::table('product_review_helpful_votes')->where('user_id', $user->id)
+            ->whereIn('review_id', $ids)->pluck('review_id') : collect();
+
+        $page->getCollection()->transform(function ($review) use ($counts, $voted) {
+            $review->helpful_count = (int) ($counts[$review->id] ?? 0);
+            $review->voted_helpful = $voted->contains($review->id);
+
+            return $review;
+        });
+
+        return $page;
+    }
+
+    public function toggleHelpful(User $user, Product $product, int $reviewId): bool
+    {
+        return DB::transaction(function () use ($user, $product, $reviewId) {
+            $review = DB::table('product_reviews')->where('id', $reviewId)
+                ->where('product_id', $product->id)->lockForUpdate()->first();
+            abort_if($review === null, 404);
+            abort_if((int) $review->user_id === $user->id, 403);
+
+            $vote = DB::table('product_review_helpful_votes')->where('review_id', $reviewId)
+                ->where('user_id', $user->id)->first();
+            if ($vote) {
+                DB::table('product_review_helpful_votes')->where('id', $vote->id)->delete();
+
+                return false;
+            }
+
+            DB::table('product_review_helpful_votes')->insert([
+                'review_id' => $reviewId, 'user_id' => $user->id,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            return true;
+        });
     }
 
     public function save(User $user, Product $product, int $orderId, array $data): void

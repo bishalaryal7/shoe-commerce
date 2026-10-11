@@ -101,6 +101,32 @@ class ProductReviewsTest extends TestCase
         $this->actingAs($buyer)->post('/products/'.$product->slug.'/reviews', $this->review())->assertNotFound();
     }
 
+    public function test_helpful_votes_are_unique_toggleable_private_and_cannot_be_self_cast(): void
+    {
+        $author = User::factory()->create();
+        $voter = User::factory()->create();
+        $product = Product::where('slug', 'city-low')->firstOrFail();
+        $otherProduct = Product::where('slug', 'pace-runner')->firstOrFail();
+        $this->order($author, $product);
+        $this->actingAs($author)->post('/products/'.$product->slug.'/reviews', $this->review());
+        $reviewId = (int) DB::table('product_reviews')->where('user_id', $author->id)->value('id');
+
+        auth()->logout();
+        $this->post('/products/'.$product->slug.'/reviews/'.$reviewId.'/helpful')->assertRedirect('/login');
+        $this->actingAs($author)->post('/products/'.$product->slug.'/reviews/'.$reviewId.'/helpful')->assertForbidden();
+        $this->actingAs($voter)->post('/products/'.$otherProduct->slug.'/reviews/'.$reviewId.'/helpful')->assertNotFound();
+        $this->post('/products/'.$product->slug.'/reviews/'.$reviewId.'/helpful')->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('product_review_helpful_votes', ['review_id' => $reviewId, 'user_id' => $voter->id]);
+        $this->get('/products/'.$product->slug)->assertInertia(fn (Assert $page) => $page
+            ->where('reviews.data.0.helpful_count', 1)->where('reviews.data.0.voted_helpful', true)
+            ->missing('reviews.data.0.user_id'));
+
+        $this->post('/products/'.$product->slug.'/reviews/'.$reviewId.'/helpful')->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('product_review_helpful_votes', 0);
+        $this->get('/products/'.$product->slug)->assertInertia(fn (Assert $page) => $page
+            ->where('reviews.data.0.helpful_count', 0)->where('reviews.data.0.voted_helpful', false));
+    }
+
     public function test_nepali_review_validation_and_success_message(): void
     {
         $user = User::factory()->create();

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import type { ShopSharedProps } from '@/types/shop';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { Star } from 'lucide-vue-next';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Star, ThumbsUp } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Review {
     id: number;
@@ -11,6 +12,8 @@ interface Review {
     title: string;
     body: string;
     created_at: string;
+    helpful_count: number;
+    voted_helpful: boolean;
 }
 const props = defineProps<{
     productSlug: string;
@@ -23,11 +26,12 @@ const props = defineProps<{
         data: Review[];
         links: { url: string | null; label: string; active: boolean }[];
     };
-    ownReview: Pick<Review, 'rating' | 'fit' | 'title' | 'body'> | null;
+    ownReview: Pick<Review, 'id' | 'rating' | 'fit' | 'title' | 'body'> | null;
     canReview: boolean;
 }>();
 const { t, num, date, paginationLabel } = useLocale();
 const page = usePage<ShopSharedProps>();
+const votingReview = ref<number | null>(null);
 const form = useForm({
     rating: props.ownReview?.rating ?? 0,
     fit: props.ownReview?.fit ?? '',
@@ -39,6 +43,17 @@ function submit() {
         preserveScroll: true,
         onSuccess: () => form.clearErrors(),
     });
+}
+function toggleHelpful(review: Review) {
+    router.post(
+        `/products/${props.productSlug}/reviews/${review.id}/helpful`,
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => (votingReview.value = review.id),
+            onFinish: () => (votingReview.value = null),
+        },
+    );
 }
 const fitLabels = {
     small: 'Runs small',
@@ -114,6 +129,42 @@ const fitOptions = ['small', 'true', 'large'] as const;
                         }}</span>
                     </div>
                     <p>{{ review.body }}</p>
+                    <div class="review-helpful">
+                        <button
+                            v-if="
+                                page.props.auth.user &&
+                                review.id !== ownReview?.id
+                            "
+                            type="button"
+                            :aria-pressed="review.voted_helpful"
+                            :disabled="votingReview === review.id"
+                            @click="toggleHelpful(review)"
+                        >
+                            <ThumbsUp :size="14" />
+                            {{
+                                t(
+                                    review.voted_helpful
+                                        ? 'Marked helpful · :count'
+                                        : 'Helpful · :count',
+                                    { count: num(review.helpful_count) },
+                                )
+                            }}
+                        </button>
+                        <Link v-else-if="!page.props.auth.user" href="/login">
+                            {{
+                                t('Sign in to mark helpful · :count', {
+                                    count: num(review.helpful_count),
+                                })
+                            }}
+                        </Link>
+                        <span v-else-if="review.helpful_count">
+                            {{
+                                t('Helpful · :count', {
+                                    count: num(review.helpful_count),
+                                })
+                            }}
+                        </span>
+                    </div>
                 </article>
                 <div v-if="!reviews.data.length" class="review-empty">
                     <Star :size="22" />

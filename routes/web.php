@@ -44,6 +44,7 @@ Route::get('/ready', function () {
 Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.reviews.store');
+Route::post('/products/{product:slug}/reviews/{review}/helpful', [ProductReviewController::class, 'helpful'])->middleware(['auth', 'throttle:30,1'])->whereNumber('review')->name('products.reviews.helpful');
 Route::get('/saved', [SavedProductsController::class, 'index'])->name('saved.index');
 Route::get('/compare', [CompareController::class, 'index'])->name('compare.index');
 Route::post('/compare/{product}', [CompareController::class, 'toggle'])->middleware('throttle:30,1')->name('compare.toggle');

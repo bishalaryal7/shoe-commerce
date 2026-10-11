@@ -38,10 +38,13 @@ const props = defineProps<{
             title: string;
             body: string;
             created_at: string;
+            helpful_count: number;
+            voted_helpful: boolean;
         }[];
         links: { url: string | null; label: string; active: boolean }[];
     };
     ownReview: {
+        id: number;
         rating: number;
         fit: 'small' | 'true' | 'large' | null;
         title: string;

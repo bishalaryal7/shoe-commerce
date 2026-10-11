@@ -15,7 +15,7 @@ class ProductReviews
     {
         return [
             'reviewSummary' => $this->reviews->summary($product),
-            'reviews' => $this->reviews->listing($product),
+            'reviews' => $this->reviews->listing($product, $user),
             'ownReview' => $user ? $this->reviews->own($user, $product) : null,
             'canReview' => $user && $this->reviews->eligibleOrderId($user, $product) !== null,
         ];
@@ -29,5 +29,12 @@ class ProductReviews
             throw ValidationException::withMessages(['review' => __('You can review a shoe after your paid order is fulfilled.')]);
         }
         $this->reviews->save($user, $product, $orderId, $data);
+    }
+
+    public function toggleHelpful(User $user, Product $product, int $reviewId): bool
+    {
+        abort_unless($product->active, 404);
+
+        return $this->reviews->toggleHelpful($user, $product, $reviewId);
     }
 }
