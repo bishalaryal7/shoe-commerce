@@ -17,14 +17,23 @@ class CheckoutController extends Controller
 {
     public function create(Request $request, Cart $cart, Gateways $gateways)
     {
-        if (! $cart->lines($request)) {
+        $lines = $cart->lines($request);
+        if (! $lines) {
             return redirect()->route('cart');
         }
         if (! $request->session()->has('checkout_token')) {
             $request->session()->put('checkout_token', (string) Str::uuid());
         }
 
-        return Inertia::render('shop/Checkout', ['lines' => $cart->lines($request), 'wholesale' => $cart->wholesale($request), 'token' => $request->session()->get('checkout_token'), 'cashOnDelivery' => config('shop.cash_on_delivery') && config('shop.currency') === 'NPR', 'paymentOptions' => $gateways->options(config('shop.currency')), 'shippingAmount' => max(0, config('shop.shipping_amount')), 'taxBasisPoints' => max(0, config('shop.tax_basis_points'))]);
+        return Inertia::render('shop/Checkout', [
+            'lines' => $lines,
+            'wholesale' => $cart->wholesale($request),
+            'token' => $request->session()->get('checkout_token'),
+            'cashOnDelivery' => config('shop.cash_on_delivery') && config('shop.currency') === 'NPR',
+            'paymentOptions' => $gateways->options(config('shop.currency')),
+            'shippingAmount' => max(0, config('shop.shipping_amount')),
+            'taxBasisPoints' => max(0, config('shop.tax_basis_points')),
+        ]);
     }
 
     public function store(CheckoutRequest $request, Cart $cart, Gateways $gateways, OrderPayments $payments, PlaceOrder $placement)
@@ -59,7 +68,7 @@ class CheckoutController extends Controller
     {
         abort_unless($request->session()->get('last_order_reference') === $reference, 403);
         $order = Order::where('reference', $reference)->firstOrFail();
-        abort_unless($request->session()->get('last_order_reference') === $reference && ($order->user_id === null || $request->user()?->id === $order->user_id), 403);
+        abort_unless($order->user_id === null || $request->user()?->id === $order->user_id, 403);
 
         return $orders->page($order, $gateways);
     }

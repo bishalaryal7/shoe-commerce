@@ -29,10 +29,10 @@ class OrderController extends Controller
         return $this->page($order, $gateways, null);
     }
 
-    public function cancel(Request $request, string $reference, CancelOrder $cancellation)
+    public function cancel(Request $request, string $reference, CancelOrder $cancellation, OrderAccess $access)
     {
         $order = Order::where('reference', $reference)->firstOrFail();
-        app(OrderAccess::class)->authorize($request, $order);
+        $access->authorize($request, $order);
         $cancellation->cancel($order, $request->user()?->id);
 
         return back()->with('success', __('Order cancelled. Your reserved stock has been released.'));
