@@ -28,6 +28,7 @@ const props = defineProps<{
     };
     ownReview: Pick<Review, 'id' | 'rating' | 'fit' | 'title' | 'body'> | null;
     canReview: boolean;
+    reviewSort: 'recent' | 'helpful' | 'rating';
 }>();
 const { t, num, date, paginationLabel } = useLocale();
 const page = usePage<ShopSharedProps>();
@@ -52,6 +53,19 @@ function toggleHelpful(review: Review) {
             preserveScroll: true,
             onStart: () => (votingReview.value = review.id),
             onFinish: () => (votingReview.value = null),
+        },
+    );
+}
+function sortReviews(event: Event) {
+    const sort = (event.target as HTMLSelectElement).value;
+    router.get(
+        `/products/${props.productSlug}`,
+        { reviews_sort: sort },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+            only: ['reviews', 'reviewSort'],
         },
     );
 }
@@ -85,6 +99,14 @@ const fitOptions = ['small', 'true', 'large'] as const;
                 )
             }}
         </p>
+        <label class="review-sort">
+            {{ t('Sort reviews') }}
+            <select :value="reviewSort" @change="sortReviews">
+                <option value="recent">{{ t('Most recent') }}</option>
+                <option value="helpful">{{ t('Most helpful') }}</option>
+                <option value="rating">{{ t('Highest rated') }}</option>
+            </select>
+        </label>
         <div v-if="summary.count" class="review-fit-summary">
             <strong>{{ t('How did it fit?') }}</strong>
             <span v-for="fit in fitOptions" :key="fit">

@@ -41,18 +41,26 @@ class ProductReviewRepository
         ];
     }
 
-    public function listing(Product $product, ?User $user)
+    public function listing(Product $product, ?User $user, string $sort)
     {
-        $page = DB::table('product_reviews')->where('product_id', $product->id)->orderByDesc('id')
-            ->paginate(5, ['id', 'rating', 'fit', 'title', 'body', 'created_at'], 'reviews_page')->withQueryString();
+        $query = DB::table('product_reviews')->select([
+            'product_reviews.id', 'product_reviews.rating', 'product_reviews.fit',
+            'product_reviews.title', 'product_reviews.body', 'product_reviews.created_at',
+        ])->where('product_id', $product->id)
+            ->addSelect(['helpful_count' => DB::table('product_review_helpful_votes')->selectRaw('COUNT(*)')
+                ->whereColumn('review_id', 'product_reviews.id')]);
+        match ($sort) {
+            'helpful' => $query->orderByDesc('helpful_count')->orderByDesc('id'),
+            'rating' => $query->orderByDesc('rating')->orderByDesc('id'),
+            default => $query->orderByDesc('id'),
+        };
+        $page = $query->paginate(5, ['*'], 'reviews_page')->withQueryString();
         $ids = $page->getCollection()->pluck('id');
-        $counts = DB::table('product_review_helpful_votes')->whereIn('review_id', $ids)
-            ->selectRaw('review_id, COUNT(*) as total')->groupBy('review_id')->pluck('total', 'review_id');
         $voted = $user ? DB::table('product_review_helpful_votes')->where('user_id', $user->id)
             ->whereIn('review_id', $ids)->pluck('review_id') : collect();
 
-        $page->getCollection()->transform(function ($review) use ($counts, $voted) {
-            $review->helpful_count = (int) ($counts[$review->id] ?? 0);
+        $page->getCollection()->transform(function ($review) use ($voted) {
+            $review->helpful_count = (int) $review->helpful_count;
             $review->voted_helpful = $voted->contains($review->id);
 
             return $review;

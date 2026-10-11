@@ -97,6 +97,7 @@ export const fixtures = {
         },
         ownReview: null,
         canReview: false,
+        reviewSort: 'recent',
     },
     'shop/Saved': { products: [product], wholesale: false },
     'shop/Compare': { products: [product], wholesale: false },

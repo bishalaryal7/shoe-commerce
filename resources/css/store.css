@@ -2778,6 +2778,22 @@
     font-size: 12px;
     line-height: 1.7;
 }
+.review-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 11px;
+}
+.review-sort select {
+    min-height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: white;
+    padding: 6px 10px;
+    color: var(--ink);
+}
 .review-fit-summary {
     display: flex;
     flex-wrap: wrap;

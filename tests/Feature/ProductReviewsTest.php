@@ -127,6 +127,30 @@ class ProductReviewsTest extends TestCase
             ->where('reviews.data.0.helpful_count', 0)->where('reviews.data.0.voted_helpful', false));
     }
 
+    public function test_reviews_can_be_sorted_by_helpfulness_rating_and_recency(): void
+    {
+        $product = Product::where('slug', 'city-low')->firstOrFail();
+        $lowReviewer = User::factory()->create();
+        $highReviewer = User::factory()->create();
+        $recentReviewer = User::factory()->create();
+        $voter = User::factory()->create();
+        foreach ([[$lowReviewer, 2], [$highReviewer, 5], [$recentReviewer, 4]] as [$reviewer, $rating]) {
+            $this->order($reviewer, $product);
+            $this->actingAs($reviewer)->post('/products/'.$product->slug.'/reviews', $this->review(['rating' => $rating]));
+        }
+        $lowReviewId = (int) DB::table('product_reviews')->where('user_id', $lowReviewer->id)->value('id');
+        $this->actingAs($voter)->post('/products/'.$product->slug.'/reviews/'.$lowReviewId.'/helpful');
+
+        $this->get('/products/'.$product->slug.'?reviews_sort=helpful')->assertInertia(fn (Assert $page) => $page
+            ->where('reviewSort', 'helpful')->where('reviews.data.0.rating', 2)->where('reviews.data.0.helpful_count', 1));
+        $this->get('/products/'.$product->slug.'?reviews_sort=rating')->assertInertia(fn (Assert $page) => $page
+            ->where('reviewSort', 'rating')->where('reviews.data.0.rating', 5));
+        $this->get('/products/'.$product->slug)->assertInertia(fn (Assert $page) => $page
+            ->where('reviewSort', 'recent')->where('reviews.data.0.rating', 4));
+        $this->get('/products/'.$product->slug.'?reviews_sort=invalid')->assertInertia(fn (Assert $page) => $page
+            ->where('reviewSort', 'recent')->where('reviews.data.0.rating', 4));
+    }
+
     public function test_nepali_review_validation_and_success_message(): void
     {
         $user = User::factory()->create();

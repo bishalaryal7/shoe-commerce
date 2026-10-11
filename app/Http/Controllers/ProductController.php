@@ -17,6 +17,9 @@ class ProductController extends Controller
     public function show(Request $request, Product $product, Cart $cart, ProductRepository $products, ShoppingDiscovery $discovery, ProductReviews $reviews)
     {
         abort_unless($product->active, 404);
+        $reviewSort = in_array($request->query('reviews_sort'), ['helpful', 'rating'], true)
+            ? $request->query('reviews_sort')
+            : 'recent';
         $wholesale = $cart->wholesale($request);
         $serialize = fn ($item) => $products->display($item, $wholesale);
         $discovery->recordView($request, $product);
@@ -24,7 +27,7 @@ class ProductController extends Controller
         return Inertia::render('shop/Product', ['product' => $serialize($product->load('variants')->loadCount('reviews')->loadAvg('reviews', 'rating')), 'wholesale' => $wholesale,
             'related' => Product::with('variants')->withCount('reviews')->withAvg('reviews', 'rating')->where('active', true)->where('category', $product->category)->whereKeyNot($product->id)->limit(3)->get()->map($serialize),
             'savedIds' => $discovery->savedIds($request), 'recentlyViewed' => $discovery->recentlyViewed($request, $wholesale, $product->id),
-            ...$reviews->page($product, $request->user())]);
+            ...$reviews->page($product, $request->user(), $reviewSort), 'reviewSort' => $reviewSort]);
     }
 
     public function store(ProductRequest $request, ProductCatalog $catalog)
