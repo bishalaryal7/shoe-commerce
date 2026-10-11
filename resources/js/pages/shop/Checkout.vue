@@ -71,6 +71,13 @@ const total = subtotal + props.shippingAmount + tax;
             <div class="checkout-grid">
                 <form class="form-card" novalidate @submit.prevent="submit">
                     <h2>{{ t('Where should your next pair go?') }}</h2>
+                    <p class="checkout-help">
+                        {{
+                            t(
+                                'You can place an order without creating an account. Keep your private tracking link to return to it.',
+                            )
+                        }}
+                    </p>
                     <div class="checkout-field-grid">
                         <label
                             >{{ t('Full name')
