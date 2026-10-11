@@ -2299,6 +2299,8 @@
         font-size: 8px !important;
     }
     .catalog-selects {
+        flex-wrap: wrap;
+        justify-content: flex-end;
         gap: 6px;
     }
     .catalog-selects label {
