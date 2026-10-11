@@ -39,6 +39,7 @@ class ProductController extends Controller
             ...$reviews->page($product, $request->user(), $reviewSort, $reviewQuery),
             'reviewSort' => $reviewSort,
             'reviewQuery' => $reviewQuery,
+            'questions' => $product->questions()->whereNotNull('answered_at')->latest('answered_at')->limit(20)->get(['id', 'question', 'answer', 'answered_at']),
         ]);
     }
 

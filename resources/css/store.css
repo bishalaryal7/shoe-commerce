@@ -1223,6 +1223,50 @@
     font-size: 12px;
     line-height: 1.9;
 }
+.stock-alert-form {
+    margin-top: 20px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+}
+.stock-alert-form h3,
+.product-questions h2 {
+    font-size: 15px;
+    margin: 0 0 8px;
+}
+.stock-alert-form p {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.7;
+}
+.stock-alert-form :is(input, select) {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+.stock-alert-form .button {
+    width: 100%;
+    margin-top: 4px;
+}
+.product-questions {
+    padding-block: 48px;
+}
+.question-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+.tracking-details {
+    margin-top: 12px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #f8fafc;
+}
 .field-error {
     color: #b34356 !important;
     font-size: 11px !important;

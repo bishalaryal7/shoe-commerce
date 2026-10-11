@@ -32,6 +32,7 @@ const props = defineProps<{
     wholesale: boolean;
     savedIds: number[];
     recentlyViewed: Product[];
+    popular: Product[];
 }>();
 const search = ref(props.filters.q || '');
 const size = ref(props.filters.size || '');
@@ -319,6 +320,28 @@ function reset() {
                     ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav>
+        </section>
+        <section
+            v-if="!hasFilters && popular.length"
+            class="collection wrap discovery-section"
+        >
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">{{
+                        t('CUSTOMERS CHOOSE THESE')
+                    }}</span>
+                    <h2>{{ t('Popular shoes') }}</h2>
+                </div>
+            </div>
+            <div class="product-grid">
+                <ProductCard
+                    v-for="product in popular"
+                    :key="product.id"
+                    :product="product"
+                    :wholesale="wholesale"
+                    :saved="savedIds.includes(product.id)"
+                />
+            </div>
         </section>
         <section
             v-if="recentlyViewed.length"

@@ -6,6 +6,8 @@ use App\Models\Order;
 use App\Models\OrderEmail;
 use App\Models\PaymentAttempt;
 use App\Models\Product;
+use App\Models\ProductQuestion;
+use App\Models\Promotion;
 use App\Models\Variant;
 use App\Models\WholesaleAccount;
 use App\Payments\KhaltiGateway;
@@ -42,6 +44,8 @@ class AdminWorkspace
             'integrations' => $this->integrations(),
             'stats' => $this->stats(),
             'lowStockThreshold' => max(0, config('shop.low_stock_threshold')),
+            'promotions' => Promotion::latest('id')->get(),
+            'questions' => ProductQuestion::with(['product:id,name,slug', 'user:id,name'])->latest('id')->paginate(20, ['*'], 'questions_page')->withQueryString(),
         ];
     }
 

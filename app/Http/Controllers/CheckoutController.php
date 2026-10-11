@@ -33,12 +33,19 @@ class CheckoutController extends Controller
             'paymentOptions' => $gateways->options(config('shop.currency')),
             'shippingAmount' => max(0, config('shop.shipping_amount')),
             'taxBasisPoints' => max(0, config('shop.tax_basis_points')),
+            'addresses' => $request->user()->addresses()->orderByDesc('is_default')->latest()->get(),
         ]);
     }
 
     public function store(CheckoutRequest $request, Cart $cart, Gateways $gateways, OrderPayments $payments, PlaceOrder $placement)
     {
         $data = $request->validated();
+        if (! empty($data['address_id'])) {
+            $savedAddress = $request->user()->addresses()->findOrFail($data['address_id']);
+            $data['name'] = $savedAddress->recipient;
+            $data['phone'] = $savedAddress->phone;
+            $data['address'] = $savedAddress->address;
+        }
         $provider = $data['payment_method'] ?? 'request';
         if ($provider === 'cod' && (! config('shop.cash_on_delivery') || config('shop.currency') !== 'NPR')) {
             throw ValidationException::withMessages(['payment_method' => __('Cash on delivery is not available for this order.')]);
@@ -48,6 +55,9 @@ class CheckoutController extends Controller
         }
         abort_unless($data['token'] === $request->session()->get('checkout_token'), 419);
         $order = $placement->place($data, $cart->lines($request), $cart->wholesale($request), $request->user()?->id, count($request->session()->get('cart', [])));
+        if (! empty($data['save_address']) && empty($data['address_id'])) {
+            $request->user()->addresses()->create(['label' => __('Saved from checkout'), 'recipient' => $data['name'], 'phone' => $data['phone'], 'address' => $data['address'], 'is_default' => false]);
+        }
         $request->session()->forget('cart');
         $request->session()->put('last_order_reference', $order->reference);
 

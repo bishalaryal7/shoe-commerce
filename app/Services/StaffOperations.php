@@ -38,6 +38,25 @@ class StaffOperations
         });
     }
 
+    public function shipping(Order $order, array $data, int $actor): void
+    {
+        DB::transaction(function () use ($order, $data, $actor) {
+            $locked = $this->orders->lock($order->id);
+            if ($data['status'] === 'shipped') {
+                abort_unless($locked->status === 'confirmed' && $locked->payment_status === 'paid', 422, __('Only paid, confirmed orders can be shipped.'));
+                $this->orders->update($locked, ['status' => 'shipped', 'tracking_carrier' => trim($data['tracking_carrier']), 'tracking_number' => trim($data['tracking_number']), 'shipped_at' => now()]);
+                $this->orders->recordEvent($locked, 'shipped', $actor, ['carrier' => trim($data['tracking_carrier']), 'tracking_number' => trim($data['tracking_number'])]);
+                $this->emails->record($locked, 'shipped');
+
+                return;
+            }
+            abort_unless($locked->status === 'shipped', 422, __('Only shipped orders can be marked delivered.'));
+            $this->orders->update($locked, ['status' => 'fulfilled', 'delivered_at' => now()]);
+            $this->orders->recordEvent($locked, 'fulfilled', $actor);
+            $this->emails->record($locked, 'fulfilled');
+        });
+    }
+
     public function offlinePayment(Order $order, string $reference, int $actor): void
     {
         DB::transaction(function () use ($order, $reference, $actor) {

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class CancelOrder
 {
-    public function __construct(private OrderEmails $emails) {}
+    public function __construct(private OrderEmails $emails, private StockAlerts $alerts) {}
 
     public function cancel(Order $order, ?int $actorId, bool $staff = false): void
     {
@@ -21,6 +21,10 @@ class CancelOrder
             foreach ($locked->items as $item) {
                 Variant::whereKey($item->variant_id)->increment('stock', $item->quantity);
                 InventoryMovement::create(['variant_id' => $item->variant_id, 'order_id' => $locked->id, 'actor_id' => $actorId, 'quantity' => $item->quantity, 'reason' => 'order_cancelled']);
+                $variant = Variant::with('product')->find($item->variant_id);
+                if ($variant) {
+                    $this->alerts->restocked($variant);
+                }
             }
             $locked->update(['status' => 'cancelled']);
             OrderEvent::create(['order_id' => $locked->id, 'actor_id' => $actorId, 'event' => 'cancelled']);

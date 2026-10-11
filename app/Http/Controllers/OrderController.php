@@ -23,7 +23,7 @@ class OrderController extends Controller
 
     public function show(Request $request, string $reference, Gateways $gateways)
     {
-        $order = Order::with('items')->where('reference', $reference)->firstOrFail();
+        $order = Order::with(['items', 'events'])->where('reference', $reference)->firstOrFail();
         abort_unless($request->hasValidSignature() || ($request->user() && $order->user_id === $request->user()->id), 403);
 
         return $this->page($order, $gateways, null);
@@ -63,7 +63,9 @@ class OrderController extends Controller
             }
         }
 
-        return Inertia::render('shop/Order', ['order' => $order->only(['reference', 'name', 'email', 'address', 'phone', 'currency', 'subtotal', 'shipping_amount', 'tax_amount', 'total', 'status', 'payment_status', 'payment_method', 'paid_at', 'created_at', 'items']),
+        $order->loadMissing('events');
+
+        return Inertia::render('shop/Order', ['order' => $order->only(['reference', 'name', 'email', 'address', 'phone', 'currency', 'subtotal', 'shipping_amount', 'tax_amount', 'total', 'status', 'payment_status', 'payment_method', 'paid_at', 'created_at', 'items', 'events', 'tracking_carrier', 'tracking_number', 'shipped_at', 'delivered_at', 'promotion_code', 'discount_amount']),
             'resumePayment' => $resume,
             'paymentOptions' => in_array($order->status, ['pending_confirmation', 'confirmed']) && $order->payment_status === 'unpaid' ? $gateways->options($order->currency) : [],
             'accessUrl' => $accessUrl ?? URL::temporarySignedRoute('orders.track', now()->addDays(30), ['reference' => $order->reference]),

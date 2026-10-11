@@ -68,6 +68,7 @@ export const fixtures = {
         wholesale: false,
         savedIds: [product.id],
         recentlyViewed: [product],
+        popular: [],
     },
     'shop/Product': {
         product,
@@ -99,6 +100,7 @@ export const fixtures = {
         canReview: false,
         reviewSort: 'recent',
         reviewQuery: '',
+        questions: [],
     },
     'shop/Saved': { products: [product], wholesale: false },
     'shop/Compare': { products: [product], wholesale: false },
@@ -112,6 +114,7 @@ export const fixtures = {
         paymentOptions: [{ id: 'khalti', name: 'Khalti', sandbox: true }],
         shippingAmount: 0,
         taxBasisPoints: 0,
+        addresses: [],
     },
     'shop/Order': {
         order,
@@ -137,8 +140,16 @@ export const fixtures = {
             mail: 'smtp',
             pendingEmails: 0,
         },
-        stats: { orders: 1, pending: 1, stock: 20, low_stock: 0, applications: 0 },
+        stats: {
+            orders: 1,
+            pending: 1,
+            stock: 20,
+            low_stock: 0,
+            applications: 0,
+        },
         lowStockThreshold: 5,
+        promotions: [],
+        questions: { data: [], total: 0, links },
     },
     'admin/Access': {},
     'auth/Login': {
@@ -162,6 +173,7 @@ export const fixtures = {
     'auth/VerifyEmail': {},
     'auth/TwoFactorChallenge': {},
     'settings/Profile': { mustVerifyEmail: true },
+    'settings/Addresses': { addresses: [] },
     'settings/Password': {},
     'settings/Appearance': {},
     'settings/TwoFactor': {

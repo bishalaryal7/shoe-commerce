@@ -44,6 +44,7 @@ export function formatMoney(
 export const labels: Record<string, string> = {
     pending_confirmation: 'Awaiting confirmation',
     confirmed: 'Confirmed',
+    shipped: 'Shipped',
     fulfilled: 'Fulfilled',
     cancelled: 'Cancelled',
     unpaid: 'Unpaid',

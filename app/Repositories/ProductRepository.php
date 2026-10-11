@@ -30,7 +30,7 @@ class ProductRepository
     public function display(Product $product, bool $wholesale): array
     {
         $data = $product->toArray();
-        unset($data['reviews_count'], $data['reviews_avg_rating']);
+        unset($data['reviews_count'], $data['reviews_avg_rating'], $data['units_sold']);
 
         if (app()->getLocale() === 'ne') {
             $data['name'] = $product->name_ne ?: __($product->name);

@@ -70,6 +70,13 @@ export interface CustomerOrder {
     status: string;
     payment_status: string;
     payment_method: string;
+    tracking_carrier?: string | null;
+    tracking_number?: string | null;
+    shipped_at?: string | null;
+    delivered_at?: string | null;
+    promotion_code?: string | null;
+    discount_amount?: number;
+    events?: { id: number; event: string; created_at: string }[];
     paid_at: string | null;
     created_at: string;
     items: {

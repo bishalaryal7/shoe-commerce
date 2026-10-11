@@ -6,11 +6,14 @@ use App\Http\Requests\Shop\ProductRequest;
 use App\Http\Requests\Staff\InventoryImportRequest;
 use App\Http\Requests\Staff\OfflinePaymentRequest;
 use App\Http\Requests\Staff\OrderStatusRequest;
+use App\Http\Requests\Staff\PromotionRequest;
+use App\Http\Requests\Staff\ShippingRequest;
 use App\Http\Requests\Staff\StockRequest;
 use App\Http\Requests\Staff\WholesaleReviewRequest;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\Variant;
 use App\Models\WholesaleAccount;
 use App\Repositories\ProductRepository;
@@ -28,7 +31,7 @@ class AdminController extends Controller
     {
         $filters = $request->validate([
             'search' => 'nullable|string|max:150',
-            'status' => 'nullable|in:pending_confirmation,confirmed,fulfilled,cancelled',
+            'status' => 'nullable|in:pending_confirmation,confirmed,shipped,fulfilled,cancelled',
             'payment' => 'nullable|in:unpaid,pending,paid,review,refunded',
         ]);
 
@@ -74,6 +77,27 @@ class AdminController extends Controller
         $staff->transition($order, $request->validated('status'), $request->user()->id);
 
         return back()->with('success', __('Order updated.'));
+    }
+
+    public function shipping(ShippingRequest $request, Order $order, StaffOperations $staff)
+    {
+        $staff->shipping($order, $request->validated(), $request->user()->id);
+
+        return back()->with('success', __('Order delivery status updated.'));
+    }
+
+    public function promotion(PromotionRequest $request)
+    {
+        Promotion::create($request->validated());
+
+        return back()->with('success', __('Discount code created.'));
+    }
+
+    public function togglePromotion(Promotion $promotion)
+    {
+        $promotion->update(['active' => ! $promotion->active]);
+
+        return back()->with('success', __('Discount code status updated.'));
     }
 
     public function offlinePayment(OfflinePaymentRequest $request, Order $order, StaffOperations $staff)

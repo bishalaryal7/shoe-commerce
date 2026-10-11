@@ -34,10 +34,12 @@ const canCancel = computed(
 const paid = computed(() => props.order.payment_status === 'paid');
 const stage = computed(() =>
     props.order.status === 'fulfilled'
-        ? 3
-        : props.order.status === 'confirmed'
-          ? 2
-          : 1,
+        ? 4
+        : props.order.status === 'shipped'
+          ? 3
+          : props.order.status === 'confirmed'
+            ? 2
+            : 1,
 );
 async function copy() {
     if (!props.accessUrl) return;
@@ -81,7 +83,8 @@ function pay(provider: 'khalti' | 'paypay') {
                     v-for="(step, index) in [
                         t('Order received'),
                         t('Order confirmed'),
-                        t('Order fulfilled'),
+                        t('Order shipped'),
+                        t('Delivered'),
                     ]"
                     :key="step"
                     :class="{ done: stage > index }"
@@ -158,6 +161,28 @@ function pay(provider: 'khalti' | 'paypay') {
                             {{ t('Open private tracking link') }}
                         </a>
                     </div>
+                    <div
+                        v-if="order.tracking_number"
+                        class="delivery-details tracking-details"
+                    >
+                        <div>
+                            <span class="eyebrow">{{
+                                t('DELIVERY TRACKING')
+                            }}</span>
+                            <h3>{{ order.tracking_carrier }}</h3>
+                            <p>
+                                {{ t('Tracking number') }}:
+                                <strong>{{ order.tracking_number }}</strong>
+                            </p>
+                        </div>
+                        <div>
+                            <span class="eyebrow">{{ t('LAST UPDATE') }}</span>
+                            <p>{{ label(order.status) }}</p>
+                            <p v-if="order.shipped_at">
+                                {{ date(order.shipped_at) }}
+                            </p>
+                        </div>
+                    </div>
                     <Link href="/" class="back-shopping">
                         {{ t('Keep exploring') }} <ArrowRight :size="14"
                     /></Link>
@@ -169,6 +194,16 @@ function pay(provider: 'khalti' | 'paypay') {
                         ><strong>{{
                             money(order.subtotal, order.currency)
                         }}</strong>
+                    </div>
+                    <div v-if="order.discount_amount" class="summary-line">
+                        <span
+                            >{{ t('Discount') }}
+                            <small>{{ order.promotion_code }}</small></span
+                        ><strong
+                            >−{{
+                                money(order.discount_amount, order.currency)
+                            }}</strong
+                        >
                     </div>
                     <div class="summary-line">
                         <span>{{ t('Shipping') }}</span

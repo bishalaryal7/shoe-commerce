@@ -23,6 +23,8 @@ const sections = [
     { label: 'Inventory', icon: Boxes },
     { label: 'Payments', icon: CreditCard },
     { label: 'Partners', icon: UsersRound },
+    { label: 'Promotions', icon: CreditCard },
+    { label: 'Questions', icon: UsersRound },
     { label: 'Team', icon: UsersRound },
 ];
 </script>

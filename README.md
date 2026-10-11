@@ -46,6 +46,7 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
 - Customer order history, private signed guest tracking links, unpaid order cancellation and resuming unexpired provider checkout.
+- Size-specific back-in-stock email alerts, staff shipment tracking and delivery updates, scheduled retail/wholesale promotion codes, moderated product Q&A, verified best-selling shoe discovery and a private saved-address book.
 - Staff product creation, prices, photo uploads, inventory adjustments, spreadsheet-ready inventory export and atomic bulk stock import, searchable and paginated orders/payments, order audit history, confirmation, payment receipt recording, fulfillment and cancellation.
 - Khalti server-side initiation and authoritative lookup verification. Redirect parameters never mark an order paid.
 - PayPay HMAC integration and isolated JPY sandbox testing. PayPay is excluded from NPR checkout.

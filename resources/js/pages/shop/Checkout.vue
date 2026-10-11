@@ -15,7 +15,7 @@ import {
     ShieldCheck,
     WalletCards,
 } from 'lucide-vue-next';
-import { nextTick } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 const { t, num, money } = useLocale();
 const props = defineProps<{
     lines: CartLine[];
@@ -25,19 +25,87 @@ const props = defineProps<{
     shippingAmount: number;
     taxBasisPoints: number;
     cashOnDelivery?: boolean;
+    addresses: {
+        id: number;
+        label: string;
+        recipient: string;
+        phone: string;
+        address: string;
+        is_default: boolean;
+    }[];
 }>();
 const page = usePage<ShopSharedProps>();
 const user = page.props.auth.user;
+const quote = ref<{
+    code: string;
+    discount: number;
+    tax: number;
+    total: number;
+} | null>(null);
+const quoteBusy = ref(false);
+const quoteError = ref('');
 const form = useForm({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
     address: '',
+    address_id: '',
+    save_address: false,
+    promotion_code: '',
     token: props.token,
     payment_method: props.cashOnDelivery
         ? 'cod'
         : (props.paymentOptions[0]?.id ?? 'request'),
 });
+if (props.addresses.length) {
+    const preferred =
+        props.addresses.find((address) => address.is_default) ??
+        props.addresses[0];
+    form.address_id = String(preferred.id);
+    form.name = preferred.recipient;
+    form.phone = preferred.phone;
+    form.address = preferred.address;
+}
+function selectAddress() {
+    const saved = props.addresses.find(
+        (address) => String(address.id) === form.address_id,
+    );
+    if (saved) {
+        form.name = saved.recipient;
+        form.phone = saved.phone;
+        form.address = saved.address;
+    }
+}
+async function applyPromotion() {
+    quoteError.value = '';
+    quote.value = null;
+    quoteBusy.value = true;
+    try {
+        const response = await fetch(
+            '/checkout/promotion?code=' +
+                encodeURIComponent(form.promotion_code),
+            {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            },
+        );
+        const result = await response.json();
+        if (!response.ok)
+            throw new Error(
+                result.errors?.code?.[0] ??
+                    result.errors?.promotion_code?.[0] ??
+                    'This discount code is unavailable or does not apply to this order.',
+            );
+        quote.value = result;
+    } catch (error) {
+        quoteError.value =
+            error instanceof Error
+                ? error.message
+                : 'This discount code is unavailable or does not apply to this order.';
+    } finally {
+        quoteBusy.value = false;
+    }
+}
 function submit() {
     form.clearErrors();
     const errors = validateContact(form, page.props.locale === 'ne');
@@ -56,8 +124,14 @@ const subtotal = props.lines.reduce(
     (sum, l) => sum + l.unit_price * l.quantity,
     0,
 );
-const tax = Math.floor((subtotal * props.taxBasisPoints + 5000) / 10000);
-const total = subtotal + props.shippingAmount + tax;
+const tax = computed(
+    () =>
+        quote.value?.tax ??
+        Math.floor((subtotal * props.taxBasisPoints + 5000) / 10000),
+);
+const total = computed(
+    () => quote.value?.total ?? subtotal + props.shippingAmount + tax.value,
+);
 </script>
 <template>
     <Head :title="t('Checkout')" /><ShopLayout
@@ -71,6 +145,24 @@ const total = subtotal + props.shippingAmount + tax;
             <div class="checkout-grid">
                 <form class="form-card" novalidate @submit.prevent="submit">
                     <h2>{{ t('Where should your next pair go?') }}</h2>
+                    <label v-if="addresses.length"
+                        >{{ t('Use a saved address') }}
+                        <select
+                            v-model="form.address_id"
+                            @change="selectAddress"
+                        >
+                            <option value="">
+                                {{ t('Enter a new address') }}
+                            </option>
+                            <option
+                                v-for="address in addresses"
+                                :key="address.id"
+                                :value="String(address.id)"
+                            >
+                                {{ t(address.label) }} · {{ address.address }}
+                            </option>
+                        </select>
+                    </label>
                     <div class="checkout-field-grid">
                         <label
                             >{{ t('Full name')
@@ -146,6 +238,46 @@ const total = subtotal + props.shippingAmount + tax;
                             >{{ form.errors.address }}</span
                         ></label
                     >
+                    <label v-if="!form.address_id" class="check-line"
+                        ><input
+                            v-model="form.save_address"
+                            type="checkbox"
+                        /><span>{{
+                            t('Save this address for next time')
+                        }}</span></label
+                    >
+                    <label
+                        >{{ t('Discount code')
+                        }}<input
+                            v-model="form.promotion_code"
+                            maxlength="40"
+                            autocomplete="off"
+                            :placeholder="t('Enter a promotion code')"
+                            @input="
+                                quote = null;
+                                quoteError = '';
+                            "
+                        /><span
+                            v-if="form.errors.promotion_code"
+                            class="field-error"
+                            role="alert"
+                            >{{ t(form.errors.promotion_code) }}</span
+                        ></label
+                    >
+                    <button
+                        type="button"
+                        class="text-button"
+                        :disabled="quoteBusy || !form.promotion_code"
+                        @click="applyPromotion"
+                    >
+                        {{ quoteBusy ? t('Applying…') : t('Apply code') }}
+                    </button>
+                    <p v-if="quote" class="payment-confirmation" role="status">
+                        {{ t('Discount code applied to your order.') }}
+                    </p>
+                    <p v-if="quoteError" class="field-error" role="alert">
+                        {{ t(quoteError) }}
+                    </p>
                     <p
                         v-if="form.errors.token"
                         class="field-error"
@@ -306,6 +438,14 @@ const total = subtotal + props.shippingAmount + tax;
                     <div class="summary-line">
                         <span>{{ t('Subtotal') }}</span
                         ><span>{{ money(subtotal, page.props.currency) }}</span>
+                    </div>
+                    <div v-if="quote" class="summary-line">
+                        <span>{{ t('Discount') }} · {{ quote.code }}</span
+                        ><strong
+                            >−{{
+                                money(quote.discount, page.props.currency)
+                            }}</strong
+                        >
                     </div>
                     <div class="summary-line">
                         <span>{{ t('Shipping') }}</span

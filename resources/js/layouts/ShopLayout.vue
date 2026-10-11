@@ -107,6 +107,9 @@ const current = computed(() => page.url.split('?')[0]);
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
                             ><Link href="/orders">{{ t('Your orders') }}</Link
+                            ><Link href="/settings/addresses">{{
+                                t('Address book')
+                            }}</Link
                             ><Link href="/saved">{{ t('Saved shoes') }}</Link
                             ><Link href="/dashboard">{{ t('My account') }}</Link
                             ><Link href="/settings/profile">

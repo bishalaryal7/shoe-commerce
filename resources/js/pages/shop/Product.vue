@@ -5,7 +5,7 @@ import ProductReviews from '@/components/ProductReviews.vue';
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { type Product, type ShopSharedProps } from '@/types/shop';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeftRight,
     ArrowRight,
@@ -18,7 +18,7 @@ import {
     Star,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-const { t, num, money } = useLocale();
+const { t, num, money, date } = useLocale();
 const props = defineProps<{
     product: Product;
     wholesale: boolean;
@@ -53,11 +53,25 @@ const props = defineProps<{
     canReview: boolean;
     reviewSort: 'recent' | 'helpful' | 'rating';
     reviewQuery: string;
+    questions: {
+        id: number;
+        question: string;
+        answer: string;
+        answered_at: string;
+    }[];
 }>();
 const page = usePage<ShopSharedProps>();
 const details = ref<InstanceType<typeof ProductDetails> | null>(null);
 const saving = ref(false);
 const comparing = ref(false);
+const unavailable = computed(() =>
+    props.product.variants.filter((v) => v.stock === 0),
+);
+const alertForm = useForm({
+    variant_id: unavailable.value[0]?.id ?? '',
+    email: page.props.auth.user?.email ?? '',
+});
+const questionForm = useForm({ question: '' });
 const isSaved = computed(() => props.savedIds.includes(props.product.id));
 const isCompared = computed(
     () => page.props.compareIds?.includes(props.product.id) ?? false,
@@ -170,6 +184,74 @@ const available = computed(() =>
                                 : t('Currently unavailable')
                         }}
                     </button>
+                    <form
+                        v-if="unavailable.length"
+                        class="stock-alert-form"
+                        @submit.prevent="
+                            alertForm.post(
+                                '/products/' + product.slug + '/stock-alerts',
+                                { preserveScroll: true },
+                            )
+                        "
+                    >
+                        <h3>{{ t('Get an email when your size returns') }}</h3>
+                        <p>
+                            {{
+                                t(
+                                    'Choose the unavailable size and we’ll let you know when staff restock it.',
+                                )
+                            }}
+                        </p>
+                        <label
+                            >{{ t('Unavailable size') }}
+                            <select v-model="alertForm.variant_id" required>
+                                <option
+                                    v-for="variant in unavailable"
+                                    :key="variant.id"
+                                    :value="variant.id"
+                                >
+                                    {{ t('EU') }} {{ num(variant.size) }} ·
+                                    {{ t(variant.color) }}
+                                </option>
+                            </select>
+                        </label>
+                        <label
+                            >{{ t('Email address') }}
+                            <input
+                                v-model="alertForm.email"
+                                type="email"
+                                required
+                                maxlength="254"
+                                autocomplete="email"
+                            />
+                        </label>
+                        <p
+                            v-if="
+                                alertForm.errors.variant_id ||
+                                alertForm.errors.email
+                            "
+                            class="field-error"
+                            role="alert"
+                        >
+                            {{
+                                t(
+                                    alertForm.errors.variant_id ||
+                                        alertForm.errors.email ||
+                                        '',
+                                )
+                            }}
+                        </p>
+                        <button
+                            class="button outline"
+                            :disabled="alertForm.processing"
+                        >
+                            {{
+                                alertForm.processing
+                                    ? t('Saving…')
+                                    : t('Notify me when available')
+                            }}
+                        </button>
+                    </form>
                     <button
                         type="button"
                         class="product-save-action"
@@ -330,6 +412,71 @@ const available = computed(() =>
             :review-sort="reviewSort"
             :review-query="reviewQuery"
         />
+        <section class="wrap product-questions" id="questions">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">{{
+                        t('REAL QUESTIONS, HELPFUL ANSWERS')
+                    }}</span>
+                    <h2>{{ t('Questions about this shoe?') }}</h2>
+                </div>
+            </div>
+            <form
+                v-if="page.props.auth.user"
+                class="form-card"
+                @submit.prevent="
+                    questionForm.post(
+                        '/products/' + product.slug + '/questions',
+                        {
+                            preserveScroll: true,
+                            onSuccess: () => questionForm.reset(),
+                        },
+                    )
+                "
+            >
+                <label
+                    >{{ t('Ask about fit, materials, or care')
+                    }}<textarea
+                        v-model="questionForm.question"
+                        rows="3"
+                        minlength="8"
+                        maxlength="1200"
+                        required
+                    />
+                </label>
+                <p
+                    v-if="questionForm.errors.question"
+                    class="field-error"
+                    role="alert"
+                >
+                    {{ t(questionForm.errors.question) }}
+                </p>
+                <button class="button dark" :disabled="questionForm.processing">
+                    {{ t('Send your question') }}
+                </button>
+            </form>
+            <p v-else>
+                <Link href="/login">{{ t('Sign in to ask a question') }}</Link>
+            </p>
+            <div v-if="questions.length" class="question-list">
+                <article
+                    v-for="item in questions"
+                    :key="item.id"
+                    class="admin-card"
+                >
+                    <h3>{{ item.question }}</h3>
+                    <p>{{ item.answer }}</p>
+                    <small>{{ date(item.answered_at) }}</small>
+                </article>
+            </div>
+            <p v-else class="muted">
+                {{
+                    t(
+                        'No answered questions yet. Ask our team and we’ll help you choose.',
+                    )
+                }}
+            </p>
+        </section>
         ></ShopLayout
     >
 </template>

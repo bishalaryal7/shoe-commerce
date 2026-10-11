@@ -22,6 +22,8 @@ type Order = {
     total: number;
     payment_status: string;
     payment_method: string;
+    tracking_carrier: string | null;
+    tracking_number: string | null;
     events: {
         id: number;
         event: string;
@@ -82,6 +84,24 @@ const props = defineProps<{
         applications: number;
     };
     lowStockThreshold: number;
+    promotions: {
+        id: number;
+        code: string;
+        type: string;
+        amount: number;
+        minimum_subtotal: number;
+        usage_limit: number | null;
+        uses_count: number;
+        channel: string;
+        active: boolean;
+    }[];
+    questions: Paginated<{
+        id: number;
+        question: string;
+        answer: string | null;
+        product: { name: string; slug: string };
+        user: { name: string } | null;
+    }>;
 }>();
 const page = usePage();
 const tab = ref('Orders');
@@ -108,6 +128,18 @@ function removeMember(id: number) {
     });
 }
 const receipts = ref<Record<number, string>>({});
+const shipping = ref<Record<number, { carrier: string; number: string }>>({});
+const promotion = ref({
+    code: '',
+    type: 'percent',
+    amount: 10,
+    minimum_subtotal: 0,
+    usage_limit: null as number | null,
+    channel: 'all',
+    starts_at: '',
+    ends_at: '',
+});
+const answers = ref<Record<number, string>>({});
 function post(url: string, data: Record<string, any> = {}) {
     busy.value = true;
     router.post(url, data, {
@@ -121,6 +153,12 @@ function patch(url: string, data: Record<string, any>) {
         preserveScroll: true,
         onFinish: () => (busy.value = false),
     });
+}
+function shippingForm(id: number) {
+    return (shipping.value[id] ??= { carrier: '', number: '' });
+}
+function createPromotion() {
+    post('/admin/promotions', { ...promotion.value });
 }
 function stock(id: number, event: Event) {
     const input = event.target as HTMLInputElement;
@@ -154,9 +192,13 @@ function importInventory() {
                           ? t('Keep your shelves moving.')
                           : tab === 'Payments'
                             ? t('Every payment, accounted for.')
-                            : tab === 'Team'
-                              ? t('Your people. Your workspace.')
-                              : t('Good partners. Better business.')
+                            : tab === 'Promotions'
+                              ? t('Offers that bring customers back.')
+                              : tab === 'Questions'
+                                ? t('Help shoppers choose with confidence.')
+                                : tab === 'Team'
+                                  ? t('Your people. Your workspace.')
+                                  : t('Good partners. Better business.')
                 }}
             </h1>
             <p class="workspace-description">
@@ -173,11 +215,21 @@ function importInventory() {
                             ? t(
                                   'Check provider status and monitor your integrations.',
                               )
-                            : tab === 'Team'
-                              ? t('Manage access for registered team members.')
-                              : t(
-                                    'Review applications and manage your wholesale relationships.',
+                            : tab === 'Promotions'
+                              ? t(
+                                    'Create discount codes for seasonal campaigns and wholesale orders.',
                                 )
+                              : tab === 'Questions'
+                                ? t(
+                                      'Answer product questions and publish useful fit, material, and care advice.',
+                                  )
+                                : tab === 'Team'
+                                  ? t(
+                                        'Manage access for registered team members.',
+                                    )
+                                  : t(
+                                        'Review applications and manage your wholesale relationships.',
+                                    )
                 }}
             </p>
             <div class="stats-grid">
@@ -217,6 +269,7 @@ function importInventory() {
                                 v-for="status in [
                                     'pending_confirmation',
                                     'confirmed',
+                                    'shipped',
                                     'fulfilled',
                                     'cancelled',
                                 ]"
@@ -381,21 +434,59 @@ function importInventory() {
                                 })
                             "
                         >
-                            {{ t('Confirm') }}</button
-                        ><button
+                            {{ t('Confirm') }}
+                        </button>
+                        <form
                             v-if="
                                 order.status === 'confirmed' &&
                                 order.payment_status === 'paid'
                             "
+                            class="order-actions"
+                            @submit.prevent="
+                                patch(
+                                    '/admin/orders/' + order.id + '/shipping',
+                                    {
+                                        status: 'shipped',
+                                        tracking_carrier: shippingForm(order.id)
+                                            .carrier,
+                                        tracking_number: shippingForm(order.id)
+                                            .number,
+                                    },
+                                )
+                            "
+                        >
+                            <label
+                                >{{ t('Delivery carrier')
+                                }}<input
+                                    v-model="shippingForm(order.id).carrier"
+                                    required
+                                    maxlength="100"
+                                    :placeholder="t('Carrier name')"
+                            /></label>
+                            <label
+                                >{{ t('Tracking number')
+                                }}<input
+                                    v-model="shippingForm(order.id).number"
+                                    required
+                                    maxlength="120"
+                                    :placeholder="t('Enter tracking number')"
+                            /></label>
+                            <button class="button dark" :disabled="busy">
+                                {{ t('Mark shipped and notify customer') }}
+                            </button>
+                        </form>
+                        <button
+                            v-if="order.status === 'shipped'"
                             class="button dark"
                             :disabled="busy"
                             @click="
-                                patch('/admin/orders/' + order.id, {
-                                    status: 'fulfilled',
-                                })
+                                patch(
+                                    '/admin/orders/' + order.id + '/shipping',
+                                    { status: 'fulfilled' },
+                                )
                             "
                         >
-                            {{ t('Mark fulfilled') }}</button
+                            {{ t('Mark delivered') }}</button
                         ><button
                             v-if="
                                 ['pending_confirmation', 'confirmed'].includes(
@@ -765,6 +856,191 @@ function importInventory() {
                     </div>
                 </article>
             </div>
-        </section></AdminLayout
-    >
+            <div v-if="tab === 'Promotions'">
+                <form
+                    class="admin-card form-card"
+                    @submit.prevent="createPromotion()"
+                >
+                    <h2>{{ t('Create a discount code') }}</h2>
+                    <label
+                        >{{ t('Discount code')
+                        }}<input
+                            v-model="promotion.code"
+                            required
+                            minlength="3"
+                            maxlength="40"
+                            pattern="[A-Za-z0-9_-]+"
+                    /></label>
+                    <div class="checkout-field-grid">
+                        <label
+                            >{{ t('Discount type')
+                            }}<select v-model="promotion.type">
+                                <option value="percent">
+                                    {{ t('Percentage') }}
+                                </option>
+                                <option value="fixed">
+                                    {{ t('Fixed amount') }}
+                                </option>
+                            </select></label
+                        ><label
+                            >{{
+                                promotion.type === 'percent'
+                                    ? t('Discount percentage')
+                                    : t('Discount amount in minor units')
+                            }}<input
+                                v-model.number="promotion.amount"
+                                type="number"
+                                min="1"
+                                :max="
+                                    promotion.type === 'percent'
+                                        ? 100
+                                        : 100000000
+                                "
+                                required
+                        /></label>
+                    </div>
+                    <label
+                        >{{ t('Minimum order subtotal')
+                        }}<input
+                            v-model.number="promotion.minimum_subtotal"
+                            type="number"
+                            min="0"
+                    /></label>
+                    <p class="muted">
+                        {{
+                            t(
+                                'For NPR, 100 paisa equals NPR 1. Minimum subtotal and fixed discounts use your currency’s minor units.',
+                            )
+                        }}
+                    </p>
+                    <div class="checkout-field-grid">
+                        <label
+                            >{{ t('Order channel')
+                            }}<select v-model="promotion.channel">
+                                <option value="all">
+                                    {{ t('All orders') }}
+                                </option>
+                                <option value="retail">
+                                    {{ t('Retail') }}
+                                </option>
+                                <option value="wholesale">
+                                    {{ t('Wholesale') }}
+                                </option>
+                            </select></label
+                        ><label
+                            >{{ t('Usage limit')
+                            }}<input
+                                v-model.number="promotion.usage_limit"
+                                type="number"
+                                min="1"
+                                :placeholder="t('Unlimited')"
+                        /></label>
+                    </div>
+                    <div class="checkout-field-grid">
+                        <label
+                            >{{ t('Starts at')
+                            }}<input
+                                v-model="promotion.starts_at"
+                                type="datetime-local" /></label
+                        ><label
+                            >{{ t('Ends at')
+                            }}<input
+                                v-model="promotion.ends_at"
+                                type="datetime-local"
+                        /></label>
+                    </div>
+                    <button class="button dark" :disabled="busy">
+                        {{ t('Create code') }}
+                    </button>
+                </form>
+                <article
+                    v-for="item in promotions"
+                    :key="item.id"
+                    class="admin-card"
+                >
+                    <div class="section-heading">
+                        <h3>{{ item.code }}</h3>
+                        <span class="status-pill">{{
+                            item.active ? t('Active') : t('Paused')
+                        }}</span>
+                    </div>
+                    <p>
+                        {{
+                            item.type === 'percent'
+                                ? num(item.amount) + '%'
+                                : money(
+                                      item.amount,
+                                      String(page.props.currency),
+                                  )
+                        }}
+                        · {{ label(item.channel) }} ·
+                        {{ t(':count uses', { count: num(item.uses_count) }) }}
+                    </p>
+                    <button
+                        class="text-button"
+                        @click="patch('/admin/promotions/' + item.id, {})"
+                    >
+                        {{ item.active ? t('Pause code') : t('Activate code') }}
+                    </button>
+                </article>
+                <p v-if="!promotions.length" class="empty-state">
+                    {{ t('No discount codes yet.') }}
+                </p>
+            </div>
+            <div v-if="tab === 'Questions'">
+                <p v-if="!questions.data.length" class="empty-state">
+                    {{ t('No product questions yet.') }}
+                </p>
+                <article
+                    v-for="item in questions.data"
+                    :key="item.id"
+                    class="admin-card"
+                >
+                    <h3>{{ t(item.product.name) }}</h3>
+                    <p>{{ item.question }}</p>
+                    <p v-if="item.answer" class="muted">{{ item.answer }}</p>
+                    <form
+                        class="order-actions"
+                        @submit.prevent="
+                            patch('/admin/questions/' + item.id, {
+                                answer: answers[item.id] ?? item.answer,
+                            })
+                        "
+                    >
+                        <label
+                            >{{ t('Your answer')
+                            }}<textarea
+                                v-model="answers[item.id]"
+                                required
+                                minlength="2"
+                                maxlength="2000"
+                                :placeholder="t('Write a helpful answer')"
+                            /></label
+                        ><button class="button dark" :disabled="busy">
+                            {{
+                                item.answer
+                                    ? t('Update answer')
+                                    : t('Publish answer')
+                            }}
+                        </button>
+                    </form>
+                </article>
+                <nav
+                    v-if="questions.links.length > 3"
+                    class="pagination"
+                    :aria-label="t('Product question pages')"
+                >
+                    <template v-for="(link, i) in questions.links" :key="i"
+                        ><Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="{ active: link.active }"
+                            preserve-state
+                            preserve-scroll
+                            ><span v-text="paginationLabel(link.label)" /></Link
+                        ><span v-else v-text="paginationLabel(link.label)"
+                    /></template>
+                </nav>
+            </div></section
+    ></AdminLayout>
 </template>

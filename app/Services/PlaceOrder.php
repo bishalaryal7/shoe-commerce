@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class PlaceOrder
 {
-    public function __construct(private OrderRepository $orders, private OrderEmails $emails) {}
+    public function __construct(private OrderRepository $orders, private OrderEmails $emails, private PromotionPricing $promotions) {}
 
     public function place(array $data, array $lines, bool $wholesale, ?int $userId, int $cartSize): Order
     {
@@ -58,8 +58,10 @@ class PlaceOrder
             fn (array $line) => $line['unit_price'] * $line['quantity'],
             $lines,
         ));
+        $discount = $this->promotions->lockAndPrice($data['promotion_code'] ?? null, $subtotal, $wholesale ? 'wholesale' : 'retail');
+        $taxableSubtotal = $subtotal - $discount['discount'];
         $shipping = max(0, config('shop.shipping_amount'));
-        $tax = $this->taxFor($subtotal);
+        $tax = $this->taxFor($taxableSubtotal);
 
         return [
             'reference' => (string) Str::uuid(),
@@ -72,9 +74,12 @@ class PlaceOrder
             'channel' => $wholesale ? 'wholesale' : 'retail',
             'currency' => config('shop.currency'),
             'subtotal' => $subtotal,
+            'promotion_id' => $discount['promotion']?->id,
+            'promotion_code' => $discount['promotion']?->code,
+            'discount_amount' => $discount['discount'],
             'shipping_amount' => $shipping,
             'tax_amount' => $tax,
-            'total' => $subtotal + $shipping + $tax,
+            'total' => $taxableSubtotal + $shipping + $tax,
             'payment_method' => $data['payment_method'] ?? 'request',
             'payment_status' => 'unpaid',
         ];

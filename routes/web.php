@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddressBookController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompareController;
@@ -7,11 +8,14 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductQuestionController;
 use App\Http\Controllers\ProductReviewController;
+use App\Http\Controllers\PromotionQuoteController;
 use App\Http\Controllers\SavedProductsController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SizeGuideController;
 use App\Http\Controllers\StaffAccessController;
+use App\Http\Controllers\StockAlertController;
 use App\Http\Controllers\WholesaleController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -35,7 +39,10 @@ Route::get('/ready', function () {
             && Schema::hasTable('social_accounts')
             && Schema::hasTable('phone_challenges')
             && Schema::hasTable('saved_products');
-        $ready = $ready && Schema::hasTable('product_reviews');
+        $ready = $ready && Schema::hasTable('product_reviews')
+            && Schema::hasTable('stock_alerts') && Schema::hasTable('promotions')
+            && Schema::hasTable('product_questions') && Schema::hasTable('user_addresses')
+            && Schema::hasColumn('orders', 'tracking_number');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -44,6 +51,8 @@ Route::get('/ready', function () {
 })->name('readiness');
 Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products/{product:slug}/stock-alerts', [StockAlertController::class, 'store'])->middleware('throttle:5,1')->name('products.stock-alerts');
+Route::post('/products/{product:slug}/questions', [ProductQuestionController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.questions.store');
 Route::get('/size-guide', SizeGuideController::class)->name('size-guide');
 Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.reviews.store');
 Route::post('/products/{product:slug}/reviews/{review}/helpful', [ProductReviewController::class, 'helpful'])->middleware(['auth', 'throttle:30,1'])->whereNumber('review')->name('products.reviews.helpful');
@@ -59,8 +68,15 @@ Route::patch('/cart/{variant}', [ShopController::class, 'update'])->name('cart.u
 Route::delete('/cart/{variant}', [ShopController::class, 'remove'])->name('cart.remove');
 Route::get('/checkout', [CheckoutController::class, 'create'])->middleware('auth')->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('checkout.store');
+Route::get('/checkout/promotion', PromotionQuoteController::class)->middleware(['auth', 'throttle:20,1'])->name('checkout.promotion');
 Route::get('/orders/received/{reference}', [CheckoutController::class, 'received'])->name('order.received');
 Route::get('/orders', [OrderController::class, 'index'])->middleware('auth')->name('orders.index');
+Route::middleware('auth')->prefix('settings/addresses')->name('addresses.')->group(function () {
+    Route::get('/', [AddressBookController::class, 'index'])->name('index');
+    Route::post('/', [AddressBookController::class, 'store'])->name('store');
+    Route::patch('/{address}', [AddressBookController::class, 'update'])->name('update');
+    Route::delete('/{address}', [AddressBookController::class, 'destroy'])->name('destroy');
+});
 Route::post('/orders/{reference}/reorder', [OrderController::class, 'reorder'])->middleware(['auth', 'throttle:5,1'])->name('orders.reorder');
 Route::get('/orders/track/{reference}', [OrderController::class, 'show'])->name('orders.track');
 Route::post('/orders/{reference}/pay', [PaymentController::class, 'start'])->middleware('throttle:5,1')->name('payments.start');
@@ -84,6 +100,10 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::post('/orders/{order}/offline-payment', [AdminController::class, 'offlinePayment'])->name('orders.offline-payment');
     Route::post('/payments/{attempt}/verify', [AdminController::class, 'verifyPayment'])->name('payments.verify');
     Route::patch('/orders/{order}', [AdminController::class, 'order'])->name('order');
+    Route::patch('/orders/{order}/shipping', [AdminController::class, 'shipping'])->name('orders.shipping');
+    Route::post('/promotions', [AdminController::class, 'promotion'])->name('promotions.store');
+    Route::patch('/promotions/{promotion}', [AdminController::class, 'togglePromotion'])->name('promotions.toggle');
+    Route::patch('/questions/{question}', [ProductQuestionController::class, 'answer'])->name('questions.answer');
 });
 require __DIR__.'/settings.php';
 require __DIR__.'/connections.php';
