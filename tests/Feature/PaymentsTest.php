@@ -145,6 +145,12 @@ class PaymentsTest extends TestCase
         $this->assertSame('hmac OPA-Auth:sample_key:4GBwHd1rzZ5CrMRieDW/jDQcvOCeVhg4bBx4iZ6Hzw0=:a360e2:1743139337:empty', $header);
     }
 
+    public function test_paypay_uses_the_current_api_gateway_hosts(): void
+    {
+        $this->assertSame('https://apigw.sandbox.paypay.ne.jp', config('payments.paypay.sandbox_url'));
+        $this->assertSame('https://apigw.paypay.ne.jp', config('payments.paypay.production_url'));
+    }
+
     public function test_paypay_sandbox_lookup_checks_yen_amount_without_creating_an_order(): void
     {
         $ref = (string) Str::uuid();
@@ -301,7 +307,8 @@ class PaymentsTest extends TestCase
             $parts = explode(':', $request->header('Authorization')[0]);
             $expected = app(PayPayGateway::class)->authorization('/v2/codes', 'POST', $request->body(), $parts[3], $parts[4]);
 
-            return $request->method() === 'POST' && $request->hasHeader('Content-Type', 'application/json')
+            return str_starts_with($request->url(), 'https://apigw.sandbox.paypay.ne.jp/v2/codes')
+                && $request->method() === 'POST' && $request->hasHeader('Content-Type', 'application/json')
                 && $request->hasHeader('X-ASSUME-MERCHANT', 'test-merchant')
                 && $request->header('Authorization')[0] === $expected
                 && $request['merchantPaymentId'] === $attempt->reference

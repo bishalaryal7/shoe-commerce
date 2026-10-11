@@ -9,6 +9,6 @@ return [
     'paypay' => [
         'enabled' => (bool) env('PAYPAY_ENABLED', false), 'api_key' => env('PAYPAY_API_KEY'), 'api_secret' => env('PAYPAY_API_SECRET'),
         'merchant_id' => env('PAYPAY_MERCHANT_ID'), 'sandbox' => (bool) env('PAYPAY_SANDBOX', true),
-        'sandbox_url' => 'https://stg-api.sandbox.paypay.ne.jp', 'production_url' => 'https://api.paypay.ne.jp',
+        'sandbox_url' => 'https://apigw.sandbox.paypay.ne.jp', 'production_url' => 'https://apigw.paypay.ne.jp',
     ],
 ];
