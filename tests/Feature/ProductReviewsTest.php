@@ -111,4 +111,23 @@ class ProductReviewsTest extends TestCase
         $this->post('/products/'.$product->slug.'/reviews', $this->review())
             ->assertSessionHas('success', 'आफ्नो अनुभव बाँड्नुभएकोमा धन्यवाद।');
     }
+
+    public function test_catalog_rating_filter_and_sort_use_verified_review_averages(): void
+    {
+        $everydayBuyer = User::factory()->create();
+        $runningBuyer = User::factory()->create();
+        $everyday = Product::where('slug', 'city-low')->firstOrFail();
+        $running = Product::where('slug', 'pace-runner')->firstOrFail();
+        $this->order($everydayBuyer, $everyday);
+        $this->order($runningBuyer, $running);
+        $this->actingAs($everydayBuyer)->post('/products/'.$everyday->slug.'/reviews', $this->review(['rating' => 3]));
+        $this->actingAs($runningBuyer)->post('/products/'.$running->slug.'/reviews', $this->review(['rating' => 5]));
+
+        $this->get('/?rating=4')->assertInertia(fn (Assert $page) => $page
+            ->where('filters.rating', '4')->where('products.total', 1)
+            ->where('products.data.0.name', 'Pace Runner'));
+        $this->get('/?sort=rating')->assertInertia(fn (Assert $page) => $page
+            ->where('products.data.0.name', 'Pace Runner')->where('products.data.0.review_average', 5));
+        $this->get('/?rating=6')->assertSessionHasErrors('rating');
+    }
 }

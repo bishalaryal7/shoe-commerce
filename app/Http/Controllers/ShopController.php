@@ -19,7 +19,8 @@ class ShopController extends Controller
             'q' => 'nullable|string|max:100',
             'category' => 'nullable|in:Everyday,Running,Outdoor',
             'size' => 'nullable|in:36,37,38,39,40,41,42,43,44,45',
-            'sort' => 'nullable|in:featured,price_low,price_high,name',
+            'rating' => 'nullable|in:3,4',
+            'sort' => 'nullable|in:featured,price_low,price_high,name,rating',
         ]);
         $wholesale = $cart->wholesale($request);
         $catalog = $products->browse($filters, $wholesale);

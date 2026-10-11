@@ -38,10 +38,12 @@ class ProductRepository
                     ['City Low', 'Pace Runner', 'Trail Form', 'Court Classic', 'Daily Knit', 'Motion Pro'],
                     fn ($name) => str_contains(mb_strtolower(__($name)), mb_strtolower($term))
                 ))));
-        })->when($filters['category'] ?? null, fn ($q, $category) => $q->where('category', $category))->when($filters['size'] ?? null, fn ($q, $size) => $q->whereHas('variants', fn ($v) => $v->where('size', $size)->where('stock', '>', 0)));
+        })->when($filters['category'] ?? null, fn ($q, $category) => $q->where('category', $category))->when($filters['size'] ?? null, fn ($q, $size) => $q->whereHas('variants', fn ($v) => $v->where('size', $size)->where('stock', '>', 0)))
+            ->when($filters['rating'] ?? null, fn ($q, $rating) => $q->whereRaw('(SELECT AVG(product_reviews.rating) FROM product_reviews WHERE product_reviews.product_id = products.id) >= ?', [(int) $rating]));
         $price = $wholesale ? 'wholesale_price' : 'retail_price';
         match ($filters['sort'] ?? 'featured') {
-            'price_low' => $query->orderBy($price),'price_high' => $query->orderByDesc($price),'name' => $query->orderBy('name'),default => $query->orderBy('id')
+            'price_low' => $query->orderBy($price),'price_high' => $query->orderByDesc($price),'name' => $query->orderBy('name'),
+            'rating' => $query->orderByDesc('reviews_avg_rating')->orderByDesc('reviews_count'),default => $query->orderBy('id')
         };
 
         return $query->orderBy('id')->paginate(12)->withQueryString()->through(fn ($product) => $this->display($product, $wholesale));

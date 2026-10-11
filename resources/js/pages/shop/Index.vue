@@ -22,13 +22,20 @@ const props = defineProps<{
         total: number;
         links: { url: string | null; label: string; active: boolean }[];
     };
-    filters: { q?: string; category?: string; size?: string; sort?: string };
+    filters: {
+        q?: string;
+        category?: string;
+        size?: string;
+        rating?: string;
+        sort?: string;
+    };
     wholesale: boolean;
     savedIds: number[];
     recentlyViewed: Product[];
 }>();
 const search = ref(props.filters.q || '');
 const size = ref(props.filters.size || '');
+const rating = ref(props.filters.rating || '');
 const sort = ref(props.filters.sort || 'featured');
 const loading = ref(false);
 const hasFilters = computed(
@@ -37,6 +44,7 @@ const hasFilters = computed(
             props.filters.q ||
             props.filters.category ||
             props.filters.size ||
+            props.filters.rating ||
             (props.filters.sort && props.filters.sort !== 'featured')
         ),
 );
@@ -47,6 +55,7 @@ function filter(category = props.filters.category) {
             q: search.value || undefined,
             category,
             size: size.value || undefined,
+            rating: rating.value || undefined,
             sort: sort.value,
         },
         {
@@ -60,6 +69,7 @@ function filter(category = props.filters.category) {
 function reset() {
     search.value = '';
     size.value = '';
+    rating.value = '';
     sort.value = 'featured';
     filter('');
 }
@@ -243,6 +253,13 @@ function reset() {
                             </option>
                         </select></label
                     ><label
+                        ><span class="sr-only">{{ t('Filter by rating') }}</span
+                        ><select v-model="rating" @change="filter()">
+                            <option value="">{{ t('Any rating') }}</option>
+                            <option value="4">{{ t('4 stars & up') }}</option>
+                            <option value="3">{{ t('3 stars & up') }}</option>
+                        </select></label
+                    ><label
                         ><span class="sr-only"> {{ t('Sort products') }} </span
                         ><select v-model="sort" @change="filter()">
                             <option value="featured">
@@ -255,6 +272,7 @@ function reset() {
                                 {{ t('Price: high to low') }}
                             </option>
                             <option value="name">{{ t('Name: A–Z') }}</option>
+                            <option value="rating">{{ t('Top rated') }}</option>
                         </select></label
                     >
                 </div>

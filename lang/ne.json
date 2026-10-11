@@ -836,5 +836,10 @@
     "One pair was added to your bag.": "एउटा जोर जुत्ता झोलामा थपियो।",
     ":count pairs were added to your bag.": "झोलामा :count जोर जुत्ता थपिए।",
     ":count pairs from your previous order were already in your bag or unavailable.": "अघिल्लो अर्डरका :count जोर जुत्ता झोलामा पहिल्यै थिए वा अहिले उपलब्ध छैनन्।",
-    "None of the shoes from this order are available in your sizes right now.": "यो अर्डरका जुत्ता तपाईंले छानेका साइजमा अहिले उपलब्ध छैनन्।"
+    "None of the shoes from this order are available in your sizes right now.": "यो अर्डरका जुत्ता तपाईंले छानेका साइजमा अहिले उपलब्ध छैनन्।",
+    "Filter by rating": "मूल्याङ्कनअनुसार छान्नुहोस्",
+    "Any rating": "सबै मूल्याङ्कन",
+    "4 stars & up": "४ तारा वा बढी",
+    "3 stars & up": "३ तारा वा बढी",
+    "Top rated": "उच्च मूल्याङ्कन पहिले"
 }
