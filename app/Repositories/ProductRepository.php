@@ -47,6 +47,22 @@ class ProductRepository
         ];
     }
 
+    /** @return list<array<string, mixed>> */
+    public function related(Product $product, bool $wholesale): array
+    {
+        return Product::query()
+            ->with('variants')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->where('active', true)
+            ->where('category', $product->category)
+            ->whereKeyNot($product->id)
+            ->limit(3)
+            ->get()
+            ->map(fn (Product $related) => $this->display($related, $wholesale))
+            ->all();
+    }
+
     public function browse(array $filters, bool $wholesale): LengthAwarePaginator
     {
         $query = Product::query()

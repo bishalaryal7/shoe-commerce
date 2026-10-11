@@ -26,10 +26,20 @@ class ProductController extends Controller
         $serialize = fn ($item) => $products->display($item, $wholesale);
         $discovery->recordView($request, $product);
 
-        return Inertia::render('shop/Product', ['product' => $serialize($product->load('variants')->loadCount('reviews')->loadAvg('reviews', 'rating')), 'wholesale' => $wholesale,
-            'related' => Product::with('variants')->withCount('reviews')->withAvg('reviews', 'rating')->where('active', true)->where('category', $product->category)->whereKeyNot($product->id)->limit(3)->get()->map($serialize),
-            'savedIds' => $discovery->savedIds($request), 'recentlyViewed' => $discovery->recentlyViewed($request, $wholesale, $product->id),
-            ...$reviews->page($product, $request->user(), $reviewSort, $reviewQuery), 'reviewSort' => $reviewSort, 'reviewQuery' => $reviewQuery]);
+        $product->load('variants')
+            ->loadCount('reviews')
+            ->loadAvg('reviews', 'rating');
+
+        return Inertia::render('shop/Product', [
+            'product' => $serialize($product),
+            'wholesale' => $wholesale,
+            'related' => $products->related($product, $wholesale),
+            'savedIds' => $discovery->savedIds($request),
+            'recentlyViewed' => $discovery->recentlyViewed($request, $wholesale, $product->id),
+            ...$reviews->page($product, $request->user(), $reviewSort, $reviewQuery),
+            'reviewSort' => $reviewSort,
+            'reviewQuery' => $reviewQuery,
+        ]);
     }
 
     public function store(ProductRequest $request, ProductCatalog $catalog)

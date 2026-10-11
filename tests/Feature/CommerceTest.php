@@ -32,6 +32,18 @@ class CommerceTest extends TestCase
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->component('shop/Index')->has('products.data', 6)->missing('products.data.0.wholesale_price')->where('products.data.0.price', 8900));
     }
 
+    public function test_product_page_shows_only_active_related_products_with_customer_prices(): void
+    {
+        $this->get('/products/city-low')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('shop/Product')
+                ->where('product.price', 8900)
+                ->has('related', 2)
+                ->missing('related.0.wholesale_price')
+                ->where('related.0.price', 9900));
+    }
+
     public function test_customers_cannot_read_or_modify_admin_data(): void
     {
         $this->get('/admin')->assertRedirect('/login');
