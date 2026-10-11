@@ -11,25 +11,31 @@ use Illuminate\Validation\ValidationException;
 
 class Cart
 {
+    private const MAX_LINE_QUANTITY = 999;
+
     public function __construct(private VariantRepository $variants) {}
 
     public function wholesale(Request $request): bool
     {
-        return $request->user() && WholesaleAccount::where('user_id', $request->user()->id)->where('status', 'approved')->exists();
+        $user = $request->user();
+
+        return $user !== null
+            && WholesaleAccount::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->exists();
     }
 
+    /** @return list<array{id: int, name: string, image: string, sku: string, size: string, color: string, stock: int, quantity: int, unit_price: int|float}> */
     public function lines(Request $request): array
     {
         $cart = $request->session()->get('cart', []);
         $wholesale = $this->wholesale($request);
 
         return $this->variants->forCart(array_keys($cart))
-            ->filter(fn ($v) => $v->product->active)->map(fn ($v) => [
-                'id' => $v->id, 'name' => app()->getLocale() === 'ne' ? ($v->product->name_ne ?: __($v->product->name)) : $v->product->name, 'image' => $v->product->image,
-                'sku' => $v->sku, 'size' => $v->size, 'color' => $v->color, 'stock' => $v->stock,
-                'quantity' => (int) $cart[$v->id],
-                'unit_price' => $wholesale ? $v->product->wholesale_price : $v->product->retail_price,
-            ])->values()->all();
+            ->filter(fn ($variant) => $variant->product->active)
+            ->map(fn ($variant) => $this->line($variant, $cart, $wholesale))
+            ->values()
+            ->all();
     }
 
     public function add(Request $request, int $variantId, int $quantity): void
@@ -38,7 +44,7 @@ class Cart
         abort_unless($variant->product->active, 404);
         $cart = $request->session()->get('cart', []);
         $quantity += ($cart[$variant->id] ?? 0);
-        if ($quantity > min($variant->stock, 999)) {
+        if ($quantity > min($variant->stock, self::MAX_LINE_QUANTITY)) {
             throw ValidationException::withMessages(['quantity' => __('There is not enough stock for that size.')]);
         }
         $cart[$variant->id] = $quantity;
@@ -63,6 +69,7 @@ class Cart
         $this->save($request, $cart);
     }
 
+    /** @return array{added: int, skipped: int} */
     public function addAvailableOrderItems(Request $request, Order $order): array
     {
         $requested = $order->items->groupBy('variant_id')->map(fn ($items) => $items->sum('quantity'))->all();
@@ -81,7 +88,7 @@ class Cart
 
                 continue;
             }
-            $room = max(0, min($variant->stock, 999) - $inBag);
+            $room = max(0, min($variant->stock, self::MAX_LINE_QUANTITY) - $inBag);
             $toAdd = min((int) $quantity, $room);
             if ($toAdd > 0) {
                 $cart[$id] = $inBag + $toAdd;
@@ -100,5 +107,28 @@ class Cart
     {
         $request->session()->forget('checkout_token');
         $request->session()->put('cart', $cart);
+    }
+
+    /** @param array<int|string, int> $cart
+     * @return array{id: int, name: string, image: string, sku: string, size: string, color: string, stock: int, quantity: int, unit_price: int|float}
+     */
+    private function line(Variant $variant, array $cart, bool $wholesale): array
+    {
+        $product = $variant->product;
+        $name = app()->getLocale() === 'ne'
+            ? ($product->name_ne ?: __($product->name))
+            : $product->name;
+
+        return [
+            'id' => $variant->id,
+            'name' => $name,
+            'image' => $product->image,
+            'sku' => $variant->sku,
+            'size' => $variant->size,
+            'color' => $variant->color,
+            'stock' => $variant->stock,
+            'quantity' => (int) $cart[$variant->id],
+            'unit_price' => $wholesale ? $product->wholesale_price : $product->retail_price,
+        ];
     }
 }
