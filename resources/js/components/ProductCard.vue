@@ -2,19 +2,53 @@
 import ProductDetails from '@/components/ProductDetails.vue';
 import { useLocale } from '@/composables/useLocale';
 import { type Product, type ShopSharedProps } from '@/types/shop';
-import { Link, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, Plus } from 'lucide-vue-next';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { ArrowUpRight, Heart, Plus, Star } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 const { t, num, money } = useLocale();
-const props = defineProps<{ product: Product; wholesale: boolean }>();
+const props = defineProps<{
+    product: Product;
+    wholesale: boolean;
+    saved?: boolean;
+}>();
 const page = usePage<ShopSharedProps>();
 const details = ref<InstanceType<typeof ProductDetails> | null>(null);
+const saving = ref(false);
+function toggleSaved() {
+    router.post(
+        '/saved/' + props.product.id,
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => (saving.value = true),
+            onFinish: () => (saving.value = false),
+        },
+    );
+}
 const available = computed(() =>
     props.product.variants.filter((v) => v.stock > 0),
 );
 </script>
 <template>
     <article class="product-card">
+        <button
+            type="button"
+            class="save-button"
+            :class="{ saved }"
+            :aria-label="
+                t(
+                    saved
+                        ? 'Remove :name from saved shoes'
+                        : 'Save :name for later',
+                    { name: t(product.name) },
+                )
+            "
+            :aria-pressed="!!saved"
+            :disabled="saving"
+            @click="toggleSaved"
+        >
+            <Heart :size="19" :fill="saved ? 'currentColor' : 'none'" />
+        </button>
         <button
             type="button"
             class="product-image"
@@ -56,6 +90,17 @@ const available = computed(() =>
             ><span v-if="wholesale" class="partner-price">
                 {{ t('Partner price') }}
             </span>
+        </div>
+        <div v-if="product.review_count" class="product-rating">
+            <Star :size="13" fill="currentColor" />{{
+                num(product.review_average ?? 0)
+            }}
+            <span
+                >·
+                {{
+                    t(':count reviews', { count: num(product.review_count) })
+                }}</span
+            >
         </div>
         <p>{{ t(product.description) }}</p>
         <button

@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import ProductCard from '@/components/ProductCard.vue';
 import ProductDetails from '@/components/ProductDetails.vue';
+import ProductReviews from '@/components/ProductReviews.vue';
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { type Product, type ShopSharedProps } from '@/types/shop';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
     ChevronRight,
     Footprints,
+    Heart,
     Layers3,
     PackageCheck,
     ShoppingBag,
+    Star,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 const { t, num, money } = useLocale();
@@ -19,9 +22,47 @@ const props = defineProps<{
     product: Product;
     wholesale: boolean;
     related: Product[];
+    savedIds: number[];
+    recentlyViewed: Product[];
+    reviewSummary: {
+        count: number;
+        average: number | null;
+        fit: { small: number; true: number; large: number };
+    };
+    reviews: {
+        data: {
+            id: number;
+            rating: number;
+            fit: 'small' | 'true' | 'large' | null;
+            title: string;
+            body: string;
+            created_at: string;
+        }[];
+        links: { url: string | null; label: string; active: boolean }[];
+    };
+    ownReview: {
+        rating: number;
+        fit: 'small' | 'true' | 'large' | null;
+        title: string;
+        body: string;
+    } | null;
+    canReview: boolean;
 }>();
 const page = usePage<ShopSharedProps>();
 const details = ref<InstanceType<typeof ProductDetails> | null>(null);
+const saving = ref(false);
+const isSaved = computed(() => props.savedIds.includes(props.product.id));
+function toggleSaved() {
+    router.post(
+        '/saved/' + props.product.id,
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => (saving.value = true),
+            onFinish: () => (saving.value = false),
+        },
+    );
+}
 const available = computed(() =>
     props.product.variants.filter((v) => v.stock > 0),
 );
@@ -59,6 +100,20 @@ const available = computed(() =>
                         >{{ t(product.category) }} {{ t('COLLECTION') }}
                     </span>
                     <h1>{{ t(product.name) }}</h1>
+                    <a
+                        v-if="reviewSummary.count"
+                        href="#reviews"
+                        class="product-review-link"
+                        ><Star :size="15" fill="currentColor" />{{
+                            num(reviewSummary.average ?? 0)
+                        }}
+                        ·
+                        {{
+                            t(':count reviews', {
+                                count: num(reviewSummary.count),
+                            })
+                        }}</a
+                    >
                     <div class="product-page-price">
                         {{ money(product.price, page.props.currency)
                         }}<span>{{
@@ -92,6 +147,20 @@ const available = computed(() =>
                             available.length
                                 ? t('Choose size & add to bag')
                                 : t('Currently unavailable')
+                        }}
+                    </button>
+                    <button
+                        type="button"
+                        class="product-save-action"
+                        :aria-pressed="isSaved"
+                        :disabled="saving"
+                        @click="toggleSaved"
+                    >
+                        <Heart
+                            :size="18"
+                            :fill="isSaved ? 'currentColor' : 'none'"
+                        />{{
+                            t(isSaved ? 'Saved for later' : 'Save for later')
                         }}
                     </button>
                     <div class="product-page-benefits">
@@ -146,7 +215,7 @@ const available = computed(() =>
                         <p>
                             {{
                                 t(
-                                    'Sizes are listed in EU sizing. Select the size you normally wear; if you’re unsure, request confirmation from our team before paying.',
+                                    'Stand on paper and mark your heel and longest toe. Measure both feet in centimeters and use the longer length. Sizes here use EU labels; ask our team for the measurement of a specific style before ordering if you are unsure.',
                                 )
                             }}
                         </p>
@@ -175,7 +244,50 @@ const available = computed(() =>
                     :key="item.id"
                     :product="item"
                     :wholesale="wholesale"
+                    :saved="savedIds.includes(item.id)"
                 />
-            </div></section
-    ></ShopLayout>
+            </div>
+        </section>
+        <section
+            v-if="recentlyViewed.length"
+            class="collection wrap discovery-section"
+        >
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">{{
+                        t('PICK UP WHERE YOU LEFT OFF')
+                    }}</span>
+                    <h2>{{ t('Recently viewed shoes') }}</h2>
+                </div>
+                <button
+                    type="button"
+                    class="back-shopping"
+                    @click="
+                        router.delete('/recently-viewed', {
+                            preserveScroll: true,
+                        })
+                    "
+                >
+                    {{ t('Clear history') }} <ArrowRight :size="14" />
+                </button>
+            </div>
+            <div class="product-grid">
+                <ProductCard
+                    v-for="item in recentlyViewed"
+                    :key="item.id"
+                    :product="item"
+                    :wholesale="wholesale"
+                    :saved="savedIds.includes(item.id)"
+                />
+            </div>
+        </section>
+        <ProductReviews
+            :product-slug="product.slug"
+            :summary="reviewSummary"
+            :reviews="reviews"
+            :own-review="ownReview"
+            :can-review="canReview"
+        />
+        ></ShopLayout
+    >
 </template>

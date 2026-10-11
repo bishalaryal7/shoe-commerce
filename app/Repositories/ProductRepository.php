@@ -19,17 +19,20 @@ class ProductRepository
     public function display(Product $product, bool $wholesale): array
     {
         $data = $product->toArray();
+        unset($data['reviews_count'], $data['reviews_avg_rating']);
         if (app()->getLocale() === 'ne') {
             $data['name'] = $product->name_ne ?: __($product->name);
             $data['description'] = $product->description_ne ?: __($product->description);
         }
 
-        return [...$data, 'price' => $wholesale ? $product->wholesale_price : $product->retail_price];
+        return [...$data, 'price' => $wholesale ? $product->wholesale_price : $product->retail_price,
+            'review_count' => (int) ($product->reviews_count ?? 0),
+            'review_average' => $product->reviews_avg_rating === null ? null : round((float) $product->reviews_avg_rating, 1)];
     }
 
     public function browse(array $filters, bool $wholesale)
     {
-        $query = Product::with('variants')->where('active', true)->when($filters['q'] ?? null, function ($query, $term) {
+        $query = Product::with('variants')->withCount('reviews')->withAvg('reviews', 'rating')->where('active', true)->when($filters['q'] ?? null, function ($query, $term) {
             $query->where(fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('name_ne', 'like', '%'.$term.'%')
                 ->orWhereIn('name', array_values(array_filter(
                     ['City Low', 'Pace Runner', 'Trail Form', 'Court Classic', 'Daily Knit', 'Motion Pro'],

@@ -7,12 +7,13 @@ use App\Http\Requests\Shop\CartQuantityRequest;
 use App\Models\Variant;
 use App\Repositories\ProductRepository;
 use App\Services\Cart;
+use App\Services\ShoppingDiscovery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ShopController extends Controller
 {
-    public function index(Request $request, Cart $cart, ProductRepository $products)
+    public function index(Request $request, Cart $cart, ProductRepository $products, ShoppingDiscovery $discovery)
     {
         $filters = $request->validate([
             'q' => 'nullable|string|max:100',
@@ -23,7 +24,8 @@ class ShopController extends Controller
         $wholesale = $cart->wholesale($request);
         $catalog = $products->browse($filters, $wholesale);
 
-        return Inertia::render('shop/Index', ['products' => $catalog, 'filters' => $filters, 'wholesale' => $wholesale]);
+        return Inertia::render('shop/Index', ['products' => $catalog, 'filters' => $filters, 'wholesale' => $wholesale,
+            'savedIds' => $discovery->savedIds($request), 'recentlyViewed' => $discovery->recentlyViewed($request, $wholesale)]);
     }
 
     public function cart(Request $request, Cart $cart)

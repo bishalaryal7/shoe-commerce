@@ -7,6 +7,7 @@ import {
     ArrowRight,
     ArrowUpRight,
     Check,
+    Heart,
     Menu,
     Mountain,
     Search,
@@ -20,6 +21,15 @@ const page = usePage<ShopSharedProps>();
 const open = ref(false);
 const user = computed(() => page.props.auth.user);
 const notice = ref('');
+const savedNotice = computed(() =>
+    [t('Shoe saved for later.'), t('Shoe removed from saved list.')].includes(
+        notice.value,
+    ),
+);
+const savedError = computed(() => page.props.errors?.saved || '');
+const reviewNotice = computed(
+    () => notice.value === t('Thank you for sharing your review.'),
+);
 const query = ref(
     new URL(page.url, 'http://localhost').searchParams.get('q') || '',
 );
@@ -88,6 +98,7 @@ const current = computed(() => page.url.split('?')[0]);
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
                             ><Link href="/orders">{{ t('Your orders') }}</Link
+                            ><Link href="/saved">{{ t('Saved shoes') }}</Link
                             ><Link href="/dashboard">{{ t('My account') }}</Link
                             ><Link href="/settings/profile">
                                 {{ t('Account settings') }} </Link
@@ -150,6 +161,12 @@ const current = computed(() => page.url.split('?')[0]);
                     >{{ t('Running') }}</Link
                 >
                 <Link
+                    href="/saved"
+                    :class="{ selected: current === '/saved' }"
+                    @click="open = false"
+                    ><Heart :size="15" /> {{ t('Saved shoes') }}</Link
+                >
+                <Link
                     href="/wholesale"
                     :class="{ selected: current === '/wholesale' }"
                     @click="open = false"
@@ -159,11 +176,15 @@ const current = computed(() => page.url.split('?')[0]);
             </nav>
         </header>
         <Transition name="toast"
-            ><div v-if="notice" class="shop-toast" role="status">
+            ><div v-if="notice || savedError" class="shop-toast" role="status">
                 <span class="toast-check"><Check :size="17" /></span>
                 <div>
-                    <strong>{{ t(notice) }}</strong
-                    ><Link href="/cart"> {{ t('View your bag →') }} </Link>
+                    <strong>{{ t(savedError || notice) }}</strong
+                    ><Link v-if="savedNotice || savedError" href="/saved">
+                        {{ t('View saved shoes →') }} </Link
+                    ><Link v-else-if="!reviewNotice" href="/cart">
+                        {{ t('View your bag →') }}
+                    </Link>
                 </div>
                 <button
                     @click="notice = ''"
@@ -187,6 +208,7 @@ const current = computed(() => page.url.split('?')[0]);
             <div class="footer-links">
                 <strong> {{ t('Find your next step') }} </strong
                 ><Link href="/"> {{ t('Shop all shoes') }} </Link
+                ><Link href="/saved"> {{ t('Saved shoes') }} </Link
                 ><Link href="/wholesale"> {{ t('Wholesale partners') }} </Link
                 ><Link :href="user ? '/dashboard' : '/login'">
                     {{ t('Your account') }}

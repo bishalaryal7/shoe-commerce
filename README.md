@@ -27,7 +27,7 @@ After signing in as staff, use **Inventory** to edit names, descriptions, catego
 
 ## Brand and languages
 
-EVE Shoes takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Core navigation, checkout, order and authentication copy are translated; any untranslated copy falls back to English. Inventory supports optional Nepali product names and descriptions, with English fallback. Search matches either name. Run `php artisan migrate` before editing the new bilingual fields.
+EVE Shoes takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Storefront, checkout, order, review and authentication interface copy are translated. Inventory supports optional Nepali product names and descriptions, with English fallback for merchant content. Search matches either name. Run `php artisan migrate` before editing bilingual fields or using saved shoes and reviews.
 
 ## Application structure and validation
 
@@ -40,6 +40,8 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 ## What is built
 
 - Responsive storefront, global search, category/size filters, price sorting, product pages, size selection, stock checks and quantity controls.
+- Saved shoes (guest session, merged into the signed-in account), recently viewed shoes with a clear-history control, and practical foot-measuring guidance on product pages. Guests' saved shoes remain on their current browser until sign-in; signed-in lists persist in MySQL.
+- Verified-purchase reviews with 1–5 star ratings and optional fit feedback. Only the signed-in owner of a paid, fulfilled order for that shoe can post or update a review; ratings and reviews appear publicly without exposing buyer or order details. Reviews are not prefilled with demo ratings.
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
 - Customer order history, private signed guest tracking links, unpaid order cancellation and resuming unexpired provider checkout.

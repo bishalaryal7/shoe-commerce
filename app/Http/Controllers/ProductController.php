@@ -7,19 +7,24 @@ use App\Models\Product;
 use App\Repositories\ProductRepository;
 use App\Services\Cart;
 use App\Services\ProductCatalog;
+use App\Services\ProductReviews;
+use App\Services\ShoppingDiscovery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function show(Request $request, Product $product, Cart $cart, ProductRepository $products)
+    public function show(Request $request, Product $product, Cart $cart, ProductRepository $products, ShoppingDiscovery $discovery, ProductReviews $reviews)
     {
         abort_unless($product->active, 404);
         $wholesale = $cart->wholesale($request);
         $serialize = fn ($item) => $products->display($item, $wholesale);
+        $discovery->recordView($request, $product);
 
-        return Inertia::render('shop/Product', ['product' => $serialize($product->load('variants')), 'wholesale' => $wholesale,
-            'related' => Product::with('variants')->where('active', true)->where('category', $product->category)->whereKeyNot($product->id)->limit(3)->get()->map($serialize)]);
+        return Inertia::render('shop/Product', ['product' => $serialize($product->load('variants')->loadCount('reviews')->loadAvg('reviews', 'rating')), 'wholesale' => $wholesale,
+            'related' => Product::with('variants')->withCount('reviews')->withAvg('reviews', 'rating')->where('active', true)->where('category', $product->category)->whereKeyNot($product->id)->limit(3)->get()->map($serialize),
+            'savedIds' => $discovery->savedIds($request), 'recentlyViewed' => $discovery->recentlyViewed($request, $wholesale, $product->id),
+            ...$reviews->page($product, $request->user())]);
     }
 
     public function store(ProductRequest $request, ProductCatalog $catalog)

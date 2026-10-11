@@ -24,6 +24,8 @@ const props = defineProps<{
     };
     filters: { q?: string; category?: string; size?: string; sort?: string };
     wholesale: boolean;
+    savedIds: number[];
+    recentlyViewed: Product[];
 }>();
 const search = ref(props.filters.q || '');
 const size = ref(props.filters.size || '');
@@ -267,6 +269,7 @@ function reset() {
                     :key="product.id"
                     :product="product"
                     :wholesale="wholesale"
+                    :saved="savedIds.includes(product.id)"
                 />
             </div>
             <div v-if="!products.data.length" class="empty-state">
@@ -298,6 +301,39 @@ function reset() {
                     ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav>
+        </section>
+        <section
+            v-if="recentlyViewed.length"
+            class="collection wrap discovery-section"
+        >
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">{{
+                        t('PICK UP WHERE YOU LEFT OFF')
+                    }}</span>
+                    <h2>{{ t('Recently viewed shoes') }}</h2>
+                </div>
+                <button
+                    type="button"
+                    class="back-shopping"
+                    @click="
+                        router.delete('/recently-viewed', {
+                            preserveScroll: true,
+                        })
+                    "
+                >
+                    {{ t('Clear history') }} <X :size="14" />
+                </button>
+            </div>
+            <div class="product-grid">
+                <ProductCard
+                    v-for="product in recentlyViewed"
+                    :key="product.id"
+                    :product="product"
+                    :wholesale="wholesale"
+                    :saved="savedIds.includes(product.id)"
+                />
+            </div>
         </section>
         <section class="wholesale-banner wrap">
             <div class="partner-panel">

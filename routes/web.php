@@ -6,6 +6,8 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductReviewController;
+use App\Http\Controllers\SavedProductsController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StaffAccessController;
 use App\Http\Controllers\WholesaleController;
@@ -29,7 +31,9 @@ Route::get('/ready', function () {
             && Schema::hasColumn('products', 'description_ne')
             && Schema::hasColumn('users', 'phone_verified_at')
             && Schema::hasTable('social_accounts')
-            && Schema::hasTable('phone_challenges');
+            && Schema::hasTable('phone_challenges')
+            && Schema::hasTable('saved_products');
+        $ready = $ready && Schema::hasTable('product_reviews');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -38,6 +42,10 @@ Route::get('/ready', function () {
 })->name('readiness');
 Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.reviews.store');
+Route::get('/saved', [SavedProductsController::class, 'index'])->name('saved.index');
+Route::post('/saved/{product}', [SavedProductsController::class, 'toggle'])->middleware('throttle:30,1')->name('saved.toggle');
+Route::delete('/recently-viewed', [SavedProductsController::class, 'clearHistory'])->middleware('throttle:10,1')->name('recently-viewed.clear');
 Route::get('/cart', [ShopController::class, 'cart'])->name('cart');
 Route::post('/cart', [ShopController::class, 'add'])->name('cart.add');
 Route::patch('/cart/{variant}', [ShopController::class, 'update'])->name('cart.update');
