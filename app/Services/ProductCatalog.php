@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Repositories\ProductRepository;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -35,12 +36,32 @@ class ProductCatalog
         if (! $path) {
             throw ValidationException::withMessages(['image' => __('Photo upload could not be saved.')]);
         }
+        $previousImage = $product->image;
         try {
             $this->products->update($product, ['image' => Storage::disk('public')->url($path)]);
         } catch (\Throwable $e) {
             Storage::disk('public')->delete($path);
             throw $e;
         }
+        $this->deletePreviousPhoto($previousImage, $path);
+    }
 
+    private function deletePreviousPhoto(string $url, string $newPath): void
+    {
+        $urlPath = parse_url($url, PHP_URL_PATH);
+        if (! is_string($urlPath) || ! str_starts_with($urlPath, '/storage/products/')) {
+            return;
+        }
+
+        $previousPath = substr($urlPath, strlen('/storage/'));
+        if ($previousPath === $newPath || str_contains($previousPath, '..')) {
+            return;
+        }
+
+        try {
+            Storage::disk('public')->delete($previousPath);
+        } catch (\Throwable) {
+            Log::warning('A replaced product photo could not be removed.', ['path' => $previousPath]);
+        }
     }
 }

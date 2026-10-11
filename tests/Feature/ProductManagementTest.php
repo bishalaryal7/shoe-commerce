@@ -136,6 +136,19 @@ class ProductManagementTest extends TestCase
         Storage::disk('public')->assertExists(substr($image, strlen('/storage/')));
     }
 
+    public function test_replacing_a_managed_photo_removes_the_previous_file(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('products/old-photo.jpg', 'old photo');
+        Product::findOrFail(1)->update(['image' => '/storage/products/old-photo.jpg']);
+        $this->staff();
+
+        $this->post('/admin/products/1/image', ['image' => UploadedFile::fake()->image('new-shoe.png')])->assertRedirect();
+
+        Storage::disk('public')->assertMissing('products/old-photo.jpg');
+        Storage::disk('public')->assertExists(substr(Product::findOrFail(1)->image, strlen('/storage/')));
+    }
+
     public function test_scriptable_and_oversized_uploads_are_rejected(): void
     {
         Storage::fake('public');
