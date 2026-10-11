@@ -48,6 +48,7 @@ class CommerceTest extends TestCase
 
     public function test_order_uses_server_prices_and_duplicate_submission_reserves_stock_once(): void
     {
+        $this->actingAs(User::factory()->create());
         $variant = Product::first()->variants()->first();
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [$variant->id => 2], 'checkout_token' => $token])->post('/checkout', $this->payload($token))->assertRedirect();
@@ -62,6 +63,7 @@ class CommerceTest extends TestCase
 
     public function test_stock_shortage_rolls_back_the_entire_order(): void
     {
+        $this->actingAs(User::factory()->create());
         $variants = Product::first()->variants()->limit(2)->get();
         $variants[1]->update(['stock' => 0]);
         $token = (string) Str::uuid();
@@ -100,6 +102,7 @@ class CommerceTest extends TestCase
 
     public function test_cancellation_restores_stock_once_and_prevents_reopening(): void
     {
+        $this->actingAs(User::factory()->create());
         $variant = Product::first()->variants()->first();
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [$variant->id => 2], 'checkout_token' => $token])->post('/checkout', $this->payload($token));
@@ -127,12 +130,14 @@ class CommerceTest extends TestCase
 
     public function test_orders_require_the_session_checkout_token(): void
     {
+        $this->actingAs(User::factory()->create());
         $this->post('/checkout', $this->payload((string) Str::uuid()))->assertStatus(419);
         $this->assertSame(0, Order::count());
     }
 
     public function test_a_new_bag_starts_a_new_checkout_after_a_previous_order(): void
     {
+        $this->actingAs(User::factory()->create());
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', $this->payload($token));
         $this->post('/cart', ['variant_id' => 1, 'quantity' => 1])->assertSessionMissing('checkout_token');
@@ -141,6 +146,20 @@ class CommerceTest extends TestCase
         $this->assertNotSame($token, $newToken);
         $this->post('/checkout', $this->payload($newToken))->assertRedirect();
         $this->assertSame(2, Order::count());
+    }
+
+    public function test_guests_must_sign_in_and_their_bag_survives_the_login_redirect(): void
+    {
+        $variant = Product::first()->variants()->firstOrFail();
+        $token = (string) Str::uuid();
+        $user = User::factory()->withoutTwoFactor()->create();
+        $this->withSession(['cart' => [$variant->id => 1], 'checkout_token' => $token])
+            ->get('/checkout')->assertRedirect('/login')->assertSessionHas('cart.'.$variant->id, 1);
+        $this->post('/checkout', $this->payload($token))->assertRedirect('/login');
+        $this->assertSame(0, Order::count());
+        $this->assertSame(20, $variant->fresh()->stock);
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/checkout');
+        $this->get('/checkout')->assertOk()->assertInertia(fn (Assert $page) => $page->has('lines', 1)->where('lines.0.id', $variant->id));
     }
 
     public function test_catalog_filters_only_sizes_with_stock(): void

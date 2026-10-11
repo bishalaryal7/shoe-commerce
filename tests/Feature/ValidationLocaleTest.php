@@ -22,6 +22,7 @@ class ValidationLocaleTest extends TestCase
 
     public function test_invalid_contact_fields_never_create_an_order_or_reserve_stock(): void
     {
+        $this->actingAs(User::factory()->create());
         foreach (['name' => ' ', 'email' => 'not-an-email', 'phone' => 'call-me', 'address' => 'Here', 'payment_method' => 'invented'] as $field => $invalid) {
             $token = (string) Str::uuid();
             $data = ['name' => 'Eve Customer', 'email' => 'buyer@example.com', 'phone' => '+977 9800000000', 'address' => 'Kathmandu, Nepal', 'payment_method' => 'request', 'token' => $token];
@@ -42,6 +43,7 @@ class ValidationLocaleTest extends TestCase
 
     public function test_nepali_checkout_validation_uses_nepali_messages(): void
     {
+        $this->actingAs(User::factory()->create());
         $token = (string) Str::uuid();
         $this->withSession(['locale' => 'ne', 'cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', ['name' => 'Buyer', 'email' => 'buyer@example.com', 'phone' => 'abc', 'address' => 'Kathmandu, Nepal', 'token' => $token])->assertSessionHasErrors(['phone' => '७–१५ अङ्क भएको सही फोन नम्बर लेख्नुहोस्, जस्तै +977 9800000000।']);
     }
@@ -97,6 +99,7 @@ class ValidationLocaleTest extends TestCase
 
     public function test_nepali_phone_digits_are_validated_and_stored_in_normalized_form(): void
     {
+        $this->actingAs(User::factory()->create());
         $token = (string) Str::uuid();
         $this->withSession(['locale' => 'ne', 'cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', ['name' => 'ग्राहक', 'email' => 'buyer@example.com', 'phone' => '+९७७ ९८००००००००', 'address' => 'काठमाडौं, नेपाल', 'token' => $token])->assertRedirect();
         $this->assertSame('+977 9800000000', Order::firstOrFail()->phone);

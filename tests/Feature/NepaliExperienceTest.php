@@ -55,6 +55,7 @@ class NepaliExperienceTest extends TestCase
 
     public function test_queued_order_emails_keep_the_customer_language_after_staff_switch_to_english(): void
     {
+        $this->actingAs(User::factory()->create());
         $token = (string) Str::uuid();
         $this->withSession(['locale' => 'ne', 'cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', [
             'name' => 'ग्राहक', 'email' => 'buyer@example.com', 'phone' => '9800000000', 'address' => 'काठमाडौं, नेपाल', 'token' => $token,

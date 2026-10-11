@@ -7,6 +7,7 @@ use App\Mail\OrderUpdate;
 use App\Models\Order;
 use App\Models\OrderEmail;
 use App\Models\PaymentAttempt;
+use App\Models\Product;
 use App\Models\User;
 use App\Payments\PayPayGateway;
 use App\Services\OrderPayments;
@@ -36,8 +37,29 @@ class PaymentsTest extends TestCase
         Bus::fake([SendOrderEmail::class]);
     }
 
-    private function order(): Order
+    private function order(bool $guest = false): Order
     {
+        if ($guest) {
+            auth()->logout();
+            $product = Product::firstOrFail();
+            $variant = $product->variants()->firstOrFail();
+            $variant->decrement('stock', 2);
+            $order = Order::create([
+                'reference' => (string) Str::uuid(), 'checkout_token' => (string) Str::uuid(),
+                'user_id' => null, 'name' => 'Buyer', 'email' => 'buyer@example.com',
+                'phone' => '9800000001', 'address' => 'Example, Kathmandu', 'channel' => 'retail',
+                'currency' => 'NPR', 'subtotal' => 17800, 'total' => 17800,
+                'status' => 'pending_confirmation', 'payment_status' => 'unpaid',
+            ]);
+            $order->items()->create([
+                'variant_id' => $variant->id, 'name' => $product->name, 'sku' => $variant->sku,
+                'size' => $variant->size, 'color' => $variant->color, 'quantity' => 2, 'unit_price' => 8900,
+            ]);
+
+            return $order;
+        } elseif (! auth()->check()) {
+            $this->actingAs(User::factory()->create());
+        }
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [1 => 2], 'checkout_token' => $token])->post('/checkout', ['name' => 'Buyer', 'email' => 'buyer@example.com', 'phone' => '9800000001', 'address' => 'Example, Kathmandu', 'token' => $token])->assertRedirect();
 
@@ -124,6 +146,7 @@ class PaymentsTest extends TestCase
 
     public function test_unconfigured_methods_are_rejected_without_reserving_stock(): void
     {
+        $this->actingAs(User::factory()->create());
         config(['payments.khalti.enabled' => false]);
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', ['name' => 'Buyer', 'email' => 'buyer@example.com', 'phone' => '9800000001', 'address' => 'Kathmandu, Nepal', 'token' => $token, 'payment_method' => 'khalti'])->assertSessionHasErrors('payment_method');
@@ -133,6 +156,7 @@ class PaymentsTest extends TestCase
 
     public function test_nepal_checkout_does_not_offer_jpy_paypay(): void
     {
+        $this->actingAs(User::factory()->create());
         $this->withSession(['cart' => [1 => 1]])->get('/checkout')->assertInertia(fn (Assert $p) => $p->has('paymentOptions', 1)->where('paymentOptions.0.id', 'khalti'));
         $order = $this->order();
         $this->post('/orders/'.$order->reference.'/pay', ['provider' => 'paypay'])->assertSessionHasErrors('payment_method');
@@ -174,7 +198,7 @@ class PaymentsTest extends TestCase
 
     public function test_private_guest_tracking_links_expire_and_reject_tampering(): void
     {
-        $order = $this->order();
+        $order = $this->order(true);
         $url = URL::temporarySignedRoute('orders.track', now()->addMinute(), ['reference' => $order->reference]);
         $this->get($url)->assertOk();
         $this->get($url.'&extra=1')->assertForbidden();
@@ -252,7 +276,7 @@ class PaymentsTest extends TestCase
 
     public function test_guest_can_cancel_an_unpaid_order_once_using_private_tracking_access(): void
     {
-        $order = $this->order();
+        $order = $this->order(true);
         $url = URL::temporarySignedRoute('orders.track', now()->addMinutes(30), ['reference' => $order->reference]);
         $this->withSession(['last_order_reference' => null])->post('/orders/'.$order->reference.'/cancel', ['access_url' => $url])->assertRedirect();
         $this->assertSame('cancelled', $order->fresh()->status);

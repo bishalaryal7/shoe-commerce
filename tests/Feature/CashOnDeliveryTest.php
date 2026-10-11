@@ -21,6 +21,7 @@ class CashOnDeliveryTest extends TestCase
         parent::setUp();
         $this->withoutVite();
         $this->seed();
+        $this->actingAs(User::factory()->create());
         config(['shop.currency' => 'NPR', 'shop.cash_on_delivery' => true]);
         Bus::fake([SendOrderEmail::class]);
         Http::preventStrayRequests();

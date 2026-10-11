@@ -230,6 +230,13 @@ function remove(id: number) {
                     ><Link v-else href="/" class="button full outline">
                         {{ t('Add more pairs') }} <Plus :size="16"
                     /></Link>
+                    <p v-if="!page.props.auth.user" class="checkout-help">
+                        {{
+                            t(
+                                'Sign in or create an account before checkout. Your bag will stay saved while you sign in.',
+                            )
+                        }}
+                    </p>
                     <div class="summary-note">
                         <ShieldCheck :size="16" /><span>
                             {{
