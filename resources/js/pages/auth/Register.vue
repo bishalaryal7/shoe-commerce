@@ -20,7 +20,11 @@ defineProps<{
 <template>
     <AuthBase
         :title="t('Create an account')"
-        :description="t('Enter your details below to create your account')"
+        :description="
+            t(
+                'Continue with a sign-in option or create an account with your email',
+            )
+        "
     >
         <Head :title="t('Register')" />
 

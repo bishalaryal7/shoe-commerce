@@ -57,6 +57,18 @@ test('all customer, admin and account pages render in Nepali without English int
                 setup: ({ App, props, plugin }) =>
                     createSSRApp({ render: () => h(App, props) }).use(plugin),
             });
+            if (['auth/Login', 'auth/Register'].includes(name)) {
+                for (const option of [
+                    'गुगलबाट अगाडि बढ्नुहोस्',
+                    'फेसबुकबाट अगाडि बढ्नुहोस्',
+                    'फोन नम्बरबाट प्रवेश गर्नुहोस्',
+                ]) {
+                    assert.ok(
+                        rendered.body.includes(option),
+                        `${name} must show ${option} before provider activation`,
+                    );
+                }
+            }
             const walk = (node) => {
                 if (['style', 'script'].includes(node.tag)) return;
                 if (node.type === 2) {

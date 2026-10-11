@@ -1,6 +1,6 @@
 # EVE Shoes: activate sign-in and payments
 
-The code supports Google, Facebook, SMS sign-in, Khalti and PayPay. Provider credentials are deliberately empty. Buttons become available when the relevant credentials are configured; a configured flag does not prove that the provider account or callback is approved. Cash on delivery is available for NPR orders without external credentials.
+The code supports Google, Facebook, SMS sign-in, Khalti and PayPay. Provider credentials are deliberately empty. Login and registration always show Google, Facebook and phone options. Options without configuration show an inline availability message; configured options start the sign-in flow. A configured flag does not prove that the provider account or callback is approved. Cash on delivery is available for NPR orders without external credentials.
 
 ## Local setup
 

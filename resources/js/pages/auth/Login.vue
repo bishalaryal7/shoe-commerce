@@ -26,7 +26,7 @@ defineProps<{
 <template>
     <AuthBase
         :title="t('Log in to your account')"
-        :description="t('Enter your email and password below to log in')"
+        :description="t('Choose how you would like to sign in')"
     >
         <Head :title="t('Log in')" />
 

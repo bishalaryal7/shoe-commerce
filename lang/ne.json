@@ -755,5 +755,7 @@
     "Provider credentials must be configured before online payments or social and phone sign-in become available.": "अनलाइन भुक्तानी तथा सामाजिक सञ्जाल र फोनबाट प्रवेश उपलब्ध गराउन पहिले सम्बन्धित सेवा प्रदायकको विवरण जडान गर्नुपर्छ।",
     "Email a reset link and sign out": "रिसेट लिङ्क इमेलमा पठाएर बाहिरिनुहोस्",
     "We could not send a reset link right now. Please try again later.": "अहिले पासवर्ड रिसेट लिङ्क पठाउन सकिएन। कृपया केही समयपछि प्रयास गर्नुहोस्।",
-    "This order is cancelled. No payment is due.": "यो अर्डर रद्द भइसकेको छ। भुक्तानी गर्नुपर्दैन।"
+    "This order is cancelled. No payment is due.": "यो अर्डर रद्द भइसकेको छ। भुक्तानी गर्नुपर्दैन।",
+    "Choose how you would like to sign in": "आफूलाई सहज लाग्ने प्रवेश विधि रोज्नुहोस्",
+    "Continue with a sign-in option or create an account with your email": "प्रवेश विधि रोज्नुहोस् वा आफ्नो इमेलबाट खाता बनाउनुहोस्"
 }
