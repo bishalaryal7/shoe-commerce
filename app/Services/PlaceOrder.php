@@ -28,10 +28,7 @@ class PlaceOrder
                 if ($wholesale && array_sum(array_column($lines, 'quantity')) < config('shop.wholesale_minimum')) {
                     throw ValidationException::withMessages(['cart' => __('Wholesale orders require at least 12 pairs.')]);
                 }
-                $subtotal = array_sum(array_map(fn ($line) => $line['unit_price'] * $line['quantity'], $lines));
-                $shipping = max(0, config('shop.shipping_amount'));
-                $tax = intdiv($subtotal * max(0, config('shop.tax_basis_points')) + 5000, 10000);
-                $order = $this->orders->create(['reference' => (string) Str::uuid(), 'checkout_token' => $data['token'], 'user_id' => $userId, 'name' => $data['name'], 'email' => $data['email'], 'phone' => $data['phone'], 'address' => $data['address'], 'channel' => $wholesale ? 'wholesale' : 'retail', 'currency' => config('shop.currency'), 'subtotal' => $subtotal, 'shipping_amount' => $shipping, 'tax_amount' => $tax, 'total' => $subtotal + $shipping + $tax, 'payment_method' => $data['payment_method'] ?? 'request', 'payment_status' => 'unpaid']);
+                $order = $this->orders->create($this->orderAttributes($data, $lines, $wholesale, $userId));
                 $this->orders->reserveItems($order, $lines, $userId);
                 $this->emails->record($order, 'created');
 
@@ -50,5 +47,43 @@ class PlaceOrder
         if ($order->user_id !== null && $order->user_id !== $userId) {
             throw ValidationException::withMessages(['token' => __('This checkout belongs to another account. Return to your bag and start a new checkout.')]);
         }
+    }
+
+    /** @param list<array{unit_price: int, quantity: int}> $lines
+     * @return array<string, int|string|null>
+     */
+    private function orderAttributes(array $data, array $lines, bool $wholesale, ?int $userId): array
+    {
+        $subtotal = array_sum(array_map(
+            fn (array $line) => $line['unit_price'] * $line['quantity'],
+            $lines,
+        ));
+        $shipping = max(0, config('shop.shipping_amount'));
+        $tax = $this->taxFor($subtotal);
+
+        return [
+            'reference' => (string) Str::uuid(),
+            'checkout_token' => $data['token'],
+            'user_id' => $userId,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'address' => $data['address'],
+            'channel' => $wholesale ? 'wholesale' : 'retail',
+            'currency' => config('shop.currency'),
+            'subtotal' => $subtotal,
+            'shipping_amount' => $shipping,
+            'tax_amount' => $tax,
+            'total' => $subtotal + $shipping + $tax,
+            'payment_method' => $data['payment_method'] ?? 'request',
+            'payment_status' => 'unpaid',
+        ];
+    }
+
+    private function taxFor(int $subtotal): int
+    {
+        $taxBasisPoints = max(0, config('shop.tax_basis_points'));
+
+        return intdiv($subtotal * $taxBasisPoints + 5000, 10000);
     }
 }
