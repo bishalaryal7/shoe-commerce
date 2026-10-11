@@ -62,6 +62,25 @@ class ProductManagementTest extends TestCase
         $this->post('/admin/products/1/image', ['image' => UploadedFile::fake()->image('shoe.png')])->assertForbidden();
     }
 
+    public function test_inventory_csv_is_staff_only_and_safe_to_open_in_spreadsheets(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->get('/admin/inventory/export')->assertForbidden();
+
+        $this->staff();
+        Product::findOrFail(1)->update(['name' => '=HYPERLINK("https://example.com")']);
+        $response = $this->get('/admin/inventory/export')->assertOk();
+        $this->assertStringContainsString('text/csv', $response->headers->get('content-type'));
+        $this->assertStringContainsString('eve-shoes-inventory-', $response->headers->get('content-disposition'));
+
+        $csv = $response->streamedContent();
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+        $rows = array_map('str_getcsv', explode("\n", trim(substr($csv, 3))));
+        $this->assertSame(['SKU', 'Product', 'Category', 'Color', 'EU size', 'Stock', 'Retail price', 'Wholesale price', 'Active'], $rows[0]);
+        $this->assertSame("'=HYPERLINK(\"https://example.com\")", $rows[1][1]);
+        $this->assertSame('20', $rows[1][5]);
+    }
+
     public function test_photos_are_stored_using_generated_paths(): void
     {
         Storage::fake('public');

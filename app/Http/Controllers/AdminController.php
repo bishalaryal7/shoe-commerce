@@ -18,6 +18,7 @@ use App\Payments\PayPayGateway;
 use App\Repositories\ProductRepository;
 use App\Repositories\UserRepository;
 use App\Services\Auth\SignInOptions;
+use App\Services\InventoryExport;
 use App\Services\OrderPayments;
 use App\Services\StaffOperations;
 use Illuminate\Http\Request;
@@ -63,6 +64,11 @@ class AdminController extends Controller
         $staff->stock($variant->id, $request->validated('stock'), $request->user()->id);
 
         return back()->with('success', __('Available stock updated.'));
+    }
+
+    public function exportInventory(InventoryExport $inventory)
+    {
+        return $inventory->download();
     }
 
     public function product(ProductRequest $request, Product $product, ProductRepository $products)

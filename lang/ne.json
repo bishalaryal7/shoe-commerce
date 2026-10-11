@@ -505,6 +505,8 @@
     "PayPay": "पेपे",
     "Orders": "अर्डरहरू",
     "Inventory": "मौज्दात",
+    "Download a spreadsheet of every size, SKU, price and stock level.": "हरेक साइज, एसकेयू, मूल्य र मौज्दातसहितको स्प्रेडसिट डाउनलोड गर्नुहोस्।",
+    "Export inventory CSV": "मौज्दात CSV निर्यात गर्नुहोस्",
     "Payments": "भुक्तानीहरू",
     "Partners": "साझेदारहरू",
     "Team": "टोली",

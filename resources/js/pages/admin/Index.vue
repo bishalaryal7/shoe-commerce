@@ -534,6 +534,18 @@ function stock(id: number, event: Event) {
                 /></template>
             </nav>
             <div v-if="tab === 'Inventory'" class="admin-products">
+                <div class="order-actions">
+                    <p class="muted">
+                        {{
+                            t(
+                                'Download a spreadsheet of every size, SKU, price and stock level.',
+                            )
+                        }}
+                    </p>
+                    <a class="button outline" href="/admin/inventory/export">
+                        {{ t('Export inventory CSV') }}
+                    </a>
+                </div>
                 <ProductCreate />
                 <article
                     v-for="product in products"
