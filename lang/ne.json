@@ -831,5 +831,10 @@
     "Shoe removed from comparison.": "जुत्ता तुलना सूचीबाट हटाइयो।",
     "Comparison list cleared.": "तुलना सूची खाली गरियो।",
     "Compare up to :count shoes at a time. Remove one to add another.": "एकपटकमा बढीमा :count वटा जुत्ता तुलना गर्न सकिन्छ। अर्को थप्न एउटा हटाउनुहोस्।",
-    "View comparison →": "तुलना सूची हेर्नुहोस् →"
+    "View comparison →": "तुलना सूची हेर्नुहोस् →",
+    "Order again": "फेरि अर्डर गर्नुहोस्",
+    "One pair was added to your bag.": "एउटा जोर जुत्ता झोलामा थपियो।",
+    ":count pairs were added to your bag.": "झोलामा :count जोर जुत्ता थपिए।",
+    ":count pairs from your previous order were already in your bag or unavailable.": "अघिल्लो अर्डरका :count जोर जुत्ता झोलामा पहिल्यै थिए वा अहिले उपलब्ध छैनन्।",
+    "None of the shoes from this order are available in your sizes right now.": "यो अर्डरका जुत्ता तपाईंले छानेका साइजमा अहिले उपलब्ध छैनन्।"
 }

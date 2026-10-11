@@ -2,9 +2,22 @@
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { type CustomerOrder } from '@/types/shop';
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowRight, ShoppingBag } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ArrowRight, PackageCheck, ShoppingBag } from 'lucide-vue-next';
+import { ref } from 'vue';
 const { t, label, num, date, money, paginationLabel } = useLocale();
+const reordering = ref<string | null>(null);
+function orderAgain(reference: string) {
+    router.post(
+        '/orders/' + reference + '/reorder',
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => (reordering.value = reference),
+            onFinish: () => (reordering.value = null),
+        },
+    );
+}
 defineProps<{
     orders: {
         data: CustomerOrder[];
@@ -63,6 +76,18 @@ defineProps<{
                 >
                     {{ t('View order') }} <ArrowRight :size="15"
                 /></Link>
+                <button
+                    v-if="
+                        order.status === 'fulfilled' &&
+                        order.payment_status === 'paid'
+                    "
+                    type="button"
+                    class="button reorder-button outline"
+                    :disabled="reordering === order.reference"
+                    @click="orderAgain(order.reference)"
+                >
+                    <PackageCheck :size="15" />{{ t('Order again') }}
+                </button>
             </article>
             <nav
                 v-if="orders.links.length > 3"

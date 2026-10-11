@@ -58,6 +58,7 @@ Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout')
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
 Route::get('/orders/received/{reference}', [CheckoutController::class, 'received'])->name('order.received');
 Route::get('/orders', [OrderController::class, 'index'])->middleware('auth')->name('orders.index');
+Route::post('/orders/{reference}/reorder', [OrderController::class, 'reorder'])->middleware(['auth', 'throttle:5,1'])->name('orders.reorder');
 Route::get('/orders/track/{reference}', [OrderController::class, 'show'])->name('orders.track');
 Route::post('/orders/{reference}/pay', [PaymentController::class, 'start'])->middleware('throttle:5,1')->name('payments.start');
 Route::post('/orders/{reference}/cancel', [OrderController::class, 'cancel'])->middleware('throttle:5,1')->name('orders.cancel');

@@ -3210,6 +3210,9 @@ body:has(.product-dialog[open]) {
     font-size: 10px !important;
     min-height: 37px;
 }
+.customer-order-card .button + .button {
+    margin-left: 8px;
+}
 @media (max-width: 700px) {
     .checkout-field-grid {
         grid-template-columns: 1fr;

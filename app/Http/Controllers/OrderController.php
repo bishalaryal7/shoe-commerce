@@ -7,6 +7,7 @@ use App\Models\PaymentAttempt;
 use App\Payments\Gateways;
 use App\Services\CancelOrder;
 use App\Services\OrderAccess;
+use App\Services\RepeatOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
@@ -35,6 +36,20 @@ class OrderController extends Controller
         $cancellation->cancel($order, $request->user()?->id);
 
         return back()->with('success', __('Order cancelled. Your reserved stock has been released.'));
+    }
+
+    public function reorder(Request $request, string $reference, RepeatOrder $repeatOrder)
+    {
+        $order = Order::where('reference', $reference)->where('user_id', $request->user()->id)->firstOrFail();
+        $result = $repeatOrder->addToBag($request, $request->user(), $order);
+        $message = $result['added'] === 1
+            ? __('One pair was added to your bag.')
+            : __(':count pairs were added to your bag.', ['count' => $result['added']]);
+        if ($result['skipped'] > 0) {
+            $message .= ' '.__(':count pairs from your previous order were already in your bag or unavailable.', ['count' => $result['skipped']]);
+        }
+
+        return redirect('/cart')->with('success', $message);
     }
 
     public function page(Order $order, Gateways $gateways, ?string $accessUrl = null)
