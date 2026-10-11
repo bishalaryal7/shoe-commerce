@@ -48,6 +48,7 @@ export type ShopSharedProps = AppPageProps<{
     cartCount: number;
     flash: { success?: string };
     errors?: Record<string, string>;
+    compareIds: number[];
 }>;
 
 export interface PaymentOption {

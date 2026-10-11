@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CompareController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
@@ -44,6 +45,9 @@ Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.reviews.store');
 Route::get('/saved', [SavedProductsController::class, 'index'])->name('saved.index');
+Route::get('/compare', [CompareController::class, 'index'])->name('compare.index');
+Route::post('/compare/{product}', [CompareController::class, 'toggle'])->middleware('throttle:30,1')->name('compare.toggle');
+Route::delete('/compare', [CompareController::class, 'clear'])->middleware('throttle:10,1')->name('compare.clear');
 Route::post('/saved/{product}', [SavedProductsController::class, 'toggle'])->middleware('throttle:30,1')->name('saved.toggle');
 Route::delete('/recently-viewed', [SavedProductsController::class, 'clearHistory'])->middleware('throttle:10,1')->name('recently-viewed.clear');
 Route::get('/cart', [ShopController::class, 'cart'])->name('cart');

@@ -4,6 +4,7 @@ import { useLocale } from '@/composables/useLocale';
 import type { ShopSharedProps } from '@/types/shop';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
+    ArrowLeftRight,
     ArrowRight,
     ArrowUpRight,
     Check,
@@ -27,6 +28,14 @@ const savedNotice = computed(() =>
     ),
 );
 const savedError = computed(() => page.props.errors?.saved || '');
+const compareError = computed(() => page.props.errors?.compare || '');
+const compareNotice = computed(() =>
+    [
+        t('Shoe added to comparison.'),
+        t('Shoe removed from comparison.'),
+        t('Comparison list cleared.'),
+    ].includes(notice.value),
+);
 const reviewNotice = computed(
     () => notice.value === t('Thank you for sharing your review.'),
 );
@@ -167,6 +176,15 @@ const current = computed(() => page.url.split('?')[0]);
                     ><Heart :size="15" /> {{ t('Saved shoes') }}</Link
                 >
                 <Link
+                    href="/compare"
+                    :class="{ selected: current === '/compare' }"
+                    @click="open = false"
+                    ><ArrowLeftRight :size="15" /> {{ t('Compare')
+                    }}<span v-if="page.props.compareIds?.length"
+                        >({{ num(page.props.compareIds.length) }})</span
+                    ></Link
+                >
+                <Link
                     href="/wholesale"
                     :class="{ selected: current === '/wholesale' }"
                     @click="open = false"
@@ -176,11 +194,19 @@ const current = computed(() => page.url.split('?')[0]);
             </nav>
         </header>
         <Transition name="toast"
-            ><div v-if="notice || savedError" class="shop-toast" role="status">
+            ><div
+                v-if="notice || savedError || compareError"
+                class="shop-toast"
+                role="status"
+            >
                 <span class="toast-check"><Check :size="17" /></span>
                 <div>
-                    <strong>{{ t(savedError || notice) }}</strong
-                    ><Link v-if="savedNotice || savedError" href="/saved">
+                    <strong>{{
+                        t(compareError || savedError || notice)
+                    }}</strong
+                    ><Link v-if="compareNotice || compareError" href="/compare">
+                        {{ t('View comparison →') }} </Link
+                    ><Link v-else-if="savedNotice || savedError" href="/saved">
                         {{ t('View saved shoes →') }} </Link
                     ><Link v-else-if="!reviewNotice" href="/cart">
                         {{ t('View your bag →') }}
@@ -209,6 +235,7 @@ const current = computed(() => page.url.split('?')[0]);
                 <strong> {{ t('Find your next step') }} </strong
                 ><Link href="/"> {{ t('Shop all shoes') }} </Link
                 ><Link href="/saved"> {{ t('Saved shoes') }} </Link
+                ><Link href="/compare"> {{ t('Compare shoes') }} </Link
                 ><Link href="/wholesale"> {{ t('Wholesale partners') }} </Link
                 ><Link :href="user ? '/dashboard' : '/login'">
                     {{ t('Your account') }}

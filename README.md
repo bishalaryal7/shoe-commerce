@@ -41,6 +41,7 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 
 - Responsive storefront, global search, category/size filters, price sorting, product pages, size selection, stock checks and quantity controls.
 - Saved shoes (guest session, merged into the signed-in account), recently viewed shoes with a clear-history control, and practical foot-measuring guidance on product pages. Guests' saved shoes remain on their current browser until sign-in; signed-in lists persist in MySQL.
+- Side-by-side comparison for up to three shoes, including current customer or approved wholesale price, available sizes, color options, review rating, and product description. The comparison list stays in the current browser session.
 - Verified-purchase reviews with 1–5 star ratings and optional fit feedback. Only the signed-in owner of a paid, fulfilled order for that shoe can post or update a review; ratings and reviews appear publicly without exposing buyer or order details. Reviews are not prefilled with demo ratings.
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.

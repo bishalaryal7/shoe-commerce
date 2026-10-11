@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\ProductComparison;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -44,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'locale' => app()->getLocale(),
             'currency' => config('shop.currency'),
             'cartCount' => array_sum($request->session()->get('cart', [])),
+            'compareIds' => app(ProductComparison::class)->ids($request),
             'flash' => ['success' => $request->session()->get('success')],
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [

@@ -97,6 +97,7 @@ export const fixtures = {
         canReview: false,
     },
     'shop/Saved': { products: [product], wholesale: false },
+    'shop/Compare': { products: [product], wholesale: false },
     'shop/Cart': { lines: [line], wholesale: true },
     'shop/Checkout': {
         cashOnDelivery: true,

@@ -7,6 +7,7 @@ import ShopLayout from '@/layouts/ShopLayout.vue';
 import { type Product, type ShopSharedProps } from '@/types/shop';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
+    ArrowLeftRight,
     ArrowRight,
     ChevronRight,
     Footprints,
@@ -51,7 +52,11 @@ const props = defineProps<{
 const page = usePage<ShopSharedProps>();
 const details = ref<InstanceType<typeof ProductDetails> | null>(null);
 const saving = ref(false);
+const comparing = ref(false);
 const isSaved = computed(() => props.savedIds.includes(props.product.id));
+const isCompared = computed(
+    () => page.props.compareIds?.includes(props.product.id) ?? false,
+);
 function toggleSaved() {
     router.post(
         '/saved/' + props.product.id,
@@ -60,6 +65,17 @@ function toggleSaved() {
             preserveScroll: true,
             onStart: () => (saving.value = true),
             onFinish: () => (saving.value = false),
+        },
+    );
+}
+function toggleCompare() {
+    router.post(
+        '/compare/' + props.product.id,
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => (comparing.value = true),
+            onFinish: () => (comparing.value = false),
         },
     );
 }
@@ -161,6 +177,21 @@ const available = computed(() =>
                             :fill="isSaved ? 'currentColor' : 'none'"
                         />{{
                             t(isSaved ? 'Saved for later' : 'Save for later')
+                        }}
+                    </button>
+                    <button
+                        type="button"
+                        class="product-save-action compare-action"
+                        :aria-pressed="isCompared"
+                        :disabled="comparing || saving"
+                        @click="toggleCompare"
+                    >
+                        <ArrowLeftRight :size="18" />{{
+                            t(
+                                isCompared
+                                    ? 'Remove from comparison'
+                                    : 'Add to comparison',
+                            )
                         }}
                     </button>
                     <div class="product-page-benefits">

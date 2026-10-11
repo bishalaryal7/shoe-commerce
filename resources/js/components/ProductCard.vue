@@ -3,7 +3,13 @@ import ProductDetails from '@/components/ProductDetails.vue';
 import { useLocale } from '@/composables/useLocale';
 import { type Product, type ShopSharedProps } from '@/types/shop';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, Heart, Plus, Star } from 'lucide-vue-next';
+import {
+    ArrowLeftRight,
+    ArrowUpRight,
+    Heart,
+    Plus,
+    Star,
+} from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 const { t, num, money } = useLocale();
 const props = defineProps<{
@@ -14,6 +20,10 @@ const props = defineProps<{
 const page = usePage<ShopSharedProps>();
 const details = ref<InstanceType<typeof ProductDetails> | null>(null);
 const saving = ref(false);
+const comparing = ref(false);
+const compared = computed(
+    () => page.props.compareIds?.includes(props.product.id) ?? false,
+);
 function toggleSaved() {
     router.post(
         '/saved/' + props.product.id,
@@ -25,30 +35,61 @@ function toggleSaved() {
         },
     );
 }
+function toggleCompare() {
+    router.post(
+        '/compare/' + props.product.id,
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => (comparing.value = true),
+            onFinish: () => (comparing.value = false),
+        },
+    );
+}
 const available = computed(() =>
     props.product.variants.filter((v) => v.stock > 0),
 );
 </script>
 <template>
     <article class="product-card">
-        <button
-            type="button"
-            class="save-button"
-            :class="{ saved }"
-            :aria-label="
-                t(
-                    saved
-                        ? 'Remove :name from saved shoes'
-                        : 'Save :name for later',
-                    { name: t(product.name) },
-                )
-            "
-            :aria-pressed="!!saved"
-            :disabled="saving"
-            @click="toggleSaved"
-        >
-            <Heart :size="19" :fill="saved ? 'currentColor' : 'none'" />
-        </button>
+        <div class="product-card-actions">
+            <button
+                type="button"
+                class="save-button"
+                :class="{ saved }"
+                :aria-label="
+                    t(
+                        saved
+                            ? 'Remove :name from saved shoes'
+                            : 'Save :name for later',
+                        { name: t(product.name) },
+                    )
+                "
+                :aria-pressed="!!saved"
+                :disabled="saving || comparing"
+                @click="toggleSaved"
+            >
+                <Heart :size="18" :fill="saved ? 'currentColor' : 'none'" />
+            </button>
+            <button
+                type="button"
+                class="compare-button"
+                :class="{ compared }"
+                :aria-label="
+                    t(
+                        compared
+                            ? 'Remove :name from comparison'
+                            : 'Compare :name',
+                        { name: t(product.name) },
+                    )
+                "
+                :aria-pressed="compared"
+                :disabled="saving || comparing"
+                @click="toggleCompare"
+            >
+                <ArrowLeftRight :size="17" />
+            </button>
+        </div>
         <button
             type="button"
             class="product-image"
