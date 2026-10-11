@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryMovement;
+use App\Http\Requests\Shop\ProductRequest;
+use App\Http\Requests\Staff\OfflinePaymentRequest;
+use App\Http\Requests\Staff\OrderStatusRequest;
+use App\Http\Requests\Staff\StockRequest;
+use App\Http\Requests\Staff\WholesaleReviewRequest;
 use App\Models\Order;
 use App\Models\OrderEmail;
-use App\Models\OrderEvent;
 use App\Models\PaymentAttempt;
 use App\Models\Product;
 use App\Models\Variant;
 use App\Models\WholesaleAccount;
 use App\Payments\KhaltiGateway;
 use App\Payments\PayPayGateway;
-use App\Services\CancelOrder;
-use App\Services\OrderEmails;
+use App\Repositories\ProductRepository;
+use App\Repositories\UserRepository;
 use App\Services\OrderPayments;
+use App\Services\StaffOperations;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -45,6 +48,7 @@ class AdminController extends Controller
         return Inertia::render('admin/Index', ['filters' => $filters,
             'products' => Product::with('variants')->orderBy('id')->get()->makeVisible('wholesale_price'),
             'orders' => $orders->paginate(20, ['*'], 'orders_page')->withQueryString(),
+            'team' => app(UserRepository::class)->staff(),
             'applications' => WholesaleAccount::with('user:id,name,email')->orderBy('status')->get(),
             'payments' => PaymentAttempt::latest('id')->paginate(20, ['*'], 'payments_page')->withQueryString(),
             'integrations' => ['khalti' => app(KhaltiGateway::class)->available(), 'paypay' => app(PayPayGateway::class)->available(), 'mail' => config('mail.default'), 'pendingEmails' => OrderEmail::whereNull('sent_at')->count()],
@@ -53,69 +57,38 @@ class AdminController extends Controller
         ]);
     }
 
-    public function stock(Request $request, Variant $variant)
+    public function stock(StockRequest $request, Variant $variant, StaffOperations $staff)
     {
-        $data = $request->validate(['stock' => 'required|integer|min:0|max:1000000']);
-        DB::transaction(function () use ($request, $variant, $data) {
-            $locked = Variant::lockForUpdate()->findOrFail($variant->id);
-            $difference = $data['stock'] - $locked->stock;
-            $locked->update($data);
-            if ($difference !== 0) {
-                InventoryMovement::create(['variant_id' => $locked->id, 'actor_id' => $request->user()->id, 'quantity' => $difference, 'reason' => 'staff_adjustment']);
-            }
-        });
+        $staff->stock($variant->id, $request->validated('stock'), $request->user()->id);
 
         return back()->with('success', 'Available stock updated.');
     }
 
-    public function product(Request $request, Product $product)
+    public function product(ProductRequest $request, Product $product, ProductRepository $products)
     {
-        $data = $request->validate(['name' => 'required|string|max:150', 'retail_price' => 'required|integer|min:1|max:100000000',
-            'wholesale_price' => 'required|integer|min:1|max:100000000', 'active' => 'required|boolean',
-            'description' => 'sometimes|required|string|max:5000', 'category' => 'sometimes|required|in:Everyday,Running,Outdoor']);
-        $product->update($data);
+        $products->update($product, $request->validated());
 
         return back()->with('success', 'Product updated.');
     }
 
-    public function approve(Request $request, WholesaleAccount $account)
+    public function approve(WholesaleReviewRequest $request, WholesaleAccount $account)
     {
-        $data = $request->validate(['status' => 'required|in:approved,rejected']);
+        $data = $request->validated();
         $account->update($data);
 
         return back()->with('success', 'Wholesale application updated.');
     }
 
-    public function order(Request $request, Order $order, OrderEmails $emails)
+    public function order(OrderStatusRequest $request, Order $order, StaffOperations $staff)
     {
-        $data = $request->validate(['status' => 'required|in:confirmed,fulfilled,cancelled']);
-        if ($data['status'] === 'cancelled') {
-            app(CancelOrder::class)->cancel($order, $request->user()->id, true);
-        } else {
-            DB::transaction(function () use ($order, $data, $emails, $request) {
-                $locked = Order::lockForUpdate()->findOrFail($order->id);
-                $allowed = ['pending_confirmation' => ['confirmed'], 'confirmed' => ['fulfilled']];
-                abort_unless(in_array($data['status'], $allowed[$locked->status] ?? []), 422, 'This order cannot move to that status.');
-                abort_if($data['status'] === 'fulfilled' && $locked->payment_status !== 'paid', 422, 'Record or verify payment before fulfilling this order.');
-                $locked->update($data);
-                OrderEvent::create(['order_id' => $locked->id, 'actor_id' => $request->user()->id, 'event' => $data['status']]);
-                $emails->record($locked, $data['status']);
-            });
-        }
+        $staff->transition($order, $request->validated('status'), $request->user()->id);
 
         return back()->with('success', 'Order updated.');
     }
 
-    public function offlinePayment(Request $request, Order $order, OrderEmails $emails)
+    public function offlinePayment(OfflinePaymentRequest $request, Order $order, StaffOperations $staff)
     {
-        $data = $request->validate(['reference' => 'required|string|max:150']);
-        DB::transaction(function () use ($request, $order, $data, $emails) {
-            $locked = Order::lockForUpdate()->findOrFail($order->id);
-            abort_unless($locked->payment_method === 'request' && $locked->payment_status === 'unpaid' && in_array($locked->status, ['pending_confirmation', 'confirmed']), 422, 'This order cannot record an offline payment.');
-            $locked->update(['payment_method' => 'offline', 'payment_status' => 'paid', 'paid_at' => now(), 'status' => 'confirmed', 'offline_payment_reference' => $data['reference']]);
-            OrderEvent::create(['order_id' => $locked->id, 'actor_id' => $request->user()->id, 'event' => 'offline_payment_received', 'details' => ['reference' => $data['reference'], 'amount' => $locked->total, 'currency' => $locked->currency]]);
-            $emails->record($locked, 'paid');
-        });
+        $staff->offlinePayment($order, $request->validated('reference'), $request->user()->id);
 
         return back()->with('success', 'Offline payment recorded. The order is ready for fulfillment.');
     }

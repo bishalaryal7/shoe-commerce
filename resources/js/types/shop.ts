@@ -13,6 +13,8 @@ export interface Product {
     slug: string;
     category: string;
     description: string;
+    name_ne?: string | null;
+    description_ne?: string | null;
     image: string;
     price: number;
     retail_price: number;
@@ -39,6 +41,7 @@ export function money(amount: number, currency = 'USD') {
 }
 
 export type ShopSharedProps = AppPageProps<{
+    locale: 'en' | 'ne';
     currency: string;
     cartCount: number;
     flash: { success?: string };

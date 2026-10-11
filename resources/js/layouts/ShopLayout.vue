@@ -1,18 +1,21 @@
 <script setup lang="ts">
+import LanguageSwitch from '@/components/LanguageSwitch.vue';
+import { useLocale } from '@/composables/useLocale';
 import type { ShopSharedProps } from '@/types/shop';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
     ArrowUpRight,
     Check,
-    Footprints,
     Menu,
+    Mountain,
     Search,
     ShoppingBag,
     UserRound,
     X,
 } from 'lucide-vue-next';
 import { computed, onUnmounted, ref, watch } from 'vue';
+const { t } = useLocale();
 const page = usePage<ShopSharedProps>();
 const open = ref(false);
 const user = computed(() => page.props.auth.user);
@@ -40,26 +43,29 @@ const current = computed(() => page.url.split('?')[0]);
 </script>
 <template>
     <div class="store">
-        <a class="skip-link" href="#main-content">Skip to content</a>
+        <a class="skip-link" href="#main-content">{{ t('Skip to content') }}</a>
         <div class="announcement">
-            <span>Everyday pairs. Business possibilities.</span
+            <span>{{ t('Reach higher. Walk further.') }}</span
             ><Link href="/wholesale"
-                >Explore wholesale <ArrowUpRight :size="12"
+                >{{ t('Explore wholesale') }} <ArrowUpRight :size="12"
             /></Link>
         </div>
         <header class="header-shell">
             <div class="shop-header wrap">
                 <Link href="/" class="wordmark"
-                    ><span class="brand-symbol"><Footprints :size="22" /></span
+                    ><span class="brand-symbol"><Mountain :size="22" /></span
                     >{{ page.props.name }}</Link
                 >
+                <LanguageSwitch />
                 <form class="header-search" @submit.prevent="searchShop()">
                     <Search :size="17" /><input
                         v-model="query"
                         type="search"
                         maxlength="100"
-                        placeholder="Search shoes, styles, your next favorite…"
-                        aria-label="Search the store"
+                        :placeholder="
+                            t('Search shoes, styles, your next favorite…')
+                        "
+                        :aria-label="t('Search the store')"
                     /><button type="submit" aria-label="Search">
                         <ArrowRight :size="17" />
                     </button>
@@ -78,19 +84,22 @@ const current = computed(() => page.url.split('?')[0]);
                         </summary>
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
-                            ><Link href="/orders">Your orders</Link
-                            ><Link href="/dashboard">My account</Link
+                            ><Link href="/orders">{{ t('Your orders') }}</Link
+                            ><Link href="/dashboard">{{ t('My account') }}</Link
                             ><Link href="/settings/profile"
                                 >Account settings</Link
-                            ><Link v-if="user.is_admin" href="/admin"
-                                >Team workspace</Link
-                            ><Link href="/logout" method="post" as="button"
-                                >Sign out</Link
-                            >
+                            ><Link v-if="user.is_admin" href="/admin">{{
+                                t('Team workspace')
+                            }}</Link
+                            ><Link href="/logout" method="post" as="button">{{
+                                t('Sign out')
+                            }}</Link>
                         </div>
                     </details>
                     <Link v-else href="/login" class="account-link"
-                        ><UserRound :size="19" /><span>Sign in</span></Link
+                        ><UserRound :size="19" /><span>{{
+                            t('Sign in')
+                        }}</span></Link
                     >
                     <Link
                         href="/cart"
@@ -127,10 +136,12 @@ const current = computed(() => page.url.split('?')[0]);
                 <Link
                     href="/?category=Everyday#collection"
                     @click="open = false"
-                    >Everyday</Link
+                    >{{ t('Everyday') }}</Link
                 >
-                <Link href="/?category=Running#collection" @click="open = false"
-                    >Running</Link
+                <Link
+                    href="/?category=Running#collection"
+                    @click="open = false"
+                    >{{ t('Running') }}</Link
                 >
                 <Link
                     href="/wholesale"
@@ -155,7 +166,7 @@ const current = computed(() => page.url.split('?')[0]);
         <footer class="shop-footer wrap">
             <div>
                 <Link href="/" class="wordmark"
-                    ><span class="brand-symbol"><Footprints :size="22" /></span
+                    ><span class="brand-symbol"><Mountain :size="22" /></span
                     >{{ page.props.name }}</Link
                 >
                 <p>A little more comfort.<br />A lot more possibility.</p>
@@ -169,7 +180,7 @@ const current = computed(() => page.url.split('?')[0]);
                 >
             </div>
             <div class="footer-note">
-                <span class="eyebrow">FOR EVERY WAY YOU MOVE</span>
+                <span class="eyebrow"> {{ t('FOR EVERY WAY YOU MOVE') }} </span>
                 <p>From one perfect pair<br />to your next bulk order.</p>
             </div>
             <div class="footer-bottom">

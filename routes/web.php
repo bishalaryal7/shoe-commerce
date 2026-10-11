@@ -2,15 +2,19 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\StaffAccessController;
 use App\Http\Controllers\WholesaleController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
+
+Route::post('/language', [LanguageController::class, 'update'])->middleware('throttle:30,1')->name('language');
 
 Route::get('/ready', function () {
     try {
@@ -20,7 +24,9 @@ Route::get('/ready', function () {
             && Schema::hasTable('order_emails')
             && Schema::hasTable('order_events')
             && Schema::hasTable('inventory_movements')
-            && Schema::hasColumn('orders', 'offline_payment_reference');
+            && Schema::hasColumn('orders', 'offline_payment_reference')
+            && Schema::hasColumn('products', 'name_ne')
+            && Schema::hasColumn('products', 'description_ne');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -47,6 +53,8 @@ Route::post('/wholesale', [WholesaleController::class, 'store'])->middleware(['a
 Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
+    Route::post('/team', [StaffAccessController::class, 'store'])->middleware('throttle:10,1')->name('team.store');
+    Route::delete('/team/{user}', [StaffAccessController::class, 'destroy'])->middleware('throttle:10,1')->name('team.destroy');
     Route::patch('/variants/{variant}', [AdminController::class, 'stock'])->name('stock');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::post('/products/{product}/image', [ProductController::class, 'image'])->name('products.image');

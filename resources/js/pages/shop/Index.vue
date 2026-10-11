@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ProductCard from '@/components/ProductCard.vue';
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import type { Product } from '@/types/shop';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -14,6 +15,7 @@ import {
     X,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+const { t } = useLocale();
 const props = defineProps<{
     products: {
         data: Product[];
@@ -67,53 +69,49 @@ function reset() {
             content="Shop everyday sneakers, running shoes, and outdoor footwear. Find your size, shop individual pairs, or apply for wholesale prices."
     /></Head>
     <ShopLayout>
-        <section class="hero wrap">
+        <section v-if="!hasFilters" class="hero wrap">
             <div class="hero-panel">
                 <div class="hero-copy">
                     <span class="hero-badge"
-                        ><span class="tiny-dot"></span> FOR EVERY WAY YOU
-                        MOVE</span
-                    >
-                    <h1>Your everyday.<br />A little <em>better.</em></h1>
+                        ><span class="tiny-dot"></span>
+                        {{ t('FOR EVERY WAY YOU MOVE') }}
+                    </span>
+                    <h1>{{ t('Reach higher. Walk further.') }}</h1>
                     <p>
-                        Find your next favorite pair. From the morning commute
-                        to wherever the weekend takes you.
+                        EVE takes its name from Everest: a reminder to keep
+                        moving. Find everyday comfort, running shoes and outdoor
+                        styles for your next journey.
                     </p>
                     <div class="hero-buttons">
                         <a href="#collection" class="button lime"
-                            >Find my pair <ArrowUpRight :size="18" /></a
+                            >{{ t('Find my pair') }}
+                            <ArrowUpRight :size="18" /></a
                         ><Link href="/wholesale" class="hero-secondary"
-                            >Buying in bulk? <ArrowRight :size="16"
+                            >{{ t('Buying in bulk?') }} <ArrowRight :size="16"
                         /></Link>
                     </div>
                     <div class="hero-caption">
-                        <span class="caption-line"></span> GOOD SHOES. NO
-                        OVERTHINKING.
+                        <span class="caption-line"></span>
+                        {{ t('GOOD SHOES. NO OVERTHINKING.') }}
                     </div>
                 </div>
-                <div class="hero-visual">
-                    <span class="hero-stamp">THE EVERYDAY<br />EDIT / 01</span
-                    ><span class="hero-outline-word" aria-hidden="true"
-                        >MOVE</span
-                    >
-                    <div class="hero-circle"></div>
+                <div class="hero-visual eve-hero-visual">
                     <img
-                        src="/images/shoe-cream.svg"
-                        alt="Cream everyday sneaker illustration"
-                        class="hero-shoe"
+                        src="/images/eve-everest-hero.webp"
+                        alt="Everest-inspired snowy mountain landscape at dawn"
+                        class="eve-hero-image"
+                        width="1536"
+                        height="1024"
                         fetchpriority="high"
                     />
-                    <div class="hero-product">
-                        <span class="mini-label">A FRESH PERSPECTIVE</span
-                        ><strong>Comfort looks good on you.</strong>
+                    <div class="eve-hero-overlay">
+                        <span>EVE / NEPAL</span
+                        ><strong>{{ t('Reach higher. Walk further.') }}</strong>
                     </div>
-                    <span class="hero-visual-arrow"
-                        ><ArrowUpRight :size="25"
-                    /></span>
                 </div>
             </div>
         </section>
-        <section class="benefits wrap">
+        <section v-if="!hasFilters" class="benefits wrap">
             <div>
                 <span class="benefit-icon"><Footprints :size="19" /></span
                 ><span
@@ -124,22 +122,26 @@ function reset() {
             <div>
                 <span class="benefit-icon"><Layers3 :size="19" /></span
                 ><span
-                    ><strong>One pair or a dozen</strong
-                    ><small>Retail & wholesale</small></span
+                    ><strong> {{ t('One pair or a dozen') }} </strong
+                    ><small> {{ t('Retail & wholesale') }} </small></span
                 >
             </div>
             <div>
                 <span class="benefit-icon"><PackageCheck :size="19" /></span
                 ><span
-                    ><strong>Easy to order</strong
-                    ><small>Your team confirms the details</small></span
+                    ><strong> {{ t('Easy to order') }} </strong
+                    ><small>
+                        {{ t('Your team confirms the details') }}
+                    </small></span
                 >
             </div>
         </section>
         <section id="collection" class="collection wrap">
             <div class="section-heading">
                 <div>
-                    <span class="eyebrow">YOUR NEXT FAVORITES</span>
+                    <span class="eyebrow">
+                        {{ t('YOUR NEXT FAVORITES') }}
+                    </span>
                     <h2>
                         {{
                             wholesale
@@ -150,9 +152,9 @@ function reset() {
                 </div>
                 <span v-if="wholesale" class="wholesale-pill"
                     >Wholesale pricing · 12 pair minimum</span
-                ><span v-else class="collection-caption"
-                    >A pair for every kind of day.</span
-                >
+                ><span v-else class="collection-caption">
+                    {{ t('A pair for every kind of day.') }}
+                </span>
             </div>
             <div class="collection-tools">
                 <div class="filter-tabs" aria-label="Shoe categories">
@@ -175,7 +177,7 @@ function reset() {
                             filter(category === 'All shoes' ? '' : category)
                         "
                     >
-                        {{ category }}
+                        {{ t(category) }}
                     </button>
                 </div>
                 <form class="search-field" @submit.prevent="filter()">
@@ -225,12 +227,14 @@ function reset() {
                     ><label
                         ><span class="sr-only">Sort products</span
                         ><select v-model="sort" @change="filter()">
-                            <option value="featured">Featured</option>
+                            <option value="featured">
+                                {{ t('Featured') }}
+                            </option>
                             <option value="price_low">
-                                Price: low to high
+                                {{ t('Price: low to high') }}
                             </option>
                             <option value="price_high">
-                                Price: high to low
+                                {{ t('Price: high to low') }}
                             </option>
                             <option value="name">Name: A–Z</option>
                         </select></label
@@ -257,7 +261,7 @@ function reset() {
                     there.
                 </p>
                 <button class="button dark" @click="reset()">
-                    Reset filters <ArrowRight :size="16" />
+                    {{ t('Reset filters') }} <ArrowRight :size="16" />
                 </button>
             </div>
             <nav

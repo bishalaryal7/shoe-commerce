@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { money, type CustomerOrder } from '@/types/shop';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowRight, ShoppingBag } from 'lucide-vue-next';
+const { t } = useLocale();
 defineProps<{
     orders: {
         data: CustomerOrder[];
@@ -13,14 +15,16 @@ defineProps<{
 <template>
     <Head title="Your orders" /><ShopLayout
         ><section class="wrap inner-page">
-            <span class="eyebrow">YOUR ACCOUNT</span>
-            <h1>Your orders.</h1>
+            <span class="eyebrow"> {{ t('YOUR ACCOUNT') }} </span>
+            <h1>{{ t('Your orders.') }}</h1>
             <div v-if="!orders.data.length" class="empty-state">
                 <span class="empty-icon"><ShoppingBag :size="28" /></span>
-                <h2>Your first good find is waiting.</h2>
-                <p>Orders placed while signed in will appear here.</p>
-                <Link href="/" class="button dark"
-                    >Find your next pair <ArrowRight :size="16"
+                <h2>{{ t('Your first good find is waiting.') }}</h2>
+                <p>
+                    {{ t('Orders placed while signed in will appear here.') }}
+                </p>
+                <Link href="/" class="button dark">
+                    {{ t('Find your next pair') }} <ArrowRight :size="16"
                 /></Link>
             </div>
             <article
@@ -54,7 +58,8 @@ defineProps<{
                 <Link
                     :href="'/orders/track/' + order.reference"
                     class="button outline"
-                    >View order <ArrowRight :size="15"
+                >
+                    {{ t('View order') }} <ArrowRight :size="15"
                 /></Link>
             </article>
             <nav

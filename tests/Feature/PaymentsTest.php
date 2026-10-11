@@ -126,7 +126,7 @@ class PaymentsTest extends TestCase
     {
         config(['payments.khalti.enabled' => false]);
         $token = (string) Str::uuid();
-        $this->withSession(['cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', ['name' => 'Buyer', 'email' => 'buyer@example.com', 'phone' => '123', 'address' => 'Nepal', 'token' => $token, 'payment_method' => 'khalti'])->assertSessionHasErrors('payment_method');
+        $this->withSession(['cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', ['name' => 'Buyer', 'email' => 'buyer@example.com', 'phone' => '9800000001', 'address' => 'Kathmandu, Nepal', 'token' => $token, 'payment_method' => 'khalti'])->assertSessionHasErrors('payment_method');
         $this->assertSame(0, Order::count());
         $this->assertDatabaseHas('variants', ['id' => 1, 'stock' => 20]);
     }

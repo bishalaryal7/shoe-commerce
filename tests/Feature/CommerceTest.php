@@ -39,7 +39,7 @@ class CommerceTest extends TestCase
         $this->actingAs($user)->get('/admin')->assertForbidden();
         $this->patch('/admin/variants/1', ['stock' => 999])->assertForbidden();
         $this->patch('/admin/products/1', ['name' => 'Tampered'])->assertForbidden();
-        $account = WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Store', 'phone' => '12345']);
+        $account = WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Store', 'phone' => '9800000001']);
         $this->patch('/admin/wholesale/'.$account->id, ['status' => 'approved'])->assertForbidden();
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', $this->payload($token));
@@ -79,7 +79,7 @@ class CommerceTest extends TestCase
     public function test_only_approved_businesses_receive_wholesale_prices(): void
     {
         $user = User::factory()->create();
-        $account = WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Test Store', 'phone' => '12345']);
+        $account = WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Test Store', 'phone' => '9800000001']);
         $this->actingAs($user)->get('/')->assertInertia(fn (Assert $p) => $p->where('wholesale', false)->where('products.data.0.price', 8900));
         $account->update(['status' => 'approved']);
         $this->get('/')->assertInertia(fn (Assert $p) => $p->where('wholesale', true)->where('products.data.0.price', 5900));
@@ -88,7 +88,7 @@ class CommerceTest extends TestCase
     public function test_wholesale_minimum_is_enforced_on_the_server(): void
     {
         $user = User::factory()->create();
-        WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Test Store', 'phone' => '12345', 'status' => 'approved']);
+        WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Test Store', 'phone' => '9800000001', 'status' => 'approved']);
         $variant = Product::first()->variants()->first();
         $token = (string) Str::uuid();
         $this->actingAs($user)->withSession(['cart' => [$variant->id => 1], 'checkout_token' => $token])->post('/checkout', $this->payload($token))->assertSessionHasErrors('cart');
@@ -121,7 +121,7 @@ class CommerceTest extends TestCase
     public function test_customer_cannot_approve_their_own_application(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->post('/wholesale', ['company' => 'Test Store', 'phone' => '12345', 'status' => 'approved', 'user_id' => 999])->assertRedirect();
+        $this->actingAs($user)->post('/wholesale', ['company' => 'Test Store', 'phone' => '9800000001', 'status' => 'approved', 'user_id' => 999])->assertRedirect();
         $this->assertDatabaseHas('wholesale_accounts', ['user_id' => $user->id, 'status' => 'pending']);
     }
 
@@ -163,7 +163,7 @@ class CommerceTest extends TestCase
         $product = Product::where('slug', 'city-low')->first();
         $product->update(['wholesale_price' => 100]);
         $user = User::factory()->create();
-        WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Partner', 'phone' => '12345', 'status' => 'approved']);
+        WholesaleAccount::create(['user_id' => $user->id, 'company' => 'Partner', 'phone' => '9800000001', 'status' => 'approved']);
         $this->actingAs($user)->get('/?sort=price_low')->assertInertia(fn (Assert $page) => $page
             ->where('products.data.0.name', 'City Low')->where('products.data.0.price', 100));
     }

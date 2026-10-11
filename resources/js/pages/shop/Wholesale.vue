@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+const { t } = useLocale();
 defineProps<{ account: { company: string; status: string } | null }>();
 const page = usePage();
 const form = useForm({ company: '', phone: '', message: '' });
@@ -60,25 +62,29 @@ const form = useForm({ company: '', phone: '', message: '' });
                             >Explore the collection ↗</Link
                         ></template
                     ><template v-else-if="!(page.props.auth as any)?.user"
-                        ><h2>Join the partner program</h2>
+                        ><h2>{{ t('Join the partner program') }}</h2>
                         <p>
-                            Sign in or register to apply for a wholesale
-                            account.
+                            {{
+                                t(
+                                    'Sign in or register to apply for a wholesale account.',
+                                )
+                            }}
                         </p>
                         <Link href="/register" class="button dark"
                             >Create an account ↗</Link
                         >
                         <p>
-                            Already registered?
-                            <Link href="/login" class="text-button"
-                                >Sign in</Link
-                            >
+                            {{ t('Already registered?') }}
+                            <Link href="/login" class="text-button">{{
+                                t('Sign in')
+                            }}</Link>
                         </p></template
                     >
                     <form v-else @submit.prevent="form.post('/wholesale')">
-                        <h2>Apply for wholesale</h2>
+                        <h2>{{ t('Apply for wholesale') }}</h2>
                         <label
-                            >Company name<input
+                            >{{ t('Company name')
+                            }}<input
                                 v-model="form.company"
                                 required
                                 maxlength="150"
@@ -87,7 +93,8 @@ const form = useForm({ company: '', phone: '', message: '' });
                                 form.errors.company
                             }}</span></label
                         ><label
-                            >Business phone<input
+                            >{{ t('Business phone')
+                            }}<input
                                 v-model="form.phone"
                                 type="tel"
                                 required
@@ -97,11 +104,16 @@ const form = useForm({ company: '', phone: '', message: '' });
                                 form.errors.phone
                             }}</span></label
                         ><label
-                            >Tell us about your business<textarea
+                            >{{ t('Tell us about your business')
+                            }}<textarea
                                 v-model="form.message"
                                 rows="4"
                                 maxlength="2000"
-                                placeholder="Your shop, location, and expected order sizes"
+                                :placeholder="
+                                    t(
+                                        'Your shop, location, and expected order sizes',
+                                    )
+                                "
                             /><span class="field-error">{{
                                 form.errors.message
                             }}</span></label

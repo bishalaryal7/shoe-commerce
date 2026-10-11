@@ -1,4 +1,4 @@
-# Shoe Commerce
+# EVE — Reach higher. Walk further.
 
 Laravel 12 + Vue 3 / TypeScript / Inertia storefront and staff workspace. Main market: Nepal, NPR. PHP 8.4+ and Node 22+ required. Demo catalog prices and images are placeholders; enter actual selling prices before launch.
 
@@ -23,7 +23,19 @@ Mailpit: http://localhost:8026. Local SMTP uses 127.0.0.1:1026. `php artisan sho
 
 Register your own account, then grant staff access with `php artisan shop:admin your-email@example.com`. Visit `/admin`. No administrator password is seeded. An existing customer account must be granted staff access once; the access-denied page identifies the signed-in email so you can grant the correct account.
 
-After signing in as staff, use **Inventory** to edit names, descriptions, categories, prices and visibility. The customer description appears on the product page. Choose **Replace product photo**, preview the selected JPG/PNG/WebP (up to 5 MB), then save it. Uploads are stored on the public disk; `php artisan storage:link` makes them available to customers. Regular catalog updates require no source-code edits.
+After signing in as staff, use **Inventory** to edit names, descriptions, categories, prices and visibility. The customer description appears on the product page. Choose **Replace product photo**, preview the selected JPG/PNG/WebP (up to 5 MB), then save it. Uploads are stored on the public disk; `php artisan storage:link` makes them available to customers. Regular catalog updates require no source-code edits. The development server explicitly allows uploads above the 5 MB application limit; `public/.user.ini` provides matching PHP-FPM limits. The application still rejects files over 5 MB. Restart the development server after updating this code.
+
+## Brand and languages
+
+EVE takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Core navigation, checkout, order and authentication copy are translated; any untranslated copy falls back to English. Inventory supports optional Nepali product names and descriptions, with English fallback. Search matches either name. Run `php artisan migrate` before editing the new bilingual fields.
+
+## Application structure and validation
+
+Routes apply session/CSRF, authentication, staff authorization and throttling. Form Requests validate checkout, product content/prices, wholesale applications, cart quantities, language changes and staff actions. Services handle order placement, inventory/order state transitions, photo storage and staff access. Repositories handle catalog, order, inventory and user persistence. Payment adapters verify authoritative provider responses.
+
+Contact fields have length/type limits and phone validation (including normalization of Nepali digits); checkout also shows inline client errors. Orders use server prices and atomic stock reservation. Staff cannot grant customer access without authorization, remove their own staff role, fulfill unpaid orders or release unsettled payment stock. Wholesale prices cannot exceed retail. The validation suites assert that invalid input creates no order and leaves inventory unchanged.
+
+After the initial owner grant, **Admin → Team** lets staff grant/revoke access to existing registered accounts without editing the database.
 
 ## What is built
 
@@ -65,6 +77,7 @@ References: [Khalti ePayment](https://docs.khalti.com/khalti-epayment/), [PayPay
 ```bash
 php artisan test
 npm run typecheck
+npm run test:frontend
 npm run lint:check
 npm run format:check
 vendor/bin/pint --test

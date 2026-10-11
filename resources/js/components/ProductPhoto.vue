@@ -22,7 +22,21 @@ function reset() {
     if (input.value) input.value.value = '';
 }
 function file(event: Event) {
-    form.image = (event.target as HTMLInputElement).files?.[0] || null;
+    form.clearErrors('image');
+    const selected = (event.target as HTMLInputElement).files?.[0] || null;
+    if (
+        selected &&
+        (!['image/jpeg', 'image/png', 'image/webp'].includes(selected.type) ||
+            selected.size > 5 * 1024 * 1024)
+    ) {
+        form.image = null;
+        form.setError(
+            'image',
+            'Choose a JPG, PNG or WebP photo no larger than 5 MB.',
+        );
+        return;
+    }
+    form.image = selected;
 }
 </script>
 <template>
@@ -48,6 +62,15 @@ function file(event: Event) {
             <p v-if="form.errors.image" class="field-error" role="alert">
                 {{ form.errors.image }}
             </p>
+            <p v-if="form.progress" role="status">
+                Uploading {{ form.progress.percentage }}%
+            </p>
+            <progress
+                v-if="form.progress"
+                :value="form.progress.percentage"
+                max="100"
+                aria-label="Photo upload progress"
+            />
             <button
                 class="button outline"
                 :disabled="!form.image || form.processing"

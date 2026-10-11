@@ -8,6 +8,8 @@ const form = useForm({
     name: props.product.name,
     category: props.product.category,
     description: props.product.description,
+    name_ne: props.product.name_ne || '',
+    description_ne: props.product.description_ne || '',
     retail_price: (props.product.retail_price / 100).toFixed(2),
     wholesale_price: ((props.product.wholesale_price || 0) / 100).toFixed(2),
     active: props.product.active,
@@ -77,6 +79,28 @@ function save() {
                 {{ form.description.length }}/5000 characters</small
             ><span v-if="form.errors.description" class="field-error">{{
                 form.errors.description
+            }}</span></label
+        >
+        <label
+            >Nepali product name (optional)<input
+                v-model="form.name_ne"
+                maxlength="150"
+                placeholder="नेपाली नाम"
+            /><span v-if="form.errors.name_ne" class="field-error">{{
+                form.errors.name_ne
+            }}</span></label
+        >
+        <label class="product-description-field"
+            >Nepali description (optional)<textarea
+                v-model="form.description_ne"
+                rows="4"
+                maxlength="5000"
+                placeholder="नेपालीमा जुत्ताको विवरण"
+            /><small
+                >Used when customers choose नेपाली. Leave blank to show the
+                English description.</small
+            ><span v-if="form.errors.description_ne" class="field-error">{{
+                form.errors.description_ne
             }}</span></label
         >
         <label class="checkbox-label"

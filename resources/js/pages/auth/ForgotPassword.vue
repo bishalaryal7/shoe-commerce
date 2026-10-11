@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useLocale } from '@/composables/useLocale';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
+const { t } = useLocale();
 
 defineProps<{
     status?: string;
@@ -17,10 +19,10 @@ defineProps<{
 
 <template>
     <AuthLayout
-        title="Forgot password"
+        :title="t('Forgot password')"
         description="Enter your email to receive a password reset link"
     >
-        <Head title="Forgot password" />
+        <Head :title="t('Forgot password')" />
 
         <div
             v-if="status"
@@ -32,7 +34,7 @@ defineProps<{
         <div class="space-y-6">
             <Form v-bind="email.form()" v-slot="{ errors, processing }">
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">{{ t('Email address') }}</Label>
                     <Input
                         id="email"
                         type="email"
@@ -51,7 +53,7 @@ defineProps<{
                         data-test="email-password-reset-link-button"
                     >
                         <Spinner v-if="processing" />
-                        Email password reset link
+                        {{ t('Email password reset link') }}
                     </Button>
                 </div>
             </Form>

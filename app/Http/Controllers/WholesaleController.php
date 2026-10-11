@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Shop\WholesaleRequest;
 use App\Models\WholesaleAccount;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,9 +14,9 @@ class WholesaleController extends Controller
         return Inertia::render('shop/Wholesale', ['account' => $request->user() ? WholesaleAccount::where('user_id', $request->user()->id)->first() : null]);
     }
 
-    public function store(Request $request)
+    public function store(WholesaleRequest $request)
     {
-        $data = $request->validate(['company' => 'required|string|max:150', 'phone' => 'required|string|max:40', 'message' => 'nullable|string|max:2000']);
+        $data = $request->validated();
         if (WholesaleAccount::where('user_id', $request->user()->id)->exists()) {
             return back()->withErrors(['company' => 'You already have a wholesale application.']);
         }

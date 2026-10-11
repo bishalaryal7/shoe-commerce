@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { money, type CustomerOrder, type PaymentOption } from '@/types/shop';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
@@ -12,6 +13,7 @@ import {
     RefreshCw,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+const { t } = useLocale();
 const props = defineProps<{
     order: CustomerOrder;
     paymentOptions: PaymentOption[];
@@ -60,10 +62,10 @@ function pay(provider: 'khalti' | 'paypay') {
             <h1>
                 {{
                     order.status === 'cancelled'
-                        ? 'Order cancelled.'
+                        ? t('Order cancelled.')
                         : paid
-                          ? 'You’re all set.'
-                          : 'Your order is in.'
+                          ? t('You’re all set.')
+                          : t('Your order is in.')
                 }}
             </h1>
             <div class="order-overview">
@@ -79,9 +81,9 @@ function pay(provider: 'khalti' | 'paypay') {
             <div v-if="order.status !== 'cancelled'" class="order-timeline">
                 <div
                     v-for="(step, index) in [
-                        'Order received',
-                        'Order confirmed',
-                        'Order fulfilled',
+                        t('Order received'),
+                        t('Order confirmed'),
+                        t('Order fulfilled'),
                     ]"
                     :key="step"
                     :class="{ done: stage > index }"
@@ -96,7 +98,7 @@ function pay(provider: 'khalti' | 'paypay') {
             <div class="checkout-grid">
                 <div>
                     <div class="form-card">
-                        <h2>Your order details</h2>
+                        <h2>{{ t('Your order details') }}</h2>
                         <p class="order-reference">{{ order.reference }}</p>
                         <div
                             v-for="item in order.items"
@@ -118,17 +120,24 @@ function pay(provider: 'khalti' | 'paypay') {
                         </div>
                         <div class="delivery-details">
                             <div>
-                                <span class="eyebrow">DELIVER TO</span>
+                                <span class="eyebrow">
+                                    {{ t('DELIVER TO') }}
+                                </span>
                                 <h3>{{ order.name }}</h3>
                                 <p>{{ order.address }}</p>
                                 <p>{{ order.phone }}</p>
                             </div>
                             <div>
-                                <span class="eyebrow">ORDER UPDATES</span>
+                                <span class="eyebrow">
+                                    {{ t('ORDER UPDATES') }}
+                                </span>
                                 <p>{{ order.email }}</p>
                                 <p class="muted">
-                                    Keep your private tracking link to check
-                                    this order later.
+                                    {{
+                                        t(
+                                            'Keep your private tracking link to check this order later.',
+                                        )
+                                    }}
                                 </p>
                             </div>
                         </div>
@@ -139,63 +148,76 @@ function pay(provider: 'khalti' | 'paypay') {
                         >
                             <Copy :size="15" />{{
                                 copied
-                                    ? 'Tracking link copied'
-                                    : 'Copy tracking link'
+                                    ? t('Tracking link copied')
+                                    : t('Copy tracking link')
                             }}</button
                         ><a
                             v-if="accessUrl"
                             :href="accessUrl"
                             class="text-button tracking-fallback"
-                            >Open private tracking link</a
                         >
+                            {{ t('Open private tracking link') }}
+                        </a>
                     </div>
                     <Link href="/" class="back-shopping"
                         >Keep exploring <ArrowRight :size="14"
                     /></Link>
                 </div>
                 <aside class="summary-card">
-                    <h2>Order total</h2>
+                    <h2>{{ t('Order total') }}</h2>
                     <div class="summary-line">
-                        <span>Subtotal</span
+                        <span>{{ t('Subtotal') }}</span
                         ><strong>{{
                             money(order.subtotal, order.currency)
                         }}</strong>
                     </div>
                     <div class="summary-line">
-                        <span>Shipping</span
+                        <span>{{ t('Shipping') }}</span
                         ><span>{{
                             money(order.shipping_amount, order.currency)
                         }}</span>
                     </div>
                     <div class="summary-line">
-                        <span>Tax</span
+                        <span>{{ t('Tax') }}</span
                         ><span>{{
                             money(order.tax_amount, order.currency)
                         }}</span>
                     </div>
                     <div class="summary-line summary-total">
-                        <span>Total</span
+                        <span>{{ t('Total') }}</span
                         ><strong>{{
                             money(order.total, order.currency)
                         }}</strong>
                     </div>
                     <p v-if="paid" class="payment-confirmation">
-                        <Check :size="16" />Payment verified. Thank you.
+                        <Check :size="16" />
+                        {{ t('Payment verified. Thank you.') }}
                     </p>
                     <p v-else-if="order.payment_status === 'refunded'">
-                        Your payment has been refunded by the provider.
+                        {{
+                            t('Your payment has been refunded by the provider.')
+                        }}
                     </p>
                     <p v-else-if="order.payment_status === 'review'">
-                        Our team needs to review this payment. Please don’t pay
-                        again while it is being checked.
+                        {{
+                            t(
+                                'Our team needs to review this payment. Please don’t pay again while it is being checked.',
+                            )
+                        }}
                     </p>
                     <p v-else-if="order.payment_status === 'pending'">
-                        We’re waiting for the payment provider. If you already
-                        paid, check the payment status before trying again.
+                        {{
+                            t(
+                                'We’re waiting for the payment provider. If you already paid, check the payment status before trying again.',
+                            )
+                        }}
                     </p>
                     <p v-else>
-                        No payment has been recorded yet. Our team will confirm
-                        your order and payment arrangements.
+                        {{
+                            t(
+                                'No payment has been recorded yet. Our team will confirm your order and payment arrangements.',
+                            )
+                        }}
                     </p>
                     <p
                         v-for="(error, key) in page.props.errors"
@@ -245,15 +267,18 @@ function pay(provider: 'khalti' | 'paypay') {
                     >
                         <RefreshCw :size="14" />{{
                             check.processing
-                                ? 'Checking…'
-                                : 'Check payment status'
+                                ? t('Checking…')
+                                : t('Check payment status')
                         }}
                     </button>
                     <div v-if="canCancel" class="summary-note">
                         <div v-if="confirmCancel">
                             <p>
-                                Cancel this order and release your reserved
-                                shoes?
+                                {{
+                                    t(
+                                        'Cancel this order and release your reserved shoes?',
+                                    )
+                                }}
                             </p>
                             <button
                                 class="button full outline"
@@ -273,8 +298,8 @@ function pay(provider: 'khalti' | 'paypay') {
                             >
                                 {{
                                     cancelForm.processing
-                                        ? 'Cancelling…'
-                                        : 'Yes, cancel order'
+                                        ? t('Cancelling…')
+                                        : t('Yes, cancel order')
                                 }}
                             </button>
                             <button
@@ -282,7 +307,7 @@ function pay(provider: 'khalti' | 'paypay') {
                                 :disabled="cancelForm.processing"
                                 @click="confirmCancel = false"
                             >
-                                Keep my order
+                                {{ t('Keep my order') }}
                             </button>
                         </div>
                         <button
@@ -290,14 +315,17 @@ function pay(provider: 'khalti' | 'paypay') {
                             class="text-button"
                             @click="confirmCancel = true"
                         >
-                            Cancel unpaid order
+                            {{ t('Cancel unpaid order') }}
                         </button>
                     </div>
                     <div class="summary-note">
-                        <PackageCheck :size="17" /><span
-                            >You can follow your order’s progress here
-                            anytime.</span
-                        >
+                        <PackageCheck :size="17" /><span>
+                            {{
+                                t(
+                                    'You can follow your order’s progress here anytime.',
+                                )
+                            }}
+                        </span>
                     </div>
                 </aside>
             </div>

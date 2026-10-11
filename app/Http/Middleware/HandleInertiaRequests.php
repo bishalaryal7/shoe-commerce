@@ -41,6 +41,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'locale' => app()->getLocale(),
             'currency' => config('shop.currency'),
             'cartCount' => array_sum($request->session()->get('cart', [])),
             'flash' => ['success' => $request->session()->get('success')],

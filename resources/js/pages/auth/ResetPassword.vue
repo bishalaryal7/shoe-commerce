@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useLocale } from '@/composables/useLocale';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { update } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
+const { t } = useLocale();
 
 const props = defineProps<{
     token: string;
@@ -19,10 +21,10 @@ const inputEmail = ref(props.email);
 
 <template>
     <AuthLayout
-        title="Reset password"
+        :title="t('Reset password')"
         description="Please enter your new password below"
     >
-        <Head title="Reset password" />
+        <Head :title="t('Reset password')" />
 
         <Form
             v-bind="update.form()"
@@ -46,7 +48,7 @@ const inputEmail = ref(props.email);
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password"> {{ t('Password') }} </Label>
                     <Input
                         id="password"
                         type="password"
@@ -54,7 +56,7 @@ const inputEmail = ref(props.email);
                         autocomplete="new-password"
                         class="mt-1 block w-full"
                         autofocus
-                        placeholder="Password"
+                        :placeholder="t('Password')"
                     />
                     <InputError :message="errors.password" />
                 </div>
@@ -69,7 +71,7 @@ const inputEmail = ref(props.email);
                         name="password_confirmation"
                         autocomplete="new-password"
                         class="mt-1 block w-full"
-                        placeholder="Confirm password"
+                        :placeholder="t('Confirm password')"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
@@ -80,8 +82,7 @@ const inputEmail = ref(props.email);
                     :disabled="processing"
                     data-test="reset-password-button"
                 >
-                    <Spinner v-if="processing" />
-                    Reset password
+                    <Spinner v-if="processing" /> {{ t('Reset password') }}
                 </Button>
             </div>
         </Form>

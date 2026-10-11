@@ -76,3 +76,17 @@ Revalidated external access: Docker socket connections are still denied and GitH
 ## Owner usability updates
 
 Added category/description editing and photo preview/reset to the existing staff inventory controls. Customer descriptions preserve line breaks. A denied staff page now identifies the signed-in account and offers an account switch, retaining all authorization checks. Attempting the owner's staff grant was blocked by MySQL socket restrictions; no role change was claimed. Public storage symlink created successfully. Preserved the user's untracked code-workspace file.
+
+## EVE depth, validation and bilingual pass
+
+User requested EVE/Everest branding, deeper storefront behavior, comprehensive validation, proper service/repository/controller/route separation, and Nepali. Implemented EVE brand/slogan, mountain marks, English/Nepali session preference and core customer/auth translations. Staff can maintain Nepali names/descriptions and manage team access. Search supports both names and prioritizes results over the marketing hero when filtered.
+
+Checkout/product/wholesale/cart/staff mutations have dedicated Form Requests. Order placement, product creation/photo replacement and staff operations use services; catalog/order/inventory/variant/user persistence has repositories. Contact rules, price relationships and quantity boundaries are validated. Client contact checks have a separate test suite included in CI. Duplicate checkout tokens are checked against the current account before any further payment action.
+
+A new additive migration introduces optional Nepali content fields; actual MySQL migration remains blocked by this session's socket restrictions. Full bilingual copy/visual browser verification remains open; missing translations use English fallback. Amazon's shoe listing could not be opened by the browsing tool; no claim of visual comparison is made. User asked for Astra, but this session has no callable model-switch capability. Preserve the user's untracked workspace file.
+
+The language switch is available on login pages and restores the preference from an encrypted cookie when the session changes. Nepali phone digits are normalized consistently in client and server validation. Added an original Everest-inspired brand hero using the imagegen skill; asset and full prompt are documented in docs/BRAND.md. The hero is compact on mobile and hidden during filtered catalog searches. This pass does not assert a visually verified or perfect production store.
+
+Found a real upload mismatch: local PHP allowed only 2 MB while the UI advertised 5 MB. The development ServeCommand now passes suitable PHP limits to its child server, and PHP-FPM has matching public/.user.ini settings. Application validation still caps uploads at 5 MB; server arguments are tested without binding a socket.
+
+Latest pass verification: 102 backend tests (691 assertions), 4 frontend contact-validation tests, TypeScript, ESLint, Prettier and Pint checks. The generated hero is 1536×1024 WebP, approximately 202 KB. CI now runs the client validation tests. Actual browser/MySQL/provider/GitHub execution remains unverified.

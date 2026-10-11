@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ProductCard from '@/components/ProductCard.vue';
 import ProductDetails from '@/components/ProductDetails.vue';
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { money, type Product, type ShopSharedProps } from '@/types/shop';
 import { Head, Link, usePage } from '@inertiajs/vue3';
@@ -13,6 +14,7 @@ import {
     ShoppingBag,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+const { t } = useLocale();
 const props = defineProps<{
     product: Product;
     wholesale: boolean;
@@ -34,7 +36,8 @@ const available = computed(() =>
     ><ShopLayout
         ><section class="wrap inner-page product-page">
             <nav class="breadcrumbs" aria-label="Breadcrumb">
-                <Link href="/">Shop</Link><ChevronRight :size="12" /><Link
+                <Link href="/">{{ t('Shop') }}</Link
+                ><ChevronRight :size="12" /><Link
                     :href="'/?category=' + product.category + '#collection'"
                     >{{ product.category }}</Link
                 ><ChevronRight :size="12" /><span>{{ product.name }}</span>
@@ -125,7 +128,8 @@ const available = computed(() =>
                             across styles and sizes.
                         </p>
                         <Link href="/wholesale"
-                            >Explore wholesale <ArrowRight :size="12"
+                            >{{ t('Explore wholesale') }}
+                            <ArrowRight :size="12"
                         /></Link>
                     </details>
                     <details class="product-faq">

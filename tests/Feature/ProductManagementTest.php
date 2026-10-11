@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\ServeStore;
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
+use Symfony\Component\Console\Input\ArrayInput;
 use Tests\TestCase;
 
 class ProductManagementTest extends TestCase
@@ -94,5 +98,19 @@ class ProductManagementTest extends TestCase
         $this->assertSame($slug, $product->fresh()->slug);
         $this->get('/products/'.$slug)->assertInertia(fn (Assert $p) => $p->where('product.description', "Soft leather upper.\nEasy everyday fit.")->where('product.category', 'Outdoor'));
         $this->patch('/admin/products/'.$product->id, ['name' => 'Updated shoe', 'retail_price' => 950000, 'wholesale_price' => 700000, 'active' => true, 'description' => ''])->assertSessionHasErrors('description');
+    }
+
+    public function test_development_server_allows_the_documented_photo_upload_size(): void
+    {
+        $command = Artisan::all()['serve'];
+        $this->assertInstanceOf(ServeStore::class, $command);
+        $input = new ArrayInput(['--host' => '127.0.0.1', '--port' => '8000'], $command->getDefinition());
+        $property = new \ReflectionProperty(Command::class, 'input');
+        $property->setValue($command, $input);
+        $method = new \ReflectionMethod($command, 'serverCommand');
+        $arguments = $method->invoke($command);
+        $this->assertContains('upload_max_filesize=8M', $arguments);
+        $this->assertContains('post_max_size=10M', $arguments);
+        $this->assertContains('-S', $arguments);
     }
 }

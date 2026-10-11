@@ -2,10 +2,12 @@
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useLocale } from '@/composables/useLocale';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 import { Form, Head } from '@inertiajs/vue3';
+const { t } = useLocale();
 
 defineProps<{
     status?: string;
@@ -14,10 +16,10 @@ defineProps<{
 
 <template>
     <AuthLayout
-        title="Verify email"
+        :title="t('Verify email')"
         description="Please verify your email address by clicking on the link we just emailed to you."
     >
-        <Head title="Email verification" />
+        <Head :title="t('Email verification')" />
 
         <div
             v-if="status === 'verification-link-sent'"
@@ -34,7 +36,7 @@ defineProps<{
         >
             <Button :disabled="processing" variant="secondary">
                 <Spinner v-if="processing" />
-                Resend verification email
+                {{ t('Resend verification email') }}
             </Button>
 
             <TextLink

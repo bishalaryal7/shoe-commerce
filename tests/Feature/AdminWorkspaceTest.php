@@ -68,4 +68,19 @@ class AdminWorkspaceTest extends TestCase
         $this->actingAs($user)->get('/admin')->assertForbidden()->assertInertia(fn (Assert $p) => $p->component('admin/Access')->where('auth.user.email', $user->email));
         $this->assertFalse($user->fresh()->is_admin);
     }
+
+    public function test_only_staff_can_grant_access_and_they_cannot_remove_their_own_access(): void
+    {
+        $owner = User::factory()->create(['is_admin' => true]);
+        $member = User::factory()->create();
+        $this->actingAs($member)->post('/admin/team', ['email' => $member->email])->assertForbidden();
+        $this->assertFalse($member->fresh()->is_admin);
+        $this->actingAs($owner)->post('/admin/team', ['email' => 'missing@example.com'])->assertSessionHasErrors('email');
+        $this->post('/admin/team', ['email' => strtoupper($member->email)])->assertRedirect();
+        $this->assertTrue($member->fresh()->is_admin);
+        $this->delete('/admin/team/'.$owner->id)->assertSessionHasErrors('team');
+        $this->assertTrue($owner->fresh()->is_admin);
+        $this->delete('/admin/team/'.$member->id)->assertRedirect();
+        $this->assertFalse($member->fresh()->is_admin);
+    }
 }

@@ -1,10 +1,10 @@
 .store {
-    --ink: #24232b;
-    --paper: #fafafc;
-    --accent: #dcf59f;
-    --purple: #6b4de0;
-    --line: #e8e7ed;
-    --muted: #76747f;
+    --ink: #17293f;
+    --paper: #f8fafc;
+    --accent: #f3cc85;
+    --brand: #2559a6;
+    --line: #dde5ee;
+    --muted: #66758a;
     background: var(--paper);
     color: var(--ink);
     font-family: 'DM Sans', system-ui, sans-serif;
@@ -214,7 +214,7 @@
 }
 .admin-shortcut {
     font-size: 10px;
-    color: var(--purple);
+    color: var(--brand);
 }
 .mobile-menu {
     display: none;
@@ -882,7 +882,7 @@
     color: var(--muted);
 }
 .footer-links a:hover {
-    color: var(--purple);
+    color: var(--brand);
 }
 .footer-note {
     padding-top: 3px;
@@ -3425,4 +3425,115 @@ body:has(.product-dialog[open]) {
 .product-page-description,
 .detail-description {
     white-space: pre-line;
+}
+
+.language-switch select {
+    border: 1px solid #ddd;
+    border-radius: 0.6rem;
+    padding: 0.5rem;
+    background: white;
+    font: inherit;
+    max-width: 7rem;
+}
+
+.store input[aria-invalid='true'],
+.store textarea[aria-invalid='true'] {
+    border-color: #c63838;
+    background: #fff7f7;
+}
+@media (max-width: 600px) {
+    .shop-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding-block: 12px;
+    }
+    .header-search {
+        order: 5;
+        flex-basis: 100%;
+        max-width: none;
+        margin: 8px 0 0;
+    }
+    .language-switch {
+        margin-left: auto;
+    }
+}
+
+.eve-hero-visual {
+    overflow: hidden;
+    border-radius: 0 22px 22px 0;
+    isolation: isolate;
+    min-height: 400px;
+}
+.eve-hero-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 65% center;
+}
+.eve-hero-overlay {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 38px;
+    color: white;
+    background: linear-gradient(transparent, rgba(8, 21, 38, 0.85));
+    display: grid;
+    gap: 12px;
+}
+.eve-hero-overlay span {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+}
+.eve-hero-overlay strong {
+    font-size: 24px;
+    line-height: 1.25;
+    max-width: 260px;
+}
+@media (max-width: 760px) {
+    .eve-hero-visual {
+        border-radius: 0 0 22px 22px;
+        min-height: 300px;
+    }
+    .eve-hero-overlay {
+        padding: 24px;
+    }
+}
+
+.hero-panel {
+    background: #13273e;
+    min-height: 420px;
+}
+.hero-copy {
+    padding: 40px;
+}
+.hero h1 {
+    font-size: clamp(40px, 4.2vw, 64px);
+    letter-spacing: -2px;
+}
+.hero-copy > p {
+    max-width: 390px;
+    color: #d0dbea;
+}
+.tiny-dot {
+    background: var(--accent);
+    box-shadow: 0 0 10px #f3cc8550;
+}
+@media (max-width: 600px) {
+    .hero-copy {
+        padding: 28px 24px;
+    }
+    .hero h1 {
+        font-size: 40px;
+        letter-spacing: -1.5px;
+    }
+    .hero-caption {
+        display: none;
+    }
+    .eve-hero-visual {
+        min-height: 180px;
+    }
+    .eve-hero-overlay strong {
+        font-size: 18px;
+    }
 }

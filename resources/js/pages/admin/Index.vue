@@ -49,6 +49,7 @@ type Paginated<T> = {
     total: number;
 };
 const props = defineProps<{
+    team: { id: number; name: string; email: string }[];
     products: Product[];
     orders: Paginated<Order>;
     filters: { search?: string; status?: string; payment?: string };
@@ -91,6 +92,14 @@ function filterOrders() {
     });
 }
 const busy = ref(false);
+const teamEmail = ref('');
+const removingMember = ref<number | null>(null);
+function removeMember(id: number) {
+    router.delete('/admin/team/' + id, {
+        preserveScroll: true,
+        onSuccess: () => (removingMember.value = null),
+    });
+}
 const receipts = ref<Record<number, string>>({});
 function post(url: string, data: Record<string, any> = {}) {
     busy.value = true;
@@ -124,7 +133,9 @@ function stock(id: number, event: Event) {
                           ? 'Keep your shelves moving.'
                           : tab === 'Payments'
                             ? 'Every payment, accounted for.'
-                            : 'Good partners. Better business.'
+                            : tab === 'Team'
+                              ? 'Your people. Your workspace.'
+                              : 'Good partners. Better business.'
                 }}
             </h1>
             <p class="workspace-description">
@@ -135,7 +146,9 @@ function stock(id: number, event: Event) {
                           ? 'Manage your collection, pricing, and available sizes.'
                           : tab === 'Payments'
                             ? 'Check provider status and monitor your integrations.'
-                            : 'Review applications and manage your wholesale relationships.'
+                            : tab === 'Team'
+                              ? 'Manage access for registered team members.'
+                              : 'Review applications and manage your wholesale relationships.'
                 }}
             </p>
             <div class="stats-grid">
@@ -480,6 +493,67 @@ function stock(id: number, event: Event) {
                                 @change="stock(variant.id, $event)"
                         /></label>
                     </div>
+                </article>
+            </div>
+            <div v-if="tab === 'Team'">
+                <div class="admin-card">
+                    <h2>Give your team access</h2>
+                    <p>
+                        Ask the person to register an account first, then enter
+                        their email. Staff can manage orders, products, payments
+                        and team access.
+                    </p>
+                    <form
+                        class="order-actions"
+                        @submit.prevent="
+                            post('/admin/team', { email: teamEmail })
+                        "
+                    >
+                        <label
+                            >Registered email<input
+                                v-model="teamEmail"
+                                type="email"
+                                required
+                                maxlength="254"
+                                autocomplete="off" /></label
+                        ><button class="button dark" :disabled="busy">
+                            Grant staff access
+                        </button>
+                    </form>
+                </div>
+                <article
+                    v-for="member in team"
+                    :key="member.id"
+                    class="admin-card"
+                >
+                    <h3>{{ member.name }}</h3>
+                    <p>{{ member.email }}</p>
+                    <template
+                        v-if="member.id !== (page.props.auth as any).user.id"
+                        ><p v-if="removingMember === member.id">
+                            Remove this person's staff access?
+                        </p>
+                        <button
+                            v-if="removingMember === member.id"
+                            class="button outline"
+                            @click="removeMember(member.id)"
+                        >
+                            Confirm removal</button
+                        ><button
+                            v-else
+                            class="text-button"
+                            @click="removingMember = member.id"
+                        >
+                            Remove staff access</button
+                        ><button
+                            v-if="removingMember === member.id"
+                            class="text-button"
+                            @click="removingMember = null"
+                        >
+                            Keep access
+                        </button></template
+                    >
+                    <p v-else class="muted">Your account · Staff access</p>
                 </article>
             </div>
             <div v-if="tab === 'Partners'">

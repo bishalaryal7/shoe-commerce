@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { money, type CartLine, type ShopSharedProps } from '@/types/shop';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -12,6 +13,7 @@ import {
     Trash2,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+const { t } = useLocale();
 const props = defineProps<{ lines: CartLine[]; wholesale: boolean }>();
 const page = usePage<ShopSharedProps>();
 const busy = ref(false);
@@ -147,14 +149,14 @@ function remove(id: number) {
                         </article>
                     </div>
                     <Link href="/" class="back-shopping"
-                        ><ArrowLeft :size="15" />Find another pair</Link
-                    >
+                        ><ArrowLeft :size="15" /> {{ t('Find another pair') }}
+                    </Link>
                 </div>
                 <aside class="summary-card">
                     <span v-if="wholesale" class="status-pill"
                         >Wholesale order</span
                     >
-                    <h2>Looking good.</h2>
+                    <h2>{{ t('Looking good.') }}</h2>
                     <div class="summary-line">
                         <span
                             >{{ pairs }}
@@ -164,11 +166,11 @@ function remove(id: number) {
                         }}</strong>
                     </div>
                     <div class="summary-line">
-                        <span>Shipping & taxes</span
-                        ><span>Confirmed by our team</span>
+                        <span> {{ t('Shipping & taxes') }} </span
+                        ><span>{{ t('Calculated at checkout') }}</span>
                     </div>
                     <div class="summary-line summary-total">
-                        <span>Product subtotal</span
+                        <span> {{ t('Product subtotal') }} </span
                         ><strong>{{
                             money(subtotal, page.props.currency)
                         }}</strong>
@@ -178,8 +180,8 @@ function remove(id: number) {
                             <span>{{ Math.min(pairs, 12) }} / 12 pairs</span
                             ><span>{{
                                 pairs >= 12
-                                    ? 'Minimum reached'
-                                    : 'Wholesale minimum'
+                                    ? t('Minimum reached')
+                                    : t('Wholesale minimum')
                             }}</span>
                         </div>
                         <progress
@@ -197,16 +199,16 @@ function remove(id: number) {
                         v-if="!wholesale || pairs >= 12"
                         href="/checkout"
                         class="button dark full"
-                        >Continue to your details
+                    >
+                        {{ t('Continue to your details') }}
                         <ArrowRight :size="16" /></Link
-                    ><Link v-else href="/" class="button full outline"
-                        >Add more pairs <Plus :size="16"
+                    ><Link v-else href="/" class="button full outline">
+                        {{ t('Add more pairs') }} <Plus :size="16"
                     /></Link>
                     <div class="summary-note">
                         <ShieldCheck :size="16" /><span
-                            >No payment collected here. You’re submitting a
-                            request; our team confirms the final total and
-                            delivery with you.</span
+                            >Review your final total and choose a payment method
+                            at checkout.</span
                         >
                     </div>
                 </aside>

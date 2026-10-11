@@ -7,8 +7,8 @@ import {
     Check,
     ChevronRight,
     CreditCard,
-    Footprints,
     LogOut,
+    Mountain,
     Settings2,
     ShoppingBag,
     UsersRound,
@@ -20,6 +20,7 @@ const sections = [
     { label: 'Inventory', icon: Boxes },
     { label: 'Payments', icon: CreditCard },
     { label: 'Partners', icon: UsersRound },
+    { label: 'Team', icon: UsersRound },
 ];
 </script>
 <template>
@@ -27,7 +28,7 @@ const sections = [
         <a href="#workspace-content" class="skip-link">Skip to workspace</a>
         <aside class="workspace-sidebar">
             <Link href="/admin" class="wordmark"
-                ><span class="brand-symbol"><Footprints :size="21" /></span
+                ><span class="brand-symbol"><Mountain :size="21" /></span
                 >{{ page.props.name }}</Link
             ><span class="workspace-label">TEAM WORKSPACE</span>
             <nav aria-label="Workspace navigation">
