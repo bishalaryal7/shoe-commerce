@@ -83,6 +83,7 @@ const props = defineProps<{
 }>();
 const page = usePage();
 const tab = ref('Orders');
+const inventoryFile = ref<File | null>(null);
 const filters = ref({
     search: props.filters.search ?? '',
     status: props.filters.status ?? '',
@@ -123,6 +124,20 @@ function stock(id: number, event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.checkValidity())
         patch('/admin/variants/' + id, { stock: Number(input.value) });
+}
+function importInventory() {
+    if (!inventoryFile.value) return;
+    busy.value = true;
+    router.post(
+        '/admin/inventory/import',
+        { inventory_file: inventoryFile.value },
+        {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => (inventoryFile.value = null),
+            onFinish: () => (busy.value = false),
+        },
+    );
 }
 </script>
 <template>
@@ -546,6 +561,37 @@ function stock(id: number, event: Event) {
                         {{ t('Export inventory CSV') }}
                     </a>
                 </div>
+                <form
+                    class="inventory-import"
+                    @submit.prevent="importInventory"
+                >
+                    <label>
+                        {{ t('Update stock from CSV') }}
+                        <input
+                            type="file"
+                            accept=".csv,text/csv,text/plain"
+                            required
+                            @change="
+                                inventoryFile =
+                                    ($event.target as HTMLInputElement)
+                                        .files?.[0] ?? null
+                            "
+                        />
+                    </label>
+                    <p class="muted">
+                        {{
+                            t(
+                                'Edit only the Stock column in your export. Up to 1,000 sizes per upload. Every SKU and quantity is checked before any changes are saved.',
+                            )
+                        }}
+                    </p>
+                    <button
+                        class="button dark"
+                        :disabled="busy || !inventoryFile"
+                    >
+                        {{ busy ? t('Importing…') : t('Import stock updates') }}
+                    </button>
+                </form>
                 <ProductCreate />
                 <article
                     v-for="product in products"

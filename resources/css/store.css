@@ -1784,6 +1784,36 @@
     padding: 10px 15px;
     font-size: 10px !important;
 }
+.inventory-import {
+    display: grid;
+    justify-items: start;
+    gap: 10px;
+    margin: 12px 0 24px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: white;
+    padding: 16px;
+}
+.inventory-import label {
+    display: grid;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 650;
+}
+.inventory-import input {
+    width: min(100%, 500px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    padding: 8px;
+    font-size: 11px;
+}
+.inventory-import p {
+    max-width: 680px;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.7;
+}
 .price-form {
     display: grid;
     grid-template-columns: 1.4fr 1fr 1fr;

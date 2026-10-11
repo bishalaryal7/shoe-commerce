@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Shop\ProductRequest;
+use App\Http\Requests\Staff\InventoryImportRequest;
 use App\Http\Requests\Staff\OfflinePaymentRequest;
 use App\Http\Requests\Staff\OrderStatusRequest;
 use App\Http\Requests\Staff\StockRequest;
@@ -19,6 +20,7 @@ use App\Repositories\ProductRepository;
 use App\Repositories\UserRepository;
 use App\Services\Auth\SignInOptions;
 use App\Services\InventoryExport;
+use App\Services\InventoryImport;
 use App\Services\OrderPayments;
 use App\Services\StaffOperations;
 use Illuminate\Http\Request;
@@ -69,6 +71,13 @@ class AdminController extends Controller
     public function exportInventory(InventoryExport $inventory)
     {
         return $inventory->download();
+    }
+
+    public function importInventory(InventoryImportRequest $request, InventoryImport $inventory)
+    {
+        $count = $inventory->import($request->file('inventory_file'), $request->user()->id);
+
+        return back()->with('success', __('Inventory checked for :count sizes. Invalid files never change stock.', ['count' => $count]));
     }
 
     public function product(ProductRequest $request, Product $product, ProductRepository $products)

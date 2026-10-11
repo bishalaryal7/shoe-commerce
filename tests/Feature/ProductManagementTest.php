@@ -81,6 +81,51 @@ class ProductManagementTest extends TestCase
         $this->assertSame('20', $rows[1][5]);
     }
 
+    public function test_staff_can_import_valid_inventory_updates_and_keep_audit_history(): void
+    {
+        $this->staff();
+        $variants = Product::firstOrFail()->variants()->take(2)->get();
+        $csv = "\xEF\xBB\xBFSKU,Product,Category,Color,EU size,Stock,Retail price,Wholesale price,Active\n";
+        $csv .= $variants[0]->sku.',Daily Knit,Everyday,cream,40,7,7900,5900,yes'."\n";
+        $csv .= $variants[1]->sku.',Daily Knit,Everyday,cream,41,9,7900,5900,yes'."\n";
+
+        $this->post('/admin/inventory/import', [
+            'inventory_file' => UploadedFile::fake()->createWithContent('stock.csv', $csv),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(7, (int) $variants[0]->fresh()->stock);
+        $this->assertSame(9, (int) $variants[1]->fresh()->stock);
+        $this->assertDatabaseHas('inventory_movements', ['variant_id' => $variants[0]->id, 'quantity' => -13, 'reason' => 'staff_adjustment']);
+        $this->assertDatabaseHas('inventory_movements', ['variant_id' => $variants[1]->id, 'quantity' => -11, 'reason' => 'staff_adjustment']);
+    }
+
+    public function test_invalid_inventory_import_is_rejected_without_partial_stock_changes(): void
+    {
+        $this->staff();
+        $variant = Product::firstOrFail()->variants()->firstOrFail();
+        $csv = "SKU,Product,Category,Color,EU size,Stock,Retail price,Wholesale price,Active\n";
+        $csv .= $variant->sku.',Daily Knit,Everyday,cream,40,2,7900,5900,yes'."\n";
+        $csv .= "UNKNOWN-SKU,Daily Knit,Everyday,cream,41,9,7900,5900,yes\n";
+
+        $this->post('/admin/inventory/import', [
+            'inventory_file' => UploadedFile::fake()->createWithContent('stock.csv', $csv),
+        ])->assertSessionHasErrors('inventory_file');
+
+        $this->assertSame(20, (int) $variant->fresh()->stock);
+        $this->assertDatabaseMissing('inventory_movements', ['variant_id' => $variant->id, 'reason' => 'staff_adjustment']);
+    }
+
+    public function test_inventory_import_rejects_customer_access_and_bad_csv_headers(): void
+    {
+        $file = UploadedFile::fake()->createWithContent('stock.csv', "Product,Stock\nDaily Knit,10\n");
+        $this->actingAs(User::factory()->create())->post('/admin/inventory/import', ['inventory_file' => $file])->assertForbidden();
+
+        $this->staff();
+        $this->post('/admin/inventory/import', [
+            'inventory_file' => UploadedFile::fake()->createWithContent('stock.csv', "Product,Stock\nDaily Knit,10\n"),
+        ])->assertSessionHasErrors('inventory_file');
+    }
+
     public function test_photos_are_stored_using_generated_paths(): void
     {
         Storage::fake('public');

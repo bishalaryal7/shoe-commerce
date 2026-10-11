@@ -23,7 +23,7 @@ Mailpit: http://localhost:8026. Local SMTP uses 127.0.0.1:1026. `php artisan sho
 
 Register your own account, then grant staff access with `php artisan shop:admin your-email@example.com`. Visit `/admin`. No administrator password is seeded. An existing customer account must be granted staff access once; the access-denied page identifies the signed-in email so you can grant the correct account.
 
-After signing in as staff, use **Inventory** to edit names, descriptions, categories, prices and visibility. The customer description appears on the product page. Choose **Replace product photo**, preview the selected JPG/PNG/WebP (up to 5 MB), then save it. Uploads are stored on the public disk; `php artisan storage:link` makes them available to customers. Regular catalog updates require no source-code edits. The development server explicitly allows uploads above the 5 MB application limit; `public/.user.ini` provides matching PHP-FPM limits. The application still rejects files over 5 MB. Restart the development server after updating this code.
+After signing in as staff, use **Inventory** to edit names, descriptions, categories, prices and visibility. The customer description appears on the product page. Choose **Replace product photo**, preview the selected JPG/PNG/WebP (up to 5 MB), then save it. Export inventory as CSV, edit its **Stock** column and import it to update up to 1,000 sizes at once; every SKU and quantity is checked before stock changes are written, and each change is recorded in the inventory audit. Uploads are stored on the public disk; `php artisan storage:link` makes them available to customers. Regular catalog updates require no source-code edits. The development server explicitly allows uploads above the 5 MB application limit; `public/.user.ini` provides matching PHP-FPM limits. The application still rejects files over 5 MB. Restart the development server after updating this code.
 
 ## Brand and languages
 
@@ -46,7 +46,7 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
 - Customer order history, private signed guest tracking links, unpaid order cancellation and resuming unexpired provider checkout.
-- Staff product creation, prices, photo uploads, inventory adjustments and spreadsheet-ready CSV inventory export, searchable and paginated orders/payments, order audit history, confirmation, payment receipt recording, fulfillment and cancellation.
+- Staff product creation, prices, photo uploads, inventory adjustments, spreadsheet-ready inventory export and atomic bulk stock import, searchable and paginated orders/payments, order audit history, confirmation, payment receipt recording, fulfillment and cancellation.
 - Khalti server-side initiation and authoritative lookup verification. Redirect parameters never mark an order paid.
 - PayPay HMAC integration and isolated JPY sandbox testing. PayPay is excluded from NPR checkout.
 - Transactional email outbox, queued receipts/status updates, retry commands and scheduled reconciliation.

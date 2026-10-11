@@ -71,6 +71,7 @@ Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->middleware(['au
 Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
     Route::get('/inventory/export', [AdminController::class, 'exportInventory'])->name('inventory.export');
+    Route::post('/inventory/import', [AdminController::class, 'importInventory'])->middleware('throttle:10,1')->name('inventory.import');
     Route::post('/team', [StaffAccessController::class, 'store'])->middleware('throttle:10,1')->name('team.store');
     Route::delete('/team/{user}', [StaffAccessController::class, 'destroy'])->middleware('throttle:10,1')->name('team.destroy');
     Route::patch('/variants/{variant}', [AdminController::class, 'stock'])->name('stock');
