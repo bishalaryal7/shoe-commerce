@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\OrderEvent;
 use App\Models\PaymentAttempt;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -41,6 +42,24 @@ class AdminWorkspaceTest extends TestCase
         $this->actingAs(User::factory()->create(['is_admin' => true]));
         $this->get('/admin?status=confirmed&payment=review')->assertInertia(fn (Assert $p) => $p->has('orders.data', 1)->where('orders.data.0.reference', $matching->reference));
         $this->get('/admin?status=unknown')->assertSessionHasErrors('status');
+    }
+
+    public function test_inventory_workspace_counts_only_active_low_stock_sizes(): void
+    {
+        $this->seed();
+        config(['shop.low_stock_threshold' => 5]);
+        $variants = Product::firstOrFail()->variants()->orderBy('id')->take(2)->get();
+        $variants[0]->update(['stock' => 0]);
+        $variants[1]->update(['stock' => 5]);
+        $inactiveProduct = Product::where('slug', 'pace-runner')->firstOrFail();
+        $inactiveProduct->variants()->firstOrFail()->update(['stock' => 0]);
+        $inactiveProduct->update(['active' => false]);
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]))
+            ->get('/admin')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.low_stock', 2)
+                ->where('lowStockThreshold', 5));
     }
 
     public function test_order_audit_identifies_staff_and_payment_pages_remain_independent(): void

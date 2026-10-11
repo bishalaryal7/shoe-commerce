@@ -78,8 +78,10 @@ const props = defineProps<{
         orders: number;
         pending: number;
         stock: number;
+        low_stock: number;
         applications: number;
     };
+    lowStockThreshold: number;
 }>();
 const page = usePage();
 const tab = ref('Orders');
@@ -615,7 +617,21 @@ function importInventory() {
                             :key="variant.id"
                         >
                             {{ t('EU') }} {{ num(variant.size)
-                            }}<input
+                            }}<span
+                                v-if="
+                                    product.active &&
+                                    variant.stock <= lowStockThreshold
+                                "
+                                class="stock-warning"
+                                :class="{
+                                    'stock-warning-empty': variant.stock === 0,
+                                }"
+                                >{{
+                                    variant.stock === 0
+                                        ? t('Out of stock')
+                                        : t('Low stock')
+                                }}</span
+                            ><input
                                 :value="variant.stock"
                                 type="number"
                                 min="0"

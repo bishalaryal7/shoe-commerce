@@ -137,7 +137,8 @@ export const fixtures = {
             mail: 'smtp',
             pendingEmails: 0,
         },
-        stats: { orders: 1, pending: 1, stock: 20, applications: 0 },
+        stats: { orders: 1, pending: 1, stock: 20, low_stock: 0, applications: 0 },
+        lowStockThreshold: 5,
     },
     'admin/Access': {},
     'auth/Login': {

@@ -41,6 +41,7 @@ class AdminWorkspace
                 ->withQueryString(),
             'integrations' => $this->integrations(),
             'stats' => $this->stats(),
+            'lowStockThreshold' => max(0, config('shop.low_stock_threshold')),
         ];
     }
 
@@ -77,10 +78,15 @@ class AdminWorkspace
 
     private function stats(): array
     {
+        $lowStockThreshold = max(0, config('shop.low_stock_threshold'));
+
         return [
             'orders' => Order::count(),
             'pending' => Order::where('status', 'pending_confirmation')->count(),
             'stock' => Variant::sum('stock'),
+            'low_stock' => Variant::where('stock', '<=', $lowStockThreshold)
+                ->whereHas('product', fn (Builder $products) => $products->where('active', true))
+                ->count(),
             'applications' => WholesaleAccount::where('status', 'pending')->count(),
         ];
     }

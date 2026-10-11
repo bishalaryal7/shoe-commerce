@@ -65,6 +65,7 @@ export const labels: Record<string, string> = {
     orders: 'Orders',
     stock: 'Available stock',
     applications: 'Applications',
+    low_stock: 'Low stock sizes',
     placed: 'Order placed',
     created: 'Order created',
     payment_received: 'Payment received',
