@@ -2,7 +2,7 @@
 import { useLocale } from '@/composables/useLocale';
 import type { ShopSharedProps } from '@/types/shop';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { Star, ThumbsUp } from 'lucide-vue-next';
+import { Search, Star, ThumbsUp, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Review {
@@ -29,10 +29,12 @@ const props = defineProps<{
     ownReview: Pick<Review, 'id' | 'rating' | 'fit' | 'title' | 'body'> | null;
     canReview: boolean;
     reviewSort: 'recent' | 'helpful' | 'rating';
+    reviewQuery: string;
 }>();
 const { t, num, date, paginationLabel } = useLocale();
 const page = usePage<ShopSharedProps>();
 const votingReview = ref<number | null>(null);
+const reviewQuery = ref(props.reviewQuery);
 const form = useForm({
     rating: props.ownReview?.rating ?? 0,
     fit: props.ownReview?.fit ?? '',
@@ -60,7 +62,7 @@ function sortReviews(event: Event) {
     const sort = (event.target as HTMLSelectElement).value;
     router.get(
         `/products/${props.productSlug}`,
-        { reviews_sort: sort },
+        { reviews_sort: sort, review_q: props.reviewQuery || undefined },
         {
             preserveScroll: true,
             preserveState: true,
@@ -68,6 +70,25 @@ function sortReviews(event: Event) {
             only: ['reviews', 'reviewSort'],
         },
     );
+}
+function searchReviews() {
+    router.get(
+        `/products/${props.productSlug}`,
+        {
+            reviews_sort: props.reviewSort,
+            review_q: reviewQuery.value.trim() || undefined,
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+            only: ['reviews', 'reviewQuery'],
+        },
+    );
+}
+function clearReviewSearch() {
+    reviewQuery.value = '';
+    searchReviews();
 }
 const fitLabels = {
     small: 'Runs small',
@@ -107,6 +128,31 @@ const fitOptions = ['small', 'true', 'large'] as const;
                 <option value="rating">{{ t('Highest rated') }}</option>
             </select>
         </label>
+        <form class="review-search" @submit.prevent="searchReviews">
+            <label class="sr-only" :for="'review-search-' + productSlug">{{
+                t('Search customer reviews')
+            }}</label>
+            <Search :size="16" aria-hidden="true" />
+            <input
+                :id="'review-search-' + productSlug"
+                v-model="reviewQuery"
+                type="search"
+                maxlength="100"
+                :placeholder="t('Search review text…')"
+            />
+            <button class="button outline" type="submit">
+                {{ t('Search') }}
+            </button>
+            <button
+                v-if="reviewQuery"
+                class="review-search-clear"
+                type="button"
+                :aria-label="t('Clear review search')"
+                @click="clearReviewSearch"
+            >
+                <X :size="16" />
+            </button>
+        </form>
         <div v-if="summary.count" class="review-fit-summary">
             <strong>{{ t('How did it fit?') }}</strong>
             <span v-for="fit in fitOptions" :key="fit">
@@ -192,9 +238,13 @@ const fitOptions = ['small', 'true', 'large'] as const;
                     <Star :size="22" />
                     <p>
                         {{
-                            t(
-                                'No reviews yet. Verified buyers can share the first one.',
-                            )
+                            reviewQuery
+                                ? t(
+                                      'No reviews match your search. Try another word.',
+                                  )
+                                : t(
+                                      'No reviews yet. Verified buyers can share the first one.',
+                                  )
                         }}
                     </p>
                 </div>

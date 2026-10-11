@@ -41,7 +41,7 @@ class ProductReviewRepository
         ];
     }
 
-    public function listing(Product $product, ?User $user, string $sort)
+    public function listing(Product $product, ?User $user, string $sort, string $search = '')
     {
         $query = DB::table('product_reviews')->select([
             'product_reviews.id', 'product_reviews.rating', 'product_reviews.fit',
@@ -49,6 +49,12 @@ class ProductReviewRepository
         ])->where('product_id', $product->id)
             ->addSelect(['helpful_count' => DB::table('product_review_helpful_votes')->selectRaw('COUNT(*)')
                 ->whereColumn('review_id', 'product_reviews.id')]);
+        if ($search !== '') {
+            $query->where(function ($reviews) use ($search) {
+                $reviews->where('product_reviews.title', 'like', '%'.$search.'%')
+                    ->orWhere('product_reviews.body', 'like', '%'.$search.'%');
+            });
+        }
         match ($sort) {
             'helpful' => $query->orderByDesc('helpful_count')->orderByDesc('id'),
             'rating' => $query->orderByDesc('rating')->orderByDesc('id'),

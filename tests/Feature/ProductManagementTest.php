@@ -45,7 +45,22 @@ class ProductManagementTest extends TestCase
         $this->assertSame(2, $product->variants()->count());
         $this->assertSame(20, (int) $product->variants()->sum('stock'));
         $this->assertSame(950000, $product->retail_price);
+        $this->assertSame('/images/shoe-black-studio.webp', $product->image);
+        $this->assertFileExists(public_path('images/shoe-black-studio.webp'));
         $this->get('/products/'.$product->slug)->assertInertia(fn (Assert $p) => $p->where('product.name', 'New Shoe')->missing('product.wholesale_price'));
+    }
+
+    public function test_photo_migration_replaces_only_known_seed_placeholders(): void
+    {
+        $placeholder = Product::findOrFail(1);
+        $placeholder->update(['image' => '/images/shoe-cream.svg']);
+        $uploadedPhoto = Product::findOrFail(2);
+        $uploadedPhoto->update(['image' => '/storage/products/pace-photo.jpg']);
+
+        (require database_path('migrations/2026_10_12_000002_upgrade_seeded_product_photos.php'))->up();
+
+        $this->assertSame('/images/shoe-cream-studio.webp', $placeholder->fresh()->image);
+        $this->assertSame('/storage/products/pace-photo.jpg', $uploadedPhoto->fresh()->image);
     }
 
     public function test_duplicate_sizes_are_rejected_without_partial_product_creation(): void
@@ -155,7 +170,7 @@ class ProductManagementTest extends TestCase
         $this->staff();
         $this->post('/admin/products/1/image', ['image' => UploadedFile::fake()->create('unsafe.svg', 1, 'image/svg+xml')])->assertSessionHasErrors('image');
         $this->post('/admin/products/1/image', ['image' => UploadedFile::fake()->image('large.png')->size(6000)])->assertSessionHasErrors('image');
-        $this->assertSame('/images/shoe-cream.svg', Product::findOrFail(1)->image);
+        $this->assertSame('/images/shoe-cream-studio.webp', Product::findOrFail(1)->image);
     }
 
     public function test_unlisted_products_cannot_be_viewed_or_added_to_the_bag(): void

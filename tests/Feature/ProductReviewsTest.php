@@ -151,6 +151,31 @@ class ProductReviewsTest extends TestCase
             ->where('reviewSort', 'recent')->where('reviews.data.0.rating', 4));
     }
 
+    public function test_customer_reviews_can_be_searched_without_exposing_buyer_data(): void
+    {
+        $product = Product::where('slug', 'city-low')->firstOrFail();
+        $firstBuyer = User::factory()->create();
+        $secondBuyer = User::factory()->create();
+        foreach ([$firstBuyer, $secondBuyer] as $buyer) {
+            $this->order($buyer, $product);
+        }
+        $this->actingAs($firstBuyer)->post('/products/'.$product->slug.'/reviews', $this->review([
+            'title' => 'Comfortable for long walks', 'body' => 'Soft cushioning and a comfortable fit.',
+        ]));
+        $this->actingAs($secondBuyer)->post('/products/'.$product->slug.'/reviews', $this->review([
+            'title' => 'Great color', 'body' => 'The blue shade looks even better in person.',
+        ]));
+
+        $this->get('/products/'.$product->slug.'?review_q=comfortable&reviews_sort=rating')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('reviewQuery', 'comfortable')->where('reviewSort', 'rating')
+                ->where('reviews.total', 1)->where('reviews.data.0.title', 'Comfortable for long walks')
+                ->missing('reviews.data.0.user_id')->missing('reviews.data.0.email'));
+        $this->get('/products/'.$product->slug.'?review_q=not-found')->assertInertia(fn (Assert $page) => $page
+            ->where('reviews.total', 0)->where('reviewQuery', 'not-found'));
+        $this->get('/products/'.$product->slug.'?review_q='.str_repeat('x', 101))->assertSessionHasErrors('review_q');
+    }
+
     public function test_nepali_review_validation_and_success_message(): void
     {
         $user = User::factory()->create();

@@ -98,6 +98,7 @@ export const fixtures = {
         ownReview: null,
         canReview: false,
         reviewSort: 'recent',
+        reviewQuery: '',
     },
     'shop/Saved': { products: [product], wholesale: false },
     'shop/Compare': { products: [product], wholesale: false },

@@ -20,6 +20,8 @@ class ProductController extends Controller
         $reviewSort = in_array($request->query('reviews_sort'), ['helpful', 'rating'], true)
             ? $request->query('reviews_sort')
             : 'recent';
+        $reviewFilters = $request->validate(['review_q' => 'nullable|string|max:100']);
+        $reviewQuery = trim((string) ($reviewFilters['review_q'] ?? ''));
         $wholesale = $cart->wholesale($request);
         $serialize = fn ($item) => $products->display($item, $wholesale);
         $discovery->recordView($request, $product);
@@ -27,7 +29,7 @@ class ProductController extends Controller
         return Inertia::render('shop/Product', ['product' => $serialize($product->load('variants')->loadCount('reviews')->loadAvg('reviews', 'rating')), 'wholesale' => $wholesale,
             'related' => Product::with('variants')->withCount('reviews')->withAvg('reviews', 'rating')->where('active', true)->where('category', $product->category)->whereKeyNot($product->id)->limit(3)->get()->map($serialize),
             'savedIds' => $discovery->savedIds($request), 'recentlyViewed' => $discovery->recentlyViewed($request, $wholesale, $product->id),
-            ...$reviews->page($product, $request->user(), $reviewSort), 'reviewSort' => $reviewSort]);
+            ...$reviews->page($product, $request->user(), $reviewSort, $reviewQuery), 'reviewSort' => $reviewSort, 'reviewQuery' => $reviewQuery]);
     }
 
     public function store(ProductRequest $request, ProductCatalog $catalog)

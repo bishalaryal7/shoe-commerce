@@ -52,6 +52,7 @@ const props = defineProps<{
     } | null;
     canReview: boolean;
     reviewSort: 'recent' | 'helpful' | 'rating';
+    reviewQuery: string;
 }>();
 const page = usePage<ShopSharedProps>();
 const details = ref<InstanceType<typeof ProductDetails> | null>(null);
@@ -323,6 +324,7 @@ const available = computed(() =>
             :own-review="ownReview"
             :can-review="canReview"
             :review-sort="reviewSort"
+            :review-query="reviewQuery"
         />
         ></ShopLayout
     >

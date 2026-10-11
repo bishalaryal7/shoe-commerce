@@ -11,11 +11,11 @@ class ProductReviews
 {
     public function __construct(private ProductReviewRepository $reviews) {}
 
-    public function page(Product $product, ?User $user, string $sort = 'recent'): array
+    public function page(Product $product, ?User $user, string $sort = 'recent', string $query = ''): array
     {
         return [
             'reviewSummary' => $this->reviews->summary($product),
-            'reviews' => $this->reviews->listing($product, $user, $sort),
+            'reviews' => $this->reviews->listing($product, $user, $sort, $query),
             'ownReview' => $user ? $this->reviews->own($user, $product) : null,
             'canReview' => $user && $this->reviews->eligibleOrderId($user, $product) !== null,
         ];

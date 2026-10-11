@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         ];
         foreach ($products as [$name,$slug,$category,$description,$color,$retail,$wholesale]) {
             $product = Product::firstOrCreate(['slug' => $slug], ['name' => $name, 'category' => $category, 'description' => $description,
-                'image' => '/images/shoe-'.$color.'.svg', 'retail_price' => $retail, 'wholesale_price' => $wholesale]);
+                'image' => '/images/shoe-'.$color.'-studio.webp', 'retail_price' => $retail, 'wholesale_price' => $wholesale]);
             foreach (range(36, 45) as $size) {
                 $variant = $product->variants()->firstOrCreate(['sku' => strtoupper($slug).'-'.$size], ['size' => (string) $size, 'color' => $color, 'stock' => 20]);
                 if ($variant->wasRecentlyCreated) {
