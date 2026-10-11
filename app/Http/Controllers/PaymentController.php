@@ -12,6 +12,8 @@ use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
+    public function __construct(private OrderAccess $access) {}
+
     public function start(Request $request, string $reference, OrderPayments $payments)
     {
         $order = Order::where('reference', $reference)->firstOrFail();
@@ -64,6 +66,6 @@ class PaymentController extends Controller
 
     private function authorizeOrder(Request $request, Order $order): void
     {
-        app(OrderAccess::class)->authorize($request, $order);
+        $this->access->authorize($request, $order);
     }
 }

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class CancelOrder
 {
+    public function __construct(private OrderEmails $emails) {}
+
     public function cancel(Order $order, ?int $actorId, bool $staff = false): void
     {
         DB::transaction(function () use ($order, $actorId, $staff) {
@@ -22,7 +24,7 @@ class CancelOrder
             }
             $locked->update(['status' => 'cancelled']);
             OrderEvent::create(['order_id' => $locked->id, 'actor_id' => $actorId, 'event' => 'cancelled']);
-            app(OrderEmails::class)->record($locked, 'cancelled');
+            $this->emails->record($locked, 'cancelled');
         });
     }
 }
