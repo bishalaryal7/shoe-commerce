@@ -6,6 +6,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,5 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (HttpException $exception, Request $request) {
+            if ($exception->getStatusCode() === 403 && $request->isMethod('GET') && $request->is('admin') && ! $request->expectsJson()) {
+                return Inertia::render('admin/Access')->toResponse($request)->setStatusCode(403);
+            }
+
+            return null;
+        });
     })->create();

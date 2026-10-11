@@ -61,4 +61,11 @@ class AdminWorkspaceTest extends TestCase
         Schema::drop('inventory_movements');
         $this->get('/ready')->assertStatus(503)->assertExactJson(['status' => 'unavailable']);
     }
+
+    public function test_customer_sees_staff_access_help_without_becoming_staff(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/admin')->assertForbidden()->assertInertia(fn (Assert $p) => $p->component('admin/Access')->where('auth.user.email', $user->email));
+        $this->assertFalse($user->fresh()->is_admin);
+    }
 }

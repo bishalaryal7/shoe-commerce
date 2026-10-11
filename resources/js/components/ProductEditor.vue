@@ -6,6 +6,8 @@ const props = defineProps<{ product: Product }>();
 const page = usePage<ShopSharedProps>();
 const form = useForm({
     name: props.product.name,
+    category: props.product.category,
+    description: props.product.description,
     retail_price: (props.product.retail_price / 100).toFixed(2),
     wholesale_price: ((props.product.wholesale_price || 0) / 100).toFixed(2),
     active: props.product.active,
@@ -50,7 +52,34 @@ function save() {
             /><span v-if="form.errors.wholesale_price" class="field-error">{{
                 form.errors.wholesale_price
             }}</span></label
-        ><label class="checkbox-label"
+        ><label
+            >Category<select v-model="form.category">
+                <option
+                    v-for="category in ['Everyday', 'Running', 'Outdoor']"
+                    :key="category"
+                    :value="category"
+                >
+                    {{ category }}
+                </option></select
+            ><span v-if="form.errors.category" class="field-error">{{
+                form.errors.category
+            }}</span></label
+        >
+        <label class="product-description-field"
+            >Customer description<textarea
+                v-model="form.description"
+                required
+                rows="5"
+                maxlength="5000"
+                placeholder="Describe fit, materials, comfort and care."
+            /><small
+                >This text appears on the product page.
+                {{ form.description.length }}/5000 characters</small
+            ><span v-if="form.errors.description" class="field-error">{{
+                form.errors.description
+            }}</span></label
+        >
+        <label class="checkbox-label"
             ><input v-model="form.active" type="checkbox" />Visible in the
             shop</label
         ><button class="button dark" :disabled="form.processing">

@@ -84,4 +84,15 @@ class ProductManagementTest extends TestCase
         $this->get('/products/'.$product->slug)->assertNotFound();
         $this->post('/cart', ['variant_id' => $product->variants()->first()->id, 'quantity' => 1])->assertNotFound();
     }
+
+    public function test_staff_can_edit_customer_description_and_category_without_changing_the_product_url(): void
+    {
+        $this->staff();
+        $product = Product::first();
+        $slug = $product->slug;
+        $this->patch('/admin/products/'.$product->id, ['name' => 'Updated shoe', 'retail_price' => 950000, 'wholesale_price' => 700000, 'active' => true, 'description' => "Soft leather upper.\nEasy everyday fit.", 'category' => 'Outdoor'])->assertRedirect();
+        $this->assertSame($slug, $product->fresh()->slug);
+        $this->get('/products/'.$slug)->assertInertia(fn (Assert $p) => $p->where('product.description', "Soft leather upper.\nEasy everyday fit.")->where('product.category', 'Outdoor'));
+        $this->patch('/admin/products/'.$product->id, ['name' => 'Updated shoe', 'retail_price' => 950000, 'wholesale_price' => 700000, 'active' => true, 'description' => ''])->assertSessionHasErrors('description');
+    }
 }

@@ -2,8 +2,25 @@
 import type { Product } from '@/types/shop';
 import { useForm } from '@inertiajs/vue3';
 import { Upload } from 'lucide-vue-next';
+import { onBeforeUnmount, ref, watch } from 'vue';
 defineProps<{ product: Product }>();
 const form = useForm({ image: null as File | null });
+const preview = ref<string | null>(null);
+const input = ref<HTMLInputElement | null>(null);
+watch(
+    () => form.image,
+    (image) => {
+        if (preview.value) URL.revokeObjectURL(preview.value);
+        preview.value = image ? URL.createObjectURL(image) : null;
+    },
+);
+onBeforeUnmount(() => {
+    if (preview.value) URL.revokeObjectURL(preview.value);
+});
+function reset() {
+    form.reset();
+    if (input.value) input.value.value = '';
+}
 function file(event: Event) {
     form.image = (event.target as HTMLInputElement).files?.[0] || null;
 }
@@ -14,14 +31,15 @@ function file(event: Event) {
         @submit.prevent="
             form.post('/admin/products/' + product.id + '/image', {
                 preserveScroll: true,
-                onSuccess: () => form.reset(),
+                onSuccess: reset,
             })
         "
     >
-        <img :src="product.image" :alt="product.name" />
+        <img :src="preview || product.image" :alt="product.name" />
         <div>
             <label
-                >Product photo<input
+                >Replace product photo<input
+                    ref="input"
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     @change="file"
@@ -35,7 +53,7 @@ function file(event: Event) {
                 :disabled="!form.image || form.processing"
             >
                 <Upload :size="14" />{{
-                    form.processing ? 'Uploading…' : 'Upload photo'
+                    form.processing ? 'Uploading…' : 'Save replacement photo'
                 }}
             </button>
         </div>

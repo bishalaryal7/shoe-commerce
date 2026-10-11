@@ -3409,3 +3409,20 @@ body:has(.product-dialog[open]) {
         position: static;
     }
 }
+
+.product-description-field {
+    grid-column: 1 / -1;
+}
+.product-description-field textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 8rem;
+}
+.product-description-field small {
+    color: var(--muted);
+    font-weight: 400;
+}
+.product-page-description,
+.detail-description {
+    white-space: pre-line;
+}

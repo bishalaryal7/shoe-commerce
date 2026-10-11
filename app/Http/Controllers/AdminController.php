@@ -71,7 +71,8 @@ class AdminController extends Controller
     public function product(Request $request, Product $product)
     {
         $data = $request->validate(['name' => 'required|string|max:150', 'retail_price' => 'required|integer|min:1|max:100000000',
-            'wholesale_price' => 'required|integer|min:1|max:100000000', 'active' => 'required|boolean']);
+            'wholesale_price' => 'required|integer|min:1|max:100000000', 'active' => 'required|boolean',
+            'description' => 'sometimes|required|string|max:5000', 'category' => 'sometimes|required|in:Everyday,Running,Outdoor']);
         $product->update($data);
 
         return back()->with('success', 'Product updated.');

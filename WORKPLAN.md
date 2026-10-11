@@ -72,3 +72,7 @@ The project is not marked complete: missing runtime verification, network/authen
 ## Release consistency review
 
 Revalidated external access: Docker socket connections are still denied and GitHub CLI reports invalid authentication. Added frontend commit metadata and packaging checks that reject uncommitted work or frontend assets from a different commit. This prevents mixing PHP and JavaScript versions in an uploaded release. Live workflow/deployment verification remains unavailable.
+
+## Owner usability updates
+
+Added category/description editing and photo preview/reset to the existing staff inventory controls. Customer descriptions preserve line breaks. A denied staff page now identifies the signed-in account and offers an account switch, retaining all authorization checks. Attempting the owner's staff grant was blocked by MySQL socket restrictions; no role change was claimed. Public storage symlink created successfully. Preserved the user's untracked code-workspace file.
