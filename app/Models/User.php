@@ -47,6 +47,7 @@ class User extends Authenticatable
         return [
             'is_admin' => 'boolean',
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

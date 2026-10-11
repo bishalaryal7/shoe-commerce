@@ -24,16 +24,19 @@ const props = defineProps<{
     paymentOptions: PaymentOption[];
     shippingAmount: number;
     taxBasisPoints: number;
+    cashOnDelivery?: boolean;
 }>();
 const page = usePage<ShopSharedProps>();
 const user = page.props.auth.user;
 const form = useForm({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
     address: '',
     token: props.token,
-    payment_method: 'request',
+    payment_method: props.cashOnDelivery
+        ? 'cod'
+        : (props.paymentOptions[0]?.id ?? 'request'),
 });
 function submit() {
     form.clearErrors();
@@ -116,9 +119,12 @@ const total = subtotal + props.shippingAmount + tax;
                             maxlength="40"
                             autocomplete="tel"
                             :placeholder="t('Your contact number')"
-                        /><span class="field-error">{{
-                            form.errors.phone
-                        }}</span></label
+                        /><span
+                            id="checkout-phone-error"
+                            class="field-error"
+                            role="alert"
+                            >{{ form.errors.phone }}</span
+                        ></label
                     ><label
                         >{{ t('Delivery address')
                         }}<textarea
@@ -133,9 +139,12 @@ const total = subtotal + props.shippingAmount + tax;
                             :placeholder="
                                 t('Street, area, city, and a nearby landmark')
                             "
-                        /><span class="field-error">{{
-                            form.errors.address
-                        }}</span></label
+                        /><span
+                            id="checkout-address-error"
+                            class="field-error"
+                            role="alert"
+                            >{{ form.errors.address }}</span
+                        ></label
                     >
                     <p
                         v-if="form.errors.token"
@@ -148,11 +157,32 @@ const total = subtotal + props.shippingAmount + tax;
                         {{ t('How would you like to pay?') }}
                     </h2>
                     <label
+                        v-if="cashOnDelivery"
+                        class="payment-choice"
+                        :class="{ selected: form.payment_method === 'cod' }"
+                    >
+                        <input
+                            v-model="form.payment_method"
+                            type="radio"
+                            value="cod"
+                            name="payment_method"
+                        />
+                        <WalletCards :size="20" /><span
+                            ><strong>{{ t('Cash on delivery') }}</strong
+                            ><small>{{
+                                t(
+                                    'Pay in cash when your shoes arrive. Our team will call to confirm delivery.',
+                                )
+                            }}</small></span
+                        >
+                    </label>
+                    <label
                         class="payment-choice"
                         :class="{ selected: form.payment_method === 'request' }"
                         ><input
                             v-model="form.payment_method"
                             type="radio"
+                            name="payment_method"
                             value="request"
                         /><ClipboardCheck :size="20" /><span
                             ><strong>{{ t('Request confirmation') }}</strong
@@ -172,6 +202,7 @@ const total = subtotal + props.shippingAmount + tax;
                         ><input
                             v-model="form.payment_method"
                             type="radio"
+                            name="payment_method"
                             :value="option.id"
                         /><WalletCards :size="20" /><span
                             ><strong
@@ -195,7 +226,9 @@ const total = subtotal + props.shippingAmount + tax;
                     <p v-if="!paymentOptions.length" class="checkout-help">
                         {{
                             t(
-                                'Online payment is currently unavailable. You can still place an order request.',
+                                cashOnDelivery
+                                    ? 'Online payment is currently unavailable. Cash on delivery is available.'
+                                    : 'Online payment is currently unavailable. You can still place an order request.',
                             )
                         }}
                     </p>
@@ -220,20 +253,26 @@ const total = subtotal + props.shippingAmount + tax;
                         {{
                             form.processing
                                 ? t('Preparing your order…')
-                                : form.payment_method === 'request'
-                                  ? t('Place order request')
-                                  : t('Continue to payment')
+                                : form.payment_method === 'cod'
+                                  ? t('Place order · pay on delivery')
+                                  : form.payment_method === 'request'
+                                    ? t('Place order request')
+                                    : t('Continue to payment')
                         }}<ArrowRight :size="16" />
                     </button>
                     <p class="checkout-help">
                         {{
-                            form.payment_method === 'request'
+                            form.payment_method === 'cod'
                                 ? t(
-                                      'No payment is collected when you submit a request.',
+                                      'Pay the displayed total on delivery. No online payment is taken now.',
                                   )
-                                : t(
-                                      'Your order is marked paid only after the provider confirms it.',
-                                  )
+                                : form.payment_method === 'request'
+                                  ? t(
+                                        'No payment is collected when you submit a request.',
+                                    )
+                                  : t(
+                                        'Your order is marked paid only after the provider confirms it.',
+                                    )
                         }}
                     </p>
                     <Link href="/cart" class="back-shopping"

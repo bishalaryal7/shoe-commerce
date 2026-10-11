@@ -1,4 +1,4 @@
-# EVE — Reach higher. Walk further.
+# EVE Shoes — Reach higher. Walk further.
 
 Laravel 12 + Vue 3 / TypeScript / Inertia storefront and staff workspace. Main market: Nepal, NPR. PHP 8.4+ and Node 22+ required. Demo catalog prices and images are placeholders; enter actual selling prices before launch.
 
@@ -12,10 +12,10 @@ php artisan config:clear
 php artisan migrate
 php artisan storage:link
 npm run build
-php artisan serve
+php artisan serve --port=8002
 ```
 
-Open http://127.0.0.1:8000. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation and unsent mail retries. Use `npm run dev` while editing frontend code.
+Open http://127.0.0.1:8002. Match `APP_URL` to this address; reuse an existing server on that port. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation and unsent mail retries. Use `npm run dev` while editing frontend code.
 
 MariaDB persists in the Docker volume. The local `.env` selects the host port through `DB_PORT` (currently 3340); Docker forwards it to MariaDB port 3306. Database: `shoe_commerce`, user: `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
 
@@ -27,7 +27,7 @@ After signing in as staff, use **Inventory** to edit names, descriptions, catego
 
 ## Brand and languages
 
-EVE takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Core navigation, checkout, order and authentication copy are translated; any untranslated copy falls back to English. Inventory supports optional Nepali product names and descriptions, with English fallback. Search matches either name. Run `php artisan migrate` before editing the new bilingual fields.
+EVE Shoes takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Core navigation, checkout, order and authentication copy are translated; any untranslated copy falls back to English. Inventory supports optional Nepali product names and descriptions, with English fallback. Search matches either name. Run `php artisan migrate` before editing the new bilingual fields.
 
 ## Application structure and validation
 
@@ -48,12 +48,19 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 - PayPay HMAC integration and isolated JPY sandbox testing. PayPay is excluded from NPR checkout.
 - Transactional email outbox, queued receipts/status updates, retry commands and scheduled reconciliation.
 - Order and inventory audit records. Unsettled payments block stock release; fulfillment requires recorded payment.
-- Authentication, password resets, account settings and two-factor authentication.
+- Email/password authentication, Google and Facebook sign-in, verified-phone SMS sign-in, account connections, password resets and two-factor authentication. External sign-in options need provider credentials.
+- Cash on delivery for NPR orders, with unpaid status until staff record a collection receipt. Wholesale phone numbers are mandatory.
 - Automated tests, GitHub quality/security workflows, release packaging and manual SSH deployment workflow.
 
 Shipping is a configured flat amount in minor units; tax is configured in basis points. Defaults are zero. This is not a shipping carrier or jurisdictional tax integration. Reservations require staff cancellation; automatic expiration and a returns/refund processing workflow are not implemented. Refund lookup records provider status but never initiates a refund or automatically restocks. Partial refunds hold fulfillment for staff review.
 
+## Sign-in providers
+
+Read [Sign-in and payment setup](docs/SIGN_IN_AND_PAYMENTS.md) for Google, Facebook, Twilio Verify and Khalti credentials, callback URLs and test steps. Run `php artisan shop:integrations` for a safe configuration summary. Phone sign-in uses numbers verified in account settings; entering a checkout/wholesale contact number alone never grants account access.
+
 ## Payments
+
+Cash on delivery works for NPR orders without merchant keys. Staff must record the collection receipt before fulfillment. `SHOP_CASH_ON_DELIVERY=false` disables it.
 
 Keep both providers in sandbox while testing. Add merchant keys only to ignored `.env`, then `php artisan config:clear`.
 

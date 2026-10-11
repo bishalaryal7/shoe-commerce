@@ -24,14 +24,17 @@ class CheckoutController extends Controller
             $request->session()->put('checkout_token', (string) Str::uuid());
         }
 
-        return Inertia::render('shop/Checkout', ['lines' => $cart->lines($request), 'wholesale' => $cart->wholesale($request), 'token' => $request->session()->get('checkout_token'), 'paymentOptions' => $gateways->options(config('shop.currency')), 'shippingAmount' => max(0, config('shop.shipping_amount')), 'taxBasisPoints' => max(0, config('shop.tax_basis_points'))]);
+        return Inertia::render('shop/Checkout', ['lines' => $cart->lines($request), 'wholesale' => $cart->wholesale($request), 'token' => $request->session()->get('checkout_token'), 'cashOnDelivery' => config('shop.cash_on_delivery') && config('shop.currency') === 'NPR', 'paymentOptions' => $gateways->options(config('shop.currency')), 'shippingAmount' => max(0, config('shop.shipping_amount')), 'taxBasisPoints' => max(0, config('shop.tax_basis_points'))]);
     }
 
     public function store(CheckoutRequest $request, Cart $cart, Gateways $gateways, OrderPayments $payments, PlaceOrder $placement)
     {
         $data = $request->validated();
         $provider = $data['payment_method'] ?? 'request';
-        if ($provider !== 'request' && ! in_array($provider, array_column($gateways->options(config('shop.currency')), 'id'), true)) {
+        if ($provider === 'cod' && (! config('shop.cash_on_delivery') || config('shop.currency') !== 'NPR')) {
+            throw ValidationException::withMessages(['payment_method' => __('Cash on delivery is not available for this order.')]);
+        }
+        if (! in_array($provider, ['request', 'cod']) && ! in_array($provider, array_column($gateways->options(config('shop.currency')), 'id'), true)) {
             throw ValidationException::withMessages(['payment_method' => __('This payment method is not available.')]);
         }
         abort_unless($data['token'] === $request->session()->get('checkout_token'), 419);
@@ -39,7 +42,7 @@ class CheckoutController extends Controller
         $request->session()->forget('cart');
         $request->session()->put('last_order_reference', $order->reference);
 
-        if ($provider !== 'request') {
+        if (! in_array($provider, ['request', 'cod'])) {
             try {
                 $attempt = $payments->start($order, $provider);
 

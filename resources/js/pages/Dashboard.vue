@@ -20,6 +20,9 @@ const page = usePage();
                 }}
             </p>
             <div class="order-actions">
+                <Link href="/settings/connections" class="button outline">{{
+                    t('Sign-in methods')
+                }}</Link>
                 <Link href="/orders" class="button outline">
                     {{ t('Your orders') }}
                 </Link>

@@ -1,6 +1,6 @@
-# EVE brand
+# EVE Shoes brand
 
-Name: EVE, inspired by Everest. Slogan: **Reach higher. Walk further.** Nepali: **उचाइ छुनुहोस्। अझ टाढा हिँड्नुहोस्।** The mountain mark is maintained as a native SVG/Vue component.
+Name: EVE Shoes, inspired by Everest. Slogan: **Reach higher. Walk further.** Nepali: **उचाइ छुनुहोस्। अझ टाढा हिँड्नुहोस्।** The mountain mark is maintained as a native SVG/Vue component.
 
 Hero asset: `public/images/eve-everest-hero.webp`, converted to WebP at quality 85 for browser delivery. Generated with the built-in imagegen tool using the imagegen skill. This is an original imagined brand landscape, not a documentary location photograph or a shoe product photo. Catalog product images remain staff-managed uploads.
 
@@ -11,7 +11,7 @@ Final generation prompt:
 ## Language behavior
 
 English and Nepali are available across the shop, staff workspace, authentication,
-and account settings. EVE and “Reach higher. Walk further.” stay in English in
+and account settings. EVE Shoes and “Reach higher. Walk further.” stay in English in
 both modes. `lang/ne.json` is the shared Vue/Laravel copy catalog; validation,
 authentication, password, and pagination messages live in `lang/ne/`.
 

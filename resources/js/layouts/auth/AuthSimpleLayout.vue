@@ -31,7 +31,7 @@ defineProps<{
                                 class="size-9 fill-current text-[var(--foreground)] dark:text-white"
                             />
                         </div>
-                        <span class="text-xl tracking-widest">EVE</span>
+                        <span class="text-xl tracking-widest">EVE Shoes</span>
                     </Link>
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ t(title) }}</h1>

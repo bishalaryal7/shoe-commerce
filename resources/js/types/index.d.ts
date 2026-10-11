@@ -31,6 +31,8 @@ export interface User {
     name: string;
     email: string;
     avatar?: string;
+    phone?: string | null;
+    phone_verified_at?: string | null;
     is_admin: boolean;
     email_verified_at: string | null;
     created_at: string;

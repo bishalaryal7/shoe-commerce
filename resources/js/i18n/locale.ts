@@ -55,6 +55,7 @@ export const labels: Record<string, string> = {
     initiated: 'Started',
     approved: 'Approved',
     rejected: 'Rejected',
+    cod: 'Cash on delivery',
     request: 'Order request',
     offline: 'Offline payment',
     retail: 'Retail',

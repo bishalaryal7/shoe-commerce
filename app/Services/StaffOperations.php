@@ -42,7 +42,7 @@ class StaffOperations
     {
         DB::transaction(function () use ($order, $reference, $actor) {
             $locked = $this->orders->lock($order->id);
-            if ($locked->payment_method !== 'request' || $locked->payment_status !== 'unpaid' || ! in_array($locked->status, ['pending_confirmation', 'confirmed'])) {
+            if (! in_array($locked->payment_method, ['request', 'cod']) || $locked->payment_status !== 'unpaid' || ! in_array($locked->status, ['pending_confirmation', 'confirmed'])) {
                 abort(422, __('This order cannot record an offline payment.'));
             }
             $this->orders->update($locked, ['payment_method' => 'offline', 'payment_status' => 'paid', 'paid_at' => now(), 'status' => 'confirmed', 'offline_payment_reference' => $reference]);

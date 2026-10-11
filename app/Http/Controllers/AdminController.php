@@ -17,6 +17,7 @@ use App\Payments\KhaltiGateway;
 use App\Payments\PayPayGateway;
 use App\Repositories\ProductRepository;
 use App\Repositories\UserRepository;
+use App\Services\Auth\SignInOptions;
 use App\Services\OrderPayments;
 use App\Services\StaffOperations;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class AdminController extends Controller
             'team' => app(UserRepository::class)->staff(),
             'applications' => WholesaleAccount::with('user:id,name,email')->orderBy('status')->get(),
             'payments' => PaymentAttempt::latest('id')->paginate(20, ['*'], 'payments_page')->withQueryString(),
-            'integrations' => ['khalti' => app(KhaltiGateway::class)->available(), 'paypay' => app(PayPayGateway::class)->available(), 'mail' => config('mail.default'), 'pendingEmails' => OrderEmail::whereNull('sent_at')->count()],
+            'integrations' => ['signIn' => app(SignInOptions::class)->all(), 'cashOnDelivery' => config('shop.cash_on_delivery') && config('shop.currency') === 'NPR', 'khalti' => app(KhaltiGateway::class)->available(), 'paypay' => app(PayPayGateway::class)->available(), 'mail' => config('mail.default'), 'pendingEmails' => OrderEmail::whereNull('sent_at')->count()],
             'stats' => ['orders' => Order::count(), 'pending' => Order::where('status', 'pending_confirmation')->count(),
                 'stock' => Variant::sum('stock'), 'applications' => WholesaleAccount::where('status', 'pending')->count()],
         ]);

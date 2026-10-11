@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->dontFlash(['code', 'recovery_code']);
         $exceptions->render(function (HttpException $exception, Request $request) {
             if ($exception->getStatusCode() === 403 && $request->isMethod('GET') && $request->is('admin') && ! $request->expectsJson()) {
                 return Inertia::render('admin/Access')->toResponse($request)->setStatusCode(403);

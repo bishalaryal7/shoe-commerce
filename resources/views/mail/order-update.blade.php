@@ -21,7 +21,9 @@
 **{{ __('Total') }}: {{ $formatMoney($details['total']) }}**
 
 {{ __('Payment:') }} {{ __($details['payment_status']) }}.
-@if($details['payment_status'] !== 'paid')
+@if(($details['payment_method'] ?? '') === 'cod' && $details['payment_status'] === 'unpaid' && $details['status'] !== 'cancelled')
+{{ __('Cash on delivery: pay :amount when your shoes arrive.', ['amount' => $formatMoney($details['total'])]) }}
+@elseif($details['payment_status'] !== 'paid')
 {{ __('No completed online payment is recorded for this order. Please check your order page before paying again.') }}
 @endif
 @if($event === 'cancelled' && $details['payment_status'] === 'paid')

@@ -188,7 +188,15 @@ function pay(provider: 'khalti' | 'paypay') {
                             money(order.total, order.currency)
                         }}</strong>
                     </div>
-                    <p v-if="paid" class="payment-confirmation">
+                    <p
+                        v-if="
+                            order.status === 'cancelled' &&
+                            order.payment_status === 'unpaid'
+                        "
+                    >
+                        {{ t('This order is cancelled. No payment is due.') }}
+                    </p>
+                    <p v-else-if="paid" class="payment-confirmation">
                         <Check :size="16" />
                         {{ t('Payment verified. Thank you.') }}
                     </p>
@@ -208,6 +216,20 @@ function pay(provider: 'khalti' | 'paypay') {
                         {{
                             t(
                                 'We’re waiting for the payment provider. If you already paid, check the payment status before trying again.',
+                            )
+                        }}
+                    </p>
+                    <p
+                        v-else-if="
+                            order.payment_method === 'cod' &&
+                            order.status !== 'cancelled'
+                        "
+                        class="payment-confirmation"
+                    >
+                        {{
+                            t(
+                                'Cash on delivery: pay :amount when your shoes arrive.',
+                                { amount: money(order.total, order.currency) },
                             )
                         }}
                     </p>

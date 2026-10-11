@@ -26,7 +26,10 @@ Route::get('/ready', function () {
             && Schema::hasTable('inventory_movements')
             && Schema::hasColumn('orders', 'offline_payment_reference')
             && Schema::hasColumn('products', 'name_ne')
-            && Schema::hasColumn('products', 'description_ne');
+            && Schema::hasColumn('products', 'description_ne')
+            && Schema::hasColumn('users', 'phone_verified_at')
+            && Schema::hasTable('social_accounts')
+            && Schema::hasTable('phone_challenges');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -65,3 +68,4 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::patch('/orders/{order}', [AdminController::class, 'order'])->name('order');
 });
 require __DIR__.'/settings.php';
+require __DIR__.'/connections.php';

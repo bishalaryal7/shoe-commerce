@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
+import SignInOptions from '@/components/SignInOptions.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,9 @@ import { login } from '@/routes';
 import { store } from '@/routes/register';
 import { Form, Head } from '@inertiajs/vue3';
 const { t } = useLocale();
+defineProps<{
+    signInOptions?: { google: boolean; facebook: boolean; phone: boolean };
+}>();
 </script>
 
 <template>
@@ -19,6 +23,8 @@ const { t } = useLocale();
         :description="t('Enter your details below to create your account')"
     >
         <Head :title="t('Register')" />
+
+        <SignInOptions :options="signInOptions" />
 
         <Form
             v-bind="store.form()"

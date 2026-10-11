@@ -21,7 +21,7 @@ class CheckoutRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['name' => 'required|string|min:2|max:150', 'email' => 'required|email:rfc|max:254', 'phone' => ['required', 'string', 'max:40', new ContactPhone], 'address' => 'required|string|min:10|max:1000', 'token' => 'required|uuid', 'payment_method' => 'sometimes|in:request,khalti,paypay'];
+        return ['name' => 'required|string|min:2|max:150', 'email' => 'required|email:rfc|max:254', 'phone' => ['required', 'string', 'max:40', new ContactPhone], 'address' => 'required|string|min:10|max:1000', 'token' => 'required|uuid', 'payment_method' => 'sometimes|in:request,cod,khalti,paypay'];
     }
 
     public function attributes(): array

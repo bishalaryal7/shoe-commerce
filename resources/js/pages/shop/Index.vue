@@ -84,7 +84,7 @@ function reset() {
                     <p>
                         {{
                             t(
-                                'EVE takes its name from Everest: a reminder to keep moving. Find everyday comfort, running shoes and outdoor styles for your next journey.',
+                                'EVE Shoes takes its name from Everest: a reminder to keep moving. Find everyday comfort, running shoes and outdoor styles for your next journey.',
                             )
                         }}
                     </p>
@@ -115,7 +115,7 @@ function reset() {
                         fetchpriority="high"
                     />
                     <div class="eve-hero-overlay">
-                        <span> {{ t('EVE / NEPAL') }} </span
+                        <span> {{ t('EVE Shoes / NEPAL') }} </span
                         ><strong>{{ t('Reach higher. Walk further.') }}</strong>
                     </div>
                 </div>

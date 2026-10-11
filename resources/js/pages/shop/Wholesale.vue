@@ -5,7 +5,11 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 const { t, label } = useLocale();
 defineProps<{ account: { company: string; status: string } | null }>();
 const page = usePage();
-const form = useForm({ company: '', phone: '', message: '' });
+const form = useForm({
+    company: '',
+    phone: page.props.auth?.user?.phone ?? '',
+    message: '',
+});
 </script>
 <template>
     <Head :title="t('Wholesale partners')" /><ShopLayout
@@ -122,16 +126,23 @@ const form = useForm({ company: '', phone: '', message: '' });
                                 form.errors.company
                             }}</span></label
                         ><label
-                            >{{ t('Business phone')
+                            >{{ t('Business phone (required)')
                             }}<input
                                 v-model="form.phone"
                                 type="tel"
                                 required
                                 maxlength="40"
+                                aria-describedby="business-phone-help"
+                                :aria-invalid="!!form.errors.phone"
                                 autocomplete="tel"
                             /><span class="field-error">{{
                                 form.errors.phone
-                            }}</span></label
+                            }}</span
+                            ><small id="business-phone-help">{{
+                                t(
+                                    'A reachable phone number is required for every wholesale application and order.',
+                                )
+                            }}</small></label
                         ><label
                             >{{ t('Tell us about your business')
                             }}<textarea

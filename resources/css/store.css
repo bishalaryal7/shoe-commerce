@@ -3566,3 +3566,29 @@ html[lang='ne'] .store .wordmark {
     outline: 2px solid var(--brand);
     outline-offset: 3px;
 }
+
+/* Keep the brand, language switch, search and bag usable on narrow screens. */
+@media (max-width: 700px) {
+    .shop-header {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .shop-header > .wordmark {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .shop-header > .language-switch {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+    .shop-header > .header-search {
+        grid-column: 1;
+        grid-row: 2;
+        min-width: 0;
+        margin: 0;
+    }
+    .shop-header > .header-actions {
+        grid-column: 2;
+        grid-row: 2;
+    }
+}

@@ -13,6 +13,7 @@ import { Link } from '@inertiajs/vue3';
 const { t } = useLocale();
 
 const sidebarNavItems: NavItem[] = [
+    { title: 'Sign-in methods', href: '/settings/connections' },
     {
         title: 'Profile',
         href: editProfile(),

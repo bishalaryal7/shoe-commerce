@@ -33,7 +33,7 @@ test('all customer, admin and account pages render in Nepali without English int
                     url: '/',
                     version: null,
                     props: {
-                        name: 'EVE',
+                        name: 'EVE Shoes',
                         locale: 'ne',
                         currency: 'NPR',
                         cartCount: 1,
@@ -63,7 +63,7 @@ test('all customer, admin and account pages render in Nepali without English int
                     // Brand exceptions and identifiers entered by a customer/staff are preserved verbatim.
                     const copy = node.content
                         .replaceAll('Reach higher. Walk further.', '')
-                        .replaceAll('EVE', '')
+                        .replaceAll('EVE Shoes', '')
                         .replaceAll('ORDER-TEST', '')
                         .replaceAll('CITY-LOW-40', '')
                         .replaceAll('buyer@example.com', '');

@@ -7,7 +7,7 @@ import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
 import { installValidationMessages } from './i18n/validation';
 
-const appName = import.meta.env.VITE_APP_NAME || 'EVE';
+const appName = import.meta.env.VITE_APP_NAME || 'EVE Shoes';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

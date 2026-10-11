@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
+import SignInOptions from '@/components/SignInOptions.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +16,7 @@ import { Form, Head } from '@inertiajs/vue3';
 const { t, label } = useLocale();
 
 defineProps<{
+    signInOptions?: { google: boolean; facebook: boolean; phone: boolean };
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
@@ -34,6 +36,8 @@ defineProps<{
         >
             {{ label(status) }}
         </div>
+
+        <SignInOptions :options="signInOptions" />
 
         <Form
             v-bind="store.form()"

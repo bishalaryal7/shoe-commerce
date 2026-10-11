@@ -11,6 +11,10 @@ class WholesaleController extends Controller
 {
     public function index(Request $request)
     {
+        if (! $request->user()) {
+            $request->session()->put('url.intended', '/wholesale');
+        }
+
         return Inertia::render('shop/Wholesale', ['account' => $request->user() ? WholesaleAccount::where('user_id', $request->user()->id)->first() : null]);
     }
 

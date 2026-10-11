@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PhoneChallenge;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -17,3 +18,4 @@ Artisan::command('shop:admin {email}', function () {
 
 Schedule::command('shop:reconcile-payments')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('shop:mail-outbox')->everyMinute()->withoutOverlapping();
+Schedule::command('model:prune', ['--model' => PhoneChallenge::class])->daily()->withoutOverlapping();

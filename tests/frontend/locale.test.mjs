@@ -20,9 +20,9 @@ const files = (dir) =>
             ? files(join(dir, entry.name))
             : [join(dir, entry.name)],
     );
-const exempt = new Set(['EVE', slogan]);
+const exempt = new Set(['EVE Shoes', slogan]);
 
-test('English and Nepali preserve EVE and its slogan while translating complete sentences', () => {
+test('English and Nepali preserve EVE Shoes and its slogan while translating complete sentences', () => {
     for (const locale of ['en', 'ne'])
         for (const brand of exempt)
             assert.equal(translate(locale, brand), brand);

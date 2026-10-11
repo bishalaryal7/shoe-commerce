@@ -18,7 +18,7 @@ class OrderEmails
             'locale' => in_array($locale, ['en', 'ne'], true) ? $locale : 'en',
             'name' => $order->name, 'email' => $order->email, 'reference' => $order->reference, 'currency' => $order->currency,
             'subtotal' => $order->subtotal, 'shipping_amount' => $order->shipping_amount, 'tax_amount' => $order->tax_amount, 'total' => $order->total,
-            'status' => $order->status, 'payment_status' => $order->payment_status,
+            'payment_method' => $order->payment_method, 'status' => $order->status, 'payment_status' => $order->payment_status,
             'items' => $order->items->map(fn ($item) => ['name' => $item->name, 'size' => $item->size, 'quantity' => $item->quantity, 'unit_price' => $item->unit_price])->all(),
         ]]);
         if ($record->wasRecentlyCreated) {

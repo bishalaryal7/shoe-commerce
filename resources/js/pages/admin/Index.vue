@@ -67,6 +67,8 @@ const props = defineProps<{
         sandbox: boolean;
     }>;
     integrations: {
+        signIn?: { google: boolean; facebook: boolean; phone: boolean };
+        cashOnDelivery?: boolean;
         khalti: boolean;
         paypay: boolean;
         mail: string;
@@ -322,7 +324,7 @@ function stock(id: number, event: Event) {
                     </p>
                     <form
                         v-if="
-                            order.payment_method === 'request' &&
+                            ['request', 'cod'].includes(order.payment_method) &&
                             order.payment_status === 'unpaid' &&
                             ['pending_confirmation', 'confirmed'].includes(
                                 order.status,
@@ -418,6 +420,41 @@ function stock(id: number, event: Event) {
             <div v-if="tab === 'Payments'">
                 <div class="admin-card">
                     <h3>{{ t('Integrations') }}</h3>
+                    <p>
+                        {{ t('Cash on delivery') }}:
+                        {{
+                            integrations.cashOnDelivery
+                                ? t('Enabled')
+                                : t('Disabled')
+                        }}
+                    </p>
+                    <p v-if="integrations.signIn">
+                        {{ t('Google') }}:
+                        {{
+                            integrations.signIn.google
+                                ? t('configured')
+                                : t('needs credentials')
+                        }}
+                        · {{ t('Facebook') }}:
+                        {{
+                            integrations.signIn.facebook
+                                ? t('configured')
+                                : t('needs credentials')
+                        }}
+                        · {{ t('Phone sign-in') }}:
+                        {{
+                            integrations.signIn.phone
+                                ? t('configured')
+                                : t('needs credentials')
+                        }}
+                    </p>
+                    <p class="muted">
+                        {{
+                            t(
+                                'Provider credentials must be configured before online payments or social and phone sign-in become available.',
+                            )
+                        }}
+                    </p>
                     <p>
                         {{ t('Khalti:') }}
                         {{
