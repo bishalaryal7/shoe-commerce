@@ -44,6 +44,14 @@ class CommerceTest extends TestCase
                 ->where('related.0.price', 9900));
     }
 
+    public function test_size_guide_is_available_to_shoppers_without_an_account(): void
+    {
+        $this->get('/size-guide')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('shop/SizeGuide'));
+    }
+
     public function test_customers_cannot_read_or_modify_admin_data(): void
     {
         $this->get('/admin')->assertRedirect('/login');

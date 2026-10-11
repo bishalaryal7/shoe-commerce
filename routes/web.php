@@ -10,6 +10,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\SavedProductsController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SizeGuideController;
 use App\Http\Controllers\StaffAccessController;
 use App\Http\Controllers\WholesaleController;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,7 @@ Route::get('/ready', function () {
 })->name('readiness');
 Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/size-guide', SizeGuideController::class)->name('size-guide');
 Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.reviews.store');
 Route::post('/products/{product:slug}/reviews/{review}/helpful', [ProductReviewController::class, 'helpful'])->middleware(['auth', 'throttle:30,1'])->whereNumber('review')->name('products.reviews.helpful');
 Route::get('/saved', [SavedProductsController::class, 'index'])->name('saved.index');

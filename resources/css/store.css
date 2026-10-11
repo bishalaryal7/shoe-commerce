@@ -4045,6 +4045,110 @@ html[lang='ne'] .store .wordmark {
     outline-offset: 3px;
 }
 
+.size-guide-page > .eyebrow {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+.size-guide-intro {
+    max-width: 650px;
+    margin: -20px 0 30px;
+    color: var(--muted);
+    line-height: 1.8;
+}
+.size-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+.size-guide-card {
+    padding: 28px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+}
+.size-guide-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 20px;
+    place-items: center;
+    border-radius: 13px;
+    color: #7854ad;
+    background: #f5f0ff;
+}
+.size-guide-card .eyebrow {
+    display: block;
+    margin-bottom: 7px;
+}
+.size-guide-card h2,
+.size-guide-next h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+}
+.size-guide-card > p,
+.size-guide-next p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.8;
+}
+.size-guide-steps {
+    display: grid;
+    gap: 14px;
+    padding-left: 20px;
+    color: var(--ink);
+    font-size: 12px;
+    line-height: 1.8;
+}
+.size-guide-steps li::marker {
+    color: #7854ad;
+    font-weight: 700;
+}
+.size-guide-note {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 9px;
+    background: #f7f5fa;
+}
+.size-guide-sizes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0;
+}
+.size-guide-sizes span {
+    display: grid;
+    width: 42px;
+    height: 40px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.size-guide-next {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 20px;
+    padding: 24px 28px;
+    border-radius: 14px;
+    background: #f7f5fa;
+}
+.size-guide-next p {
+    margin: 0;
+}
+@media (max-width: 700px) {
+    .size-guide-grid {
+        grid-template-columns: 1fr;
+    }
+    .size-guide-next {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 /* Keep the brand, language switch, search and bag usable on narrow screens. */
 @media (max-width: 700px) {
     .shop-header {

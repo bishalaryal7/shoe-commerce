@@ -160,6 +160,12 @@ const current = computed(() => page.url.split('?')[0]);
                     {{ t('Shop all') }}
                 </Link>
                 <Link
+                    href="/size-guide"
+                    :class="{ selected: current === '/size-guide' }"
+                    @click="open = false"
+                    >{{ t('Size guide') }}</Link
+                >
+                <Link
                     href="/?category=Everyday#collection"
                     @click="open = false"
                     >{{ t('Everyday') }}</Link
@@ -234,6 +240,7 @@ const current = computed(() => page.url.split('?')[0]);
             <div class="footer-links">
                 <strong> {{ t('Find your next step') }} </strong
                 ><Link href="/"> {{ t('Shop all shoes') }} </Link
+                ><Link href="/size-guide">{{ t('Size guide') }}</Link
                 ><Link href="/saved"> {{ t('Saved shoes') }} </Link
                 ><Link href="/compare"> {{ t('Compare shoes') }} </Link
                 ><Link href="/wholesale"> {{ t('Wholesale partners') }} </Link

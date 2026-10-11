@@ -255,6 +255,10 @@ const available = computed(() =>
                                 )
                             }}
                         </p>
+                        <Link href="/size-guide"
+                            >{{ t('Open the size guide') }}
+                            <ChevronRight :size="13"
+                        /></Link>
                     </details>
                 </div>
             </div>
