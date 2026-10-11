@@ -15,12 +15,14 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import { useLocale } from '@/composables/useLocale';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { confirm } from '@/routes/two-factor';
 import { Form } from '@inertiajs/vue3';
 import { useClipboard } from '@vueuse/core';
 import { Check, Copy, ScanLine } from 'lucide-vue-next';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
+const { t } = useLocale();
 
 interface Props {
     requiresConfirmation: boolean;
@@ -141,9 +143,9 @@ watch(
                         />
                     </div>
                 </div>
-                <DialogTitle>{{ modalConfig.title }}</DialogTitle>
+                <DialogTitle>{{ t(modalConfig.title) }}</DialogTitle>
                 <DialogDescription class="text-center">
-                    {{ modalConfig.description }}
+                    {{ t(modalConfig.description) }}
                 </DialogDescription>
             </DialogHeader>
 
@@ -179,7 +181,7 @@ watch(
 
                         <div class="flex w-full items-center space-x-5">
                             <Button class="w-full" @click="handleModalNextStep">
-                                {{ modalConfig.buttonText }}
+                                {{ t(modalConfig.buttonText) }}
                             </Button>
                         </div>
 
@@ -189,9 +191,9 @@ watch(
                             <div
                                 class="absolute inset-0 top-1/2 h-px w-full bg-border"
                             />
-                            <span class="relative bg-card px-2 py-1"
-                                >or, enter the code manually</span
-                            >
+                            <span class="relative bg-card px-2 py-1">
+                                {{ t('or, enter the code manually') }}
+                            </span>
                         </div>
 
                         <div
@@ -270,14 +272,14 @@ watch(
                                     @click="showVerificationStep = false"
                                     :disabled="processing"
                                 >
-                                    Back
+                                    {{ t('Back') }}
                                 </Button>
                                 <Button
                                     type="submit"
                                     class="w-auto flex-1"
                                     :disabled="processing || code.length < 6"
                                 >
-                                    Confirm
+                                    {{ t('Confirm') }}
                                 </Button>
                             </div>
                         </div>

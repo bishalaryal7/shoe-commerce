@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { money, type Product, type ShopSharedProps } from '@/types/shop';
+import { useLocale } from '@/composables/useLocale';
+import { type Product, type ShopSharedProps } from '@/types/shop';
 import { useForm, usePage } from '@inertiajs/vue3';
 import {
     Check,
@@ -10,6 +11,7 @@ import {
     X,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+const { t, num, money } = useLocale();
 const props = defineProps<{ product: Product; wholesale: boolean }>();
 const page = usePage<ShopSharedProps>();
 const dialog = ref<HTMLDialogElement | null>(null);
@@ -42,7 +44,7 @@ function chooseSize(id: number) {
 }
 function add() {
     if (!form.variant_id) {
-        form.setError('variant_id', 'Choose your size to continue.');
+        form.setError('variant_id', t('Choose your size to continue.'));
         return;
     }
     form.post('/cart', {
@@ -67,7 +69,7 @@ defineExpose({ open });
             class="dialog-close"
             type="button"
             @click="dialog?.close()"
-            aria-label="Close product details"
+            :aria-label="t('Close product details')"
         >
             <X :size="20" />
         </button>
@@ -75,22 +77,29 @@ defineExpose({ open });
             <div class="detail-image" :data-color="color">
                 <img
                     :src="product.image"
-                    :alt="product.name + ' shoe illustration'"
-                /><span>Made for your everyday.</span>
+                    :alt="t('Illustration of :name', { name: t(product.name) })"
+                /><span> {{ t('Made for your everyday.') }} </span>
             </div>
             <div class="detail-content">
-                <span class="eyebrow">{{ product.category }} COLLECTION</span>
-                <h2 :id="'product-title-' + product.id">{{ product.name }}</h2>
+                <span class="eyebrow"
+                    >{{ t(product.category) }} {{ t('COLLECTION') }}
+                </span>
+                <h2 :id="'product-title-' + product.id">
+                    {{ t(product.name) }}
+                </h2>
                 <div class="detail-price">
                     {{ money(product.price, page.props.currency)
                     }}<span>{{
-                        wholesale ? 'Wholesale price / pair' : 'Price / pair'
+                        wholesale
+                            ? t('Wholesale price / pair')
+                            : t('Price / pair')
                     }}</span>
                 </div>
-                <p class="detail-description">{{ product.description }}</p>
+                <p class="detail-description">{{ t(product.description) }}</p>
                 <form @submit.prevent="add">
                     <div class="option-heading">
-                        <strong>Color</strong><span>{{ color }}</span>
+                        <strong> {{ t('Color') }} </strong
+                        ><span>{{ t(color) }}</span>
                     </div>
                     <div class="color-options">
                         <button
@@ -105,12 +114,13 @@ defineExpose({ open });
                                 class="color-swatch"
                                 :data-color="option"
                             ></span
-                            >{{ option
+                            >{{ t(option)
                             }}<Check v-if="color === option" :size="13" />
                         </button>
                     </div>
                     <div class="option-heading">
-                        <strong>Choose your size</strong><span>EU sizing</span>
+                        <strong> {{ t('Choose your size') }} </strong
+                        ><span> {{ t('EU sizing') }} </span>
                     </div>
                     <div class="size-options">
                         <button
@@ -123,13 +133,17 @@ defineExpose({ open });
                             }"
                             :aria-pressed="form.variant_id === variant.id"
                             :aria-label="
-                                'EU ' +
-                                variant.size +
-                                (variant.stock < 1 ? ', sold out' : '')
+                                t('Size :size, :availability', {
+                                    size: num(variant.size),
+                                    availability:
+                                        variant.stock < 1
+                                            ? t('Sold out')
+                                            : t('Available'),
+                                })
                             "
                             @click="chooseSize(variant.id)"
                         >
-                            {{ variant.size }}
+                            {{ num(variant.size) }}
                         </button>
                     </div>
                     <p
@@ -142,9 +156,12 @@ defineExpose({ open });
                     <p v-else class="size-help">
                         {{
                             selected
-                                ? selected.stock +
-                                  ' pairs currently available in this size.'
-                                : 'Select a size. Unavailable sizes are crossed out.'
+                                ? t(':count pairs available in this size.', {
+                                      count: num(selected.stock),
+                                  })
+                                : t(
+                                      'Select a size. Unavailable sizes are crossed out.',
+                                  )
                         }}
                     </p>
                     <div class="purchase-row">
@@ -155,7 +172,7 @@ defineExpose({ open });
                                     form.quantity <= 1 || form.processing
                                 "
                                 @click="form.quantity--"
-                                aria-label="Decrease quantity"
+                                :aria-label="t('Decrease quantity')"
                             >
                                 <Minus :size="15" /></button
                             ><input
@@ -164,14 +181,14 @@ defineExpose({ open });
                                 min="1"
                                 :max="maximum"
                                 required
-                                aria-label="Number of pairs"
+                                :aria-label="t('Number of pairs')"
                             /><button
                                 type="button"
                                 :disabled="
                                     form.quantity >= maximum || form.processing
                                 "
                                 @click="form.quantity++"
-                                aria-label="Increase quantity"
+                                :aria-label="t('Increase quantity')"
                             >
                                 <Plus :size="15" />
                             </button>
@@ -185,7 +202,7 @@ defineExpose({ open });
                             type="submit"
                         >
                             <ShoppingBag :size="17" />{{
-                                form.processing ? 'Adding…' : 'Add to bag'
+                                form.processing ? t('Adding…') : t('Add to bag')
                             }}
                         </button>
                     </div>
@@ -200,8 +217,12 @@ defineExpose({ open });
                 <div class="detail-note">
                     <PackageCheck :size="18" /><span>{{
                         wholesale
-                            ? 'Mix styles and sizes. Minimum 12 pairs per wholesale order.'
-                            : 'Order online. Our team confirms payment and delivery with you.'
+                            ? t(
+                                  'Mix styles and sizes. Minimum 12 pairs per wholesale order.',
+                              )
+                            : t(
+                                  'Order online. Our team confirms payment and delivery with you.',
+                              )
                     }}</span>
                 </div>
             </div>

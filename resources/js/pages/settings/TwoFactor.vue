@@ -4,6 +4,7 @@ import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/composables/useLocale';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -12,6 +13,7 @@ import { BreadcrumbItem } from '@/types';
 import { Form, Head } from '@inertiajs/vue3';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
 import { onUnmounted, ref } from 'vue';
+const { t } = useLocale();
 
 interface Props {
     requiresConfirmation?: boolean;
@@ -40,25 +42,28 @@ onUnmounted(() => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Two-Factor Authentication" />
+        <Head :title="t('Two-Factor Authentication')" />
         <SettingsLayout>
             <div class="space-y-6">
                 <HeadingSmall
-                    title="Two-Factor Authentication"
-                    description="Manage your two-factor authentication settings"
+                    :title="t('Two-Factor Authentication')"
+                    :description="
+                        t('Manage your two-factor authentication settings')
+                    "
                 />
 
                 <div
                     v-if="!twoFactorEnabled"
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="destructive">Disabled</Badge>
+                    <Badge variant="destructive"> {{ t('Disabled') }} </Badge>
 
                     <p class="text-muted-foreground">
-                        When you enable two-factor authentication, you will be
-                        prompted for a secure pin during login. This pin can be
-                        retrieved from a TOTP-supported application on your
-                        phone.
+                        {{
+                            t(
+                                'When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.',
+                            )
+                        }}
                     </p>
 
                     <div>
@@ -66,7 +71,7 @@ onUnmounted(() => {
                             v-if="hasSetupData"
                             @click="showSetupModal = true"
                         >
-                            <ShieldCheck />Continue Setup
+                            <ShieldCheck /> {{ t('Continue Setup') }}
                         </Button>
                         <Form
                             v-else
@@ -75,8 +80,8 @@ onUnmounted(() => {
                             #default="{ processing }"
                         >
                             <Button type="submit" :disabled="processing">
-                                <ShieldCheck />Enable 2FA</Button
-                            ></Form
+                                <ShieldCheck /> {{ t('Enable 2FA') }}
+                            </Button></Form
                         >
                     </div>
                 </div>
@@ -85,13 +90,14 @@ onUnmounted(() => {
                     v-else
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="default">Enabled</Badge>
+                    <Badge variant="default"> {{ t('Enabled') }} </Badge>
 
                     <p class="text-muted-foreground">
-                        With two-factor authentication enabled, you will be
-                        prompted for a secure, random pin during login, which
-                        you can retrieve from the TOTP-supported application on
-                        your phone.
+                        {{
+                            t(
+                                'With two-factor authentication enabled, you will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.',
+                            )
+                        }}
                     </p>
 
                     <TwoFactorRecoveryCodes />
@@ -103,8 +109,7 @@ onUnmounted(() => {
                                 type="submit"
                                 :disabled="processing"
                             >
-                                <ShieldBan />
-                                Disable 2FA
+                                <ShieldBan /> {{ t('Disable 2FA') }}
                             </Button>
                         </Form>
                     </div>

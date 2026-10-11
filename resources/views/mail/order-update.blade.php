@@ -1,35 +1,35 @@
 <x-mail::message>
-# {{ match($event) { 'paid' => 'Payment received. Thank you!', 'refunded' => 'Your payment was refunded.', 'confirmed' => 'Your order is confirmed.', 'fulfilled' => 'Your order is fulfilled.', 'cancelled' => 'Your order has been cancelled.', default => 'We received your order.' } }}
-Hello {{ $details['name'] }},
+# {{ __(match($event) { 'paid' => 'Payment received. Thank you!', 'refunded' => 'Your payment was refunded.', 'confirmed' => 'Your order is confirmed.', 'fulfilled' => 'Your order is fulfilled.', 'cancelled' => 'Your order has been cancelled.', default => 'We received your order.' }) }}
+{{ __('Hello :name,', ['name' => $details['name']]) }}
 
-Order reference: **{{ $details['reference'] }}**
+{{ __('Order reference:') }} **{{ $details['reference'] }}**
 
 <x-mail::table>
-| Shoe | EU size | Pairs | Amount |
+| {{ __('Shoe') }} | {{ __('EU size') }} | {{ __('Pairs') }} | {{ __('Amount') }} |
 |:-----|:--------|------:|-------:|
 @foreach($details['items'] as $item)
-| {{ $item['name'] }} | {{ $item['size'] }} | {{ $item['quantity'] }} | {{ $formatMoney($item['unit_price'] * $item['quantity']) }} |
+| {{ __($item['name']) }} | {{ $formatNumber($item['size']) }} | {{ $formatNumber($item['quantity']) }} | {{ $formatMoney($item['unit_price'] * $item['quantity']) }} |
 @endforeach
 </x-mail::table>
 
-Product subtotal: {{ $formatMoney($details['subtotal']) }}
+{{ __('Product subtotal:') }} {{ $formatMoney($details['subtotal']) }}
 
-Shipping: {{ $formatMoney($details['shipping_amount']) }}
+{{ __('Shipping') }}: {{ $formatMoney($details['shipping_amount']) }}
 
-Tax: {{ $formatMoney($details['tax_amount']) }}
+{{ __('Tax') }}: {{ $formatMoney($details['tax_amount']) }}
 
-**Total: {{ $formatMoney($details['total']) }}**
+**{{ __('Total') }}: {{ $formatMoney($details['total']) }}**
 
-Payment: {{ str_replace('_', ' ', $details['payment_status']) }}.
+{{ __('Payment:') }} {{ __($details['payment_status']) }}.
 @if($details['payment_status'] !== 'paid')
-No completed online payment is recorded for this order. Please check your order page before paying again.
+{{ __('No completed online payment is recorded for this order. Please check your order page before paying again.') }}
 @endif
 @if($event === 'cancelled' && $details['payment_status'] === 'paid')
-A payment refund is handled separately by our team. Cancellation does not automatically refund a payment.
+{{ __('A payment refund is handled separately by our team. Cancellation does not automatically refund a payment.') }}
 @endif
-<x-mail::button :url="$trackingUrl">View your order</x-mail::button>
-This private order link is valid for 30 days. Do not share it.
+<x-mail::button :url="$trackingUrl">{{ __('View your order') }}</x-mail::button>
+{{ __('This private order link is valid for 30 days. Do not share it.') }}
 
-Thanks,<br>
+{{ __('Thanks,') }}<br>
 {{ config('app.name') }}
 </x-mail::message>

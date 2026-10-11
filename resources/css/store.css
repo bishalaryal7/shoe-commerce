@@ -3537,3 +3537,32 @@ body:has(.product-dialog[open]) {
         font-size: 18px;
     }
 }
+
+/* Devanagari needs more line height and no Latin-style letter spacing. */
+html[lang='ne'] body {
+    font-family:
+        'Noto Sans Devanagari', 'Nirmala UI', 'Devanagari Sangam MN', system-ui,
+        sans-serif;
+}
+html[lang='ne'] .store {
+    font-family: inherit;
+}
+html[lang='ne']
+    .store
+    :is(h1, h2, h3, .eyebrow, .button, label, .workspace-label) {
+    font-family: inherit;
+    letter-spacing: normal;
+    line-height: 1.5;
+}
+html[lang='ne'] .store :is(.filter-tabs, .catalog-selects, .workspace-topbar) {
+    flex-wrap: wrap;
+}
+html[lang='ne'] .store .hero-copy h1,
+html[lang='ne'] .store .wordmark {
+    font-family: Manrope, system-ui, sans-serif;
+}
+
+.product-photo-form label:focus-within .button {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+}

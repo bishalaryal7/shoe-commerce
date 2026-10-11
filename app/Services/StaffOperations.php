@@ -27,10 +27,10 @@ class StaffOperations
             $locked = $this->orders->lock($order->id);
             $allowed = ['pending_confirmation' => ['confirmed'], 'confirmed' => ['fulfilled']];
             if (! in_array($status, $allowed[$locked->status] ?? [])) {
-                abort(422, 'This order cannot move to that status.');
+                abort(422, __('This order cannot move to that status.'));
             }
             if ($status === 'fulfilled' && $locked->payment_status !== 'paid') {
-                abort(422, 'Record or verify payment before fulfilling this order.');
+                abort(422, __('Record or verify payment before fulfilling this order.'));
             }
             $this->orders->update($locked, ['status' => $status]);
             $this->orders->recordEvent($locked, $status, $actor);
@@ -43,11 +43,11 @@ class StaffOperations
         DB::transaction(function () use ($order, $reference, $actor) {
             $locked = $this->orders->lock($order->id);
             if ($locked->payment_method !== 'request' || $locked->payment_status !== 'unpaid' || ! in_array($locked->status, ['pending_confirmation', 'confirmed'])) {
-                abort(422, 'This order cannot record an offline payment.');
+                abort(422, __('This order cannot record an offline payment.'));
             }
             $this->orders->update($locked, ['payment_method' => 'offline', 'payment_status' => 'paid', 'paid_at' => now(), 'status' => 'confirmed', 'offline_payment_reference' => $reference]);
             $this->orders->recordEvent($locked, 'offline_payment_received', $actor, ['reference' => $reference, 'amount' => $locked->total, 'currency' => $locked->currency]);
-            $this->emails->record($locked,'paid');
+            $this->emails->record($locked, 'paid');
         });
     }
 }

@@ -3,7 +3,6 @@ import { useLocale } from '@/composables/useLocale';
 import { validateContact } from '@/composables/validateContact';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import {
-    money,
     type CartLine,
     type PaymentOption,
     type ShopSharedProps,
@@ -17,7 +16,7 @@ import {
     WalletCards,
 } from 'lucide-vue-next';
 import { nextTick } from 'vue';
-const { t } = useLocale();
+const { t, num, money } = useLocale();
 const props = defineProps<{
     lines: CartLine[];
     wholesale: boolean;
@@ -58,12 +57,12 @@ const tax = Math.floor((subtotal * props.taxBasisPoints + 5000) / 10000);
 const total = subtotal + props.shippingAmount + tax;
 </script>
 <template>
-    <Head title="Checkout" /><ShopLayout
+    <Head :title="t('Checkout')" /><ShopLayout
         ><section class="wrap inner-page">
             <div class="checkout-steps">
-                <span>01 · Your bag</span
-                ><span class="active">02 · Checkout</span
-                ><span>03 · Your order</span>
+                <span> {{ t('01 · Your bag') }} </span
+                ><span class="active"> {{ t('02 · Checkout') }} </span
+                ><span> {{ t('03 · Your order') }} </span>
             </div>
             <h1>{{ t('Let’s make it yours.') }}</h1>
             <div class="checkout-grid">
@@ -176,16 +175,21 @@ const total = subtotal + props.shippingAmount + tax;
                             :value="option.id"
                         /><WalletCards :size="20" /><span
                             ><strong
-                                >{{ option.name }}
+                                >{{ t(option.name) }}
                                 <span
                                     v-if="option.sandbox"
                                     class="sandbox-badge"
-                                    >Test mode</span
-                                ></strong
-                            ><small
-                                >Continue to {{ option.name }} to complete
-                                payment securely.</small
-                            ></span
+                                >
+                                    {{ t('Test mode') }}
+                                </span></strong
+                            ><small>
+                                {{
+                                    t(
+                                        'Continue to :provider to complete payment securely.',
+                                        { provider: t(option.name) },
+                                    )
+                                }}
+                            </small></span
                         ></label
                     >
                     <p v-if="!paymentOptions.length" class="checkout-help">
@@ -239,16 +243,19 @@ const total = subtotal + props.shippingAmount + tax;
                     >
                 </form>
                 <aside class="summary-card">
-                    <h2>{{ wholesale ? 'Wholesale order' : 'Your order' }}</h2>
+                    <h2>
+                        {{ wholesale ? t('Wholesale order') : t('Your order') }}
+                    </h2>
                     <div
                         v-for="line in lines"
                         :key="line.id"
                         class="summary-line"
                     >
                         <span
-                            >{{ line.name
-                            }}<small
-                                >EU {{ line.size }} × {{ line.quantity }}</small
+                            >{{ t(line.name)
+                            }}<small>
+                                {{ t('EU') }} {{ num(line.size) }} ×
+                                {{ num(line.quantity) }}</small
                             ></span
                         ><strong>{{
                             money(
@@ -278,10 +285,13 @@ const total = subtotal + props.shippingAmount + tax;
                         }}</strong>
                     </div>
                     <div class="summary-note">
-                        <ShieldCheck :size="17" /><span
-                            >Prices and stock are checked securely when you
-                            place your order.</span
-                        >
+                        <ShieldCheck :size="17" /><span>
+                            {{
+                                t(
+                                    'Prices and stock are checked securely when you place your order.',
+                                )
+                            }}
+                        </span>
                     </div>
                 </aside>
             </div>

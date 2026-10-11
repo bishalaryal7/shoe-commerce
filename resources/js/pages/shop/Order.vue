@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { money, type CustomerOrder, type PaymentOption } from '@/types/shop';
+import { type CustomerOrder, type PaymentOption } from '@/types/shop';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -13,7 +13,7 @@ import {
     RefreshCw,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-const { t } = useLocale();
+const { t, label, num, date, money } = useLocale();
 const props = defineProps<{
     order: CustomerOrder;
     paymentOptions: PaymentOption[];
@@ -56,9 +56,9 @@ function pay(provider: 'khalti' | 'paypay') {
 }
 </script>
 <template>
-    <Head title="Your order" /><ShopLayout
+    <Head :title="t('Your order')" /><ShopLayout
         ><section class="wrap inner-page">
-            <span class="eyebrow">YOUR NEXT STEP</span>
+            <span class="eyebrow"> {{ t('YOUR NEXT STEP') }} </span>
             <h1>
                 {{
                     order.status === 'cancelled'
@@ -70,13 +70,11 @@ function pay(provider: 'khalti' | 'paypay') {
             </h1>
             <div class="order-overview">
                 <span class="status-pill" :data-status="order.status">{{
-                    order.status.replaceAll('_', ' ')
+                    label(order.status)
                 }}</span
-                ><span class="status-pill" :data-status="order.payment_status"
-                    >Payment: {{ order.payment_status }}</span
-                ><span>{{
-                    new Date(order.created_at).toLocaleDateString()
-                }}</span>
+                ><span class="status-pill" :data-status="order.payment_status">
+                    {{ t('Payment:') }} {{ label(order.payment_status) }}</span
+                ><span>{{ date(order.created_at) }}</span>
             </div>
             <div v-if="order.status !== 'cancelled'" class="order-timeline">
                 <div
@@ -106,11 +104,12 @@ function pay(provider: 'khalti' | 'paypay') {
                             class="summary-line"
                         >
                             <span
-                                ><strong>{{ item.name }}</strong
-                                ><small
-                                    >EU {{ item.size }} · {{ item.color }} ·
-                                    {{ item.quantity }} pair(s)</small
-                                ></span
+                                ><strong>{{ t(item.name) }}</strong
+                                ><small>
+                                    {{ t('EU') }} {{ num(item.size) }} ·
+                                    {{ t(item.color) }} ·
+                                    {{ num(item.quantity) }} {{ t('pair(s)') }}
+                                </small></span
                             ><strong>{{
                                 money(
                                     item.unit_price * item.quantity,
@@ -159,8 +158,8 @@ function pay(provider: 'khalti' | 'paypay') {
                             {{ t('Open private tracking link') }}
                         </a>
                     </div>
-                    <Link href="/" class="back-shopping"
-                        >Keep exploring <ArrowRight :size="14"
+                    <Link href="/" class="back-shopping">
+                        {{ t('Keep exploring') }} <ArrowRight :size="14"
                     /></Link>
                 </div>
                 <aside class="summary-card">
@@ -225,18 +224,24 @@ function pay(provider: 'khalti' | 'paypay') {
                         class="field-error"
                         role="alert"
                     >
-                        {{ error }}
+                        {{ t(error) }}
                     </p>
                     <a
                         v-if="resumePayment"
                         :href="resumePayment.url"
                         class="button dark full"
-                        ><CreditCard :size="16" />Continue
-                        {{ resumePayment.provider }} checkout<span
+                        ><CreditCard :size="16" />
+                        {{
+                            t('Continue :provider checkout', {
+                                provider: label(resumePayment.provider),
+                            })
+                        }}
+                        <span
                             v-if="resumePayment.sandbox"
                             class="sandbox-badge"
-                            >Test</span
-                        ></a
+                        >
+                            {{ t('Test') }}
+                        </span></a
                     >
                     <button
                         v-for="option in paymentOptions"
@@ -245,10 +250,11 @@ function pay(provider: 'khalti' | 'paypay') {
                         :disabled="form.processing"
                         @click="pay(option.id)"
                     >
-                        <CreditCard :size="16" />Pay with {{ option.name
-                        }}<span v-if="option.sandbox" class="sandbox-badge"
-                            >Test</span
-                        ></button
+                        <CreditCard :size="16" /> {{ t('Pay with') }}
+                        {{ t(option.name)
+                        }}<span v-if="option.sandbox" class="sandbox-badge">
+                            {{ t('Test') }}
+                        </span></button
                     ><button
                         v-if="
                             ['khalti', 'paypay'].includes(

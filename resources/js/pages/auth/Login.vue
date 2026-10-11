@@ -12,7 +12,7 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
-const { t } = useLocale();
+const { t, label } = useLocale();
 
 defineProps<{
     status?: string;
@@ -32,7 +32,7 @@ defineProps<{
             v-if="status"
             class="mb-4 text-center text-sm font-medium text-green-600"
         >
-            {{ status }}
+            {{ label(status) }}
         </div>
 
         <Form
@@ -52,7 +52,7 @@ defineProps<{
                         autofocus
                         :tabindex="1"
                         autocomplete="email"
-                        placeholder="email@example.com"
+                        :placeholder="t('email@example.com')"
                     />
                     <InputError :message="errors.email" />
                 </div>
@@ -103,7 +103,7 @@ defineProps<{
                 class="text-center text-sm text-muted-foreground"
                 v-if="canRegister"
             >
-                Don't have an account?
+                {{ t("Don't have an account?") }}
                 <TextLink :href="register()" :tabindex="5">
                     {{ t('Sign up') }}
                 </TextLink>

@@ -35,7 +35,7 @@ class ShopController extends Controller
     {
         $cart->add($request, $request->validated('variant_id'), $request->validated('quantity'));
 
-        return back()->with('success', 'Added to your bag.');
+        return back()->with('success', __('Added to your bag.'));
     }
 
     public function update(CartQuantityRequest $request, Variant $variant, Cart $cart)

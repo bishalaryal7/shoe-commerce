@@ -1,5 +1,7 @@
 <script setup lang="ts">
+const { t } = useLocale();
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useLocale } from '@/composables/useLocale';
 import { AlertCircle } from 'lucide-vue-next';
 import { computed } from 'vue';
 
@@ -18,11 +20,11 @@ const uniqueErrors = computed(() => Array.from(new Set(props.errors)));
 <template>
     <Alert variant="destructive">
         <AlertCircle class="size-4" />
-        <AlertTitle>{{ title }}</AlertTitle>
+        <AlertTitle>{{ t(title) }}</AlertTitle>
         <AlertDescription>
             <ul class="list-inside list-disc text-sm">
                 <li v-for="(error, index) in uniqueErrors" :key="index">
-                    {{ error }}
+                    {{ t(error) }}
                 </li>
             </ul>
         </AlertDescription>

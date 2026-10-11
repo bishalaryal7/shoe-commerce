@@ -61,14 +61,14 @@ class AdminController extends Controller
     {
         $staff->stock($variant->id, $request->validated('stock'), $request->user()->id);
 
-        return back()->with('success', 'Available stock updated.');
+        return back()->with('success', __('Available stock updated.'));
     }
 
     public function product(ProductRequest $request, Product $product, ProductRepository $products)
     {
         $products->update($product, $request->validated());
 
-        return back()->with('success', 'Product updated.');
+        return back()->with('success', __('Product updated.'));
     }
 
     public function approve(WholesaleReviewRequest $request, WholesaleAccount $account)
@@ -76,21 +76,21 @@ class AdminController extends Controller
         $data = $request->validated();
         $account->update($data);
 
-        return back()->with('success', 'Wholesale application updated.');
+        return back()->with('success', __('Wholesale application updated.'));
     }
 
     public function order(OrderStatusRequest $request, Order $order, StaffOperations $staff)
     {
         $staff->transition($order, $request->validated('status'), $request->user()->id);
 
-        return back()->with('success', 'Order updated.');
+        return back()->with('success', __('Order updated.'));
     }
 
     public function offlinePayment(OfflinePaymentRequest $request, Order $order, StaffOperations $staff)
     {
         $staff->offlinePayment($order, $request->validated('reference'), $request->user()->id);
 
-        return back()->with('success', 'Offline payment recorded. The order is ready for fulfillment.');
+        return back()->with('success', __('Offline payment recorded. The order is ready for fulfillment.'));
     }
 
     public function verifyPayment(PaymentAttempt $attempt, OrderPayments $payments)
@@ -98,9 +98,9 @@ class AdminController extends Controller
         try {
             $status = $payments->verify($attempt);
         } catch (\Throwable $exception) {
-            return back()->withErrors(['payment' => 'Provider verification is unavailable; payment status was not changed.']);
+            return back()->withErrors(['payment' => __('Provider verification is unavailable; payment status was not changed.')]);
         }
 
-        return back()->with('success', 'Provider status verified: '.$status.'.');
+        return back()->with('success', __('Provider status verified: :status.', ['status' => __($status)]));
     }
 }

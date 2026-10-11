@@ -22,7 +22,7 @@ const inputEmail = ref(props.email);
 <template>
     <AuthLayout
         :title="t('Reset password')"
-        description="Please enter your new password below"
+        :description="t('Please enter your new password below')"
     >
         <Head :title="t('Reset password')" />
 
@@ -34,7 +34,7 @@ const inputEmail = ref(props.email);
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email</Label>
+                    <Label for="email"> {{ t('Email') }} </Label>
                     <Input
                         id="email"
                         type="email"
@@ -63,7 +63,7 @@ const inputEmail = ref(props.email);
 
                 <div class="grid gap-2">
                     <Label for="password_confirmation">
-                        Confirm Password
+                        {{ t('Confirm Password') }}
                     </Label>
                     <Input
                         id="password_confirmation"

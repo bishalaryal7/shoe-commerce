@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { money, type CartLine, type ShopSharedProps } from '@/types/shop';
+import { type CartLine, type ShopSharedProps } from '@/types/shop';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeft,
@@ -13,7 +13,7 @@ import {
     Trash2,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-const { t } = useLocale();
+const { t, num, money } = useLocale();
 const props = defineProps<{ lines: CartLine[]; wholesale: boolean }>();
 const page = usePage<ShopSharedProps>();
 const busy = ref(false);
@@ -40,24 +40,32 @@ function remove(id: number) {
 }
 </script>
 <template>
-    <Head title="Your bag" /><ShopLayout
+    <Head :title="t('Your bag')" /><ShopLayout
         ><section class="wrap inner-page">
             <div class="checkout-steps">
-                <span class="active">01 · Your bag</span
-                ><span>02 · Your details</span
-                ><span>03 · Request received</span>
+                <span class="active"> {{ t('01 · Your bag') }} </span
+                ><span> {{ t('02 · Your details') }} </span
+                ><span> {{ t('03 · Request received') }} </span>
             </div>
             <h1>
-                Your good finds.<span class="bag-item-count"
-                    >{{ pairs }} {{ pairs === 1 ? 'pair' : 'pairs' }}</span
+                {{ t('Your good finds.') }}
+                <span class="bag-item-count"
+                    >{{ num(pairs) }}
+                    {{ pairs === 1 ? t('pair') : t('pairs') }}</span
                 >
             </h1>
             <div v-if="!lines.length" class="empty-state">
                 <span class="empty-icon"><ShoppingBag :size="29" /></span>
-                <h2>A fresh start for your next step.</h2>
-                <p>Your bag is empty. Find a pair that fits your everyday.</p>
-                <Link href="/" class="button dark"
-                    >Explore the collection <ArrowRight :size="17"
+                <h2>{{ t('A fresh start for your next step.') }}</h2>
+                <p>
+                    {{
+                        t(
+                            'Your bag is empty. Find a pair that fits your everyday.',
+                        )
+                    }}
+                </p>
+                <Link href="/" class="button dark">
+                    {{ t('Explore the collection') }} <ArrowRight :size="17"
                 /></Link>
             </div>
             <div v-else class="checkout-grid">
@@ -75,13 +83,13 @@ function remove(id: number) {
                             :key="line.id"
                             class="cart-row"
                         >
-                            <img :src="line.image" :alt="line.name" />
+                            <img :src="line.image" :alt="t(line.name)" />
                             <div class="cart-row-main">
-                                <h3>{{ line.name }}</h3>
+                                <h3>{{ t(line.name) }}</h3>
                                 <p>
-                                    EU {{ line.size }}
+                                    {{ t('EU') }} {{ num(line.size) }}
                                     <span class="meta-dot">·</span>
-                                    {{ line.color }}
+                                    {{ t(line.color) }}
                                 </p>
                                 <div class="cart-controls">
                                     <div class="quantity-stepper">
@@ -92,16 +100,20 @@ function remove(id: number) {
                                             "
                                             @click="quantity(line, -1)"
                                             :aria-label="
-                                                'Decrease quantity of ' +
-                                                line.name
+                                                t(
+                                                    'Decrease quantity of :name',
+                                                    { name: t(line.name) },
+                                                )
                                             "
                                         >
                                             <Minus :size="12" /></button
                                         ><span
                                             :aria-label="
-                                                line.quantity + ' pairs'
+                                                t(':count pairs', {
+                                                    count: num(line.quantity),
+                                                })
                                             "
-                                            >{{ line.quantity }}</span
+                                            >{{ num(line.quantity) }}</span
                                         ><button
                                             type="button"
                                             :disabled="
@@ -111,8 +123,10 @@ function remove(id: number) {
                                             "
                                             @click="quantity(line, 1)"
                                             :aria-label="
-                                                'Increase quantity of ' +
-                                                line.name
+                                                t(
+                                                    'Increase quantity of :name',
+                                                    { name: t(line.name) },
+                                                )
                                             "
                                         >
                                             <Plus :size="12" />
@@ -123,21 +137,25 @@ function remove(id: number) {
                                         :disabled="busy"
                                         @click="remove(line.id)"
                                         :aria-label="
-                                            'Remove ' +
-                                            line.name +
-                                            ' size ' +
-                                            line.size
+                                            t('Remove :name, size :size', {
+                                                name: t(line.name),
+                                                size: num(line.size),
+                                            })
                                         "
                                     >
-                                        <Trash2 :size="12" />Remove
+                                        <Trash2 :size="12" /> {{ t('Remove') }}
                                     </button>
                                 </div>
                                 <p
                                     v-if="line.quantity > line.stock"
                                     class="field-error"
                                 >
-                                    Only {{ line.stock }} left. Adjust your
-                                    quantity before continuing.
+                                    {{
+                                        t(
+                                            'Only :count pairs remain. Adjust your quantity before continuing.',
+                                            { count: num(line.stock) },
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <strong>{{
@@ -153,14 +171,14 @@ function remove(id: number) {
                     </Link>
                 </div>
                 <aside class="summary-card">
-                    <span v-if="wholesale" class="status-pill"
-                        >Wholesale order</span
-                    >
+                    <span v-if="wholesale" class="status-pill">
+                        {{ t('Wholesale order') }}
+                    </span>
                     <h2>{{ t('Looking good.') }}</h2>
                     <div class="summary-line">
                         <span
-                            >{{ pairs }}
-                            {{ pairs === 1 ? 'pair' : 'pairs' }}</span
+                            >{{ num(pairs) }}
+                            {{ pairs === 1 ? t('pair') : t('pairs') }}</span
                         ><strong>{{
                             money(subtotal, page.props.currency)
                         }}</strong>
@@ -177,7 +195,9 @@ function remove(id: number) {
                     </div>
                     <div v-if="wholesale" class="wholesale-progress">
                         <div>
-                            <span>{{ Math.min(pairs, 12) }} / 12 pairs</span
+                            <span
+                                >{{ num(Math.min(pairs, 12)) }}
+                                {{ t('/ 12 pairs') }} </span
                             ><span>{{
                                 pairs >= 12
                                     ? t('Minimum reached')
@@ -187,12 +207,17 @@ function remove(id: number) {
                         <progress
                             :value="Math.min(pairs, 12)"
                             max="12"
-                            aria-label="Progress toward 12 pair wholesale minimum"
+                            :aria-label="
+                                t('Progress toward 12 pair wholesale minimum')
+                            "
                         ></progress>
                         <p v-if="pairs < 12">
-                            Add {{ 12 - pairs }} more
-                            {{ 12 - pairs === 1 ? 'pair' : 'pairs' }} to place a
-                            wholesale request.
+                            {{
+                                t(
+                                    'Add :count more pairs to place a wholesale request.',
+                                    { count: num(12 - pairs) },
+                                )
+                            }}
                         </p>
                     </div>
                     <Link
@@ -206,10 +231,13 @@ function remove(id: number) {
                         {{ t('Add more pairs') }} <Plus :size="16"
                     /></Link>
                     <div class="summary-note">
-                        <ShieldCheck :size="16" /><span
-                            >Review your final total and choose a payment method
-                            at checkout.</span
-                        >
+                        <ShieldCheck :size="16" /><span>
+                            {{
+                                t(
+                                    'Review your final total and choose a payment method at checkout.',
+                                )
+                            }}
+                        </span>
                     </div>
                 </aside>
             </div>

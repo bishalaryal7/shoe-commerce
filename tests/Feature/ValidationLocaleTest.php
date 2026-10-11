@@ -46,14 +46,14 @@ class ValidationLocaleTest extends TestCase
         $this->withSession(['locale' => 'ne', 'cart' => [1 => 1], 'checkout_token' => $token])->post('/checkout', ['name' => 'Buyer', 'email' => 'buyer@example.com', 'phone' => 'abc', 'address' => 'Kathmandu, Nepal', 'token' => $token])->assertSessionHasErrors(['phone' => '७–१५ अङ्क भएको सही फोन नम्बर लेख्नुहोस्, जस्तै +977 9800000000।']);
     }
 
-    public function test_nepali_product_content_is_used_with_english_fallback(): void
+    public function test_nepali_product_content_and_translated_demo_fallback_are_used(): void
     {
         $product = Product::first();
         $product->update(['name_ne' => 'दैनिक जुत्ता', 'description_ne' => 'दैनिक हिँडाइका लागि आरामदायी जुत्ता।']);
         $this->withSession(['locale' => 'ne'])->get('/products/'.$product->slug)->assertInertia(fn (Assert $p) => $p->where('product.name', 'दैनिक जुत्ता')->where('product.description', 'दैनिक हिँडाइका लागि आरामदायी जुत्ता।'));
         $this->get('/?q='.rawurlencode('दैनिक'))->assertInertia(fn (Assert $p) => $p->has('products.data', 1)->where('products.data.0.name', 'दैनिक जुत्ता'));
         $other = Product::findOrFail(2);
-        $this->get('/products/'.$other->slug)->assertInertia(fn (Assert $p) => $p->where('product.name', $other->name));
+        $this->get('/products/'.$other->slug)->assertInertia(fn (Assert $p) => $p->where('product.name', 'पेस रनर'));
     }
 
     public function test_wholesale_price_cannot_exceed_retail_and_customer_cannot_edit_translations(): void

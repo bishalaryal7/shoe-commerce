@@ -20,15 +20,15 @@ class OrderPayments
     {
         $gateway = $this->gateways->get($provider);
         if (! $gateway->available() || $gateway->currency() !== $order->currency) {
-            throw ValidationException::withMessages(['payment_method' => 'This payment method is not available for your order.']);
+            throw ValidationException::withMessages(['payment_method' => __('This payment method is not available for your order.')]);
         }
         if ($provider === 'khalti' && $order->total < 1000) {
-            throw ValidationException::withMessages(['payment_method' => 'Khalti requires a minimum payment of Rs. 10.']);
+            throw ValidationException::withMessages(['payment_method' => __('Khalti requires a minimum payment of Rs. 10.')]);
         }
         $attempt = DB::transaction(function () use ($order, $provider) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             if (! in_array($locked->status, ['pending_confirmation', 'confirmed']) || in_array($locked->payment_status, ['paid', 'refunded', 'review'])) {
-                throw ValidationException::withMessages(['payment_method' => 'This order cannot start another payment.']);
+                throw ValidationException::withMessages(['payment_method' => __('This order cannot start another payment.')]);
             }
             $active = PaymentAttempt::where('order_id', $locked->id)->whereNotIn('status', ['failed'])->latest('id')->first();
             if ($active) {
@@ -50,7 +50,7 @@ class OrderPayments
                     return $this->start($order->fresh(), $provider);
                 }
             }
-            throw ValidationException::withMessages(['payment_method' => 'A payment is already being processed. Check your order status before trying again.']);
+            throw ValidationException::withMessages(['payment_method' => __('A payment is already being processed. Check your order status before trying again.')]);
         }
         try {
             $session = $gateway->initiate($attempt);
@@ -61,7 +61,7 @@ class OrderPayments
             $attempt->update(['status' => $definitive ? 'failed' : 'review']);
             $order->update(['payment_status' => $definitive ? 'unpaid' : 'review']);
             Log::warning('Payment initiation needs attention.', ['attempt_id' => $attempt->id, 'provider' => $provider]);
-            throw ValidationException::withMessages(['payment_method' => $definitive ? 'The payment provider could not start checkout. Please retry.' : 'Payment could not be confirmed. Our team must check it before another payment is attempted.']);
+            throw ValidationException::withMessages(['payment_method' => $definitive ? __('The payment provider could not start checkout. Please retry.') : __('Payment could not be confirmed. Our team must check it before another payment is attempted.')]);
         }
 
         return $attempt;
@@ -70,7 +70,7 @@ class OrderPayments
     public function verify(PaymentAttempt $attempt): string
     {
         if (! $attempt->provider_id) {
-            throw ValidationException::withMessages(['payment' => 'The payment session is not ready for verification.']);
+            throw ValidationException::withMessages(['payment' => __('The payment session is not ready for verification.')]);
         }
         $result = $this->gateways->get($attempt->provider)->lookup($attempt);
 

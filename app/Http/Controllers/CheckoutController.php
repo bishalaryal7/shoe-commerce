@@ -32,7 +32,7 @@ class CheckoutController extends Controller
         $data = $request->validated();
         $provider = $data['payment_method'] ?? 'request';
         if ($provider !== 'request' && ! in_array($provider, array_column($gateways->options(config('shop.currency')), 'id'), true)) {
-            throw ValidationException::withMessages(['payment_method' => 'This payment method is not available.']);
+            throw ValidationException::withMessages(['payment_method' => __('This payment method is not available.')]);
         }
         abort_unless($data['token'] === $request->session()->get('checkout_token'), 419);
         $order = $placement->place($data, $cart->lines($request), $cart->wholesale($request), $request->user()?->id, count($request->session()->get('cart', [])));

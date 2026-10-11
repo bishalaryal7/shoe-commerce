@@ -7,10 +7,12 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { useLocale } from '@/composables/useLocale';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { store } from '@/routes/two-factor/login';
 import { Form, Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+const { t } = useLocale();
 
 interface AuthConfigContent {
     title: string;
@@ -49,10 +51,10 @@ const code = ref<string>('');
 
 <template>
     <AuthLayout
-        :title="authConfigContent.title"
-        :description="authConfigContent.description"
+        :title="t(authConfigContent.title)"
+        :description="t(authConfigContent.description)"
     >
-        <Head title="Two-Factor Authentication" />
+        <Head :title="t('Two-Factor Authentication')" />
 
         <div class="space-y-6">
             <template v-if="!showRecoveryInput">
@@ -86,17 +88,17 @@ const code = ref<string>('');
                         </div>
                         <InputError :message="errors.code" />
                     </div>
-                    <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
-                    >
+                    <Button type="submit" class="w-full" :disabled="processing">
+                        {{ t('Continue') }}
+                    </Button>
                     <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                        <span> {{ t('or you can') }} </span>
                         <button
                             type="button"
                             class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
-                            {{ authConfigContent.toggleText }}
+                            {{ t(authConfigContent.toggleText) }}
                         </button>
                     </div>
                 </Form>
@@ -112,23 +114,23 @@ const code = ref<string>('');
                     <Input
                         name="recovery_code"
                         type="text"
-                        placeholder="Enter recovery code"
+                        :placeholder="t('Enter recovery code')"
                         :autofocus="showRecoveryInput"
                         required
                     />
                     <InputError :message="errors.recovery_code" />
-                    <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
-                    >
+                    <Button type="submit" class="w-full" :disabled="processing">
+                        {{ t('Continue') }}
+                    </Button>
 
                     <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                        <span> {{ t('or you can') }} </span>
                         <button
                             type="button"
                             class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
-                            {{ authConfigContent.toggleText }}
+                            {{ t(authConfigContent.toggleText) }}
                         </button>
                     </div>
                 </Form>

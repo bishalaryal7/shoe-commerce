@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useLocale();
 import {
     SidebarGroup,
     SidebarGroupContent,
@@ -6,6 +7,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useLocale } from '@/composables/useLocale';
 import { toUrl } from '@/lib/utils';
 import { type NavItem } from '@/types';
 
@@ -34,7 +36,7 @@ defineProps<Props>();
                             rel="noopener noreferrer"
                         >
                             <component :is="item.icon" />
-                            <span>{{ item.title }}</span>
+                            <span>{{ t(item.title) }}</span>
                         </a>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

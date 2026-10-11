@@ -15,7 +15,7 @@ import {
     X,
 } from 'lucide-vue-next';
 import { computed, onUnmounted, ref, watch } from 'vue';
-const { t } = useLocale();
+const { t, num } = useLocale();
 const page = usePage<ShopSharedProps>();
 const open = ref(false);
 const user = computed(() => page.props.auth.user);
@@ -66,7 +66,7 @@ const current = computed(() => page.url.split('?')[0]);
                             t('Search shoes, styles, your next favorite…')
                         "
                         :aria-label="t('Search the store')"
-                    /><button type="submit" aria-label="Search">
+                    /><button type="submit" :aria-label="t('Search')">
                         <ArrowRight :size="17" />
                     </button>
                 </form>
@@ -76,18 +76,21 @@ const current = computed(() => page.url.split('?')[0]);
                         v-if="user?.is_admin"
                         href="/admin"
                         class="admin-shortcut"
-                        >Workspace</Link
                     >
+                        {{ t('Workspace') }}
+                    </Link>
                     <details v-if="user" class="account-menu">
-                        <summary aria-label="Account menu">
-                            <UserRound :size="19" /><span>Account</span>
+                        <summary :aria-label="t('Account menu')">
+                            <UserRound :size="19" /><span>
+                                {{ t('Account') }}
+                            </span>
                         </summary>
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
                             ><Link href="/orders">{{ t('Your orders') }}</Link
                             ><Link href="/dashboard">{{ t('My account') }}</Link
-                            ><Link href="/settings/profile"
-                                >Account settings</Link
+                            ><Link href="/settings/profile">
+                                {{ t('Account settings') }} </Link
                             ><Link v-if="user.is_admin" href="/admin">{{
                                 t('Team workspace')
                             }}</Link
@@ -105,10 +108,12 @@ const current = computed(() => page.url.split('?')[0]);
                         href="/cart"
                         class="bag"
                         :aria-label="
-                            'Shopping bag, ' + page.props.cartCount + ' pairs'
+                            t('Shopping bag, :count pairs', {
+                                count: num(page.props.cartCount),
+                            })
                         "
                         ><ShoppingBag :size="20" /><span>{{
-                            page.props.cartCount
+                            num(page.props.cartCount)
                         }}</span></Link
                     >
                     <button
@@ -116,7 +121,7 @@ const current = computed(() => page.url.split('?')[0]);
                         @click="open = !open"
                         :aria-expanded="open"
                         aria-controls="shop-navigation"
-                        aria-label="Toggle navigation"
+                        :aria-label="t('Toggle navigation')"
                     >
                         <X v-if="open" :size="21" /><Menu v-else :size="21" />
                     </button>
@@ -125,14 +130,15 @@ const current = computed(() => page.url.split('?')[0]);
             <nav
                 id="shop-navigation"
                 :class="['shop-nav', 'wrap', { open }]"
-                aria-label="Main navigation"
+                :aria-label="t('Main navigation')"
             >
                 <Link
                     href="/"
                     :class="{ selected: current === '/' }"
                     @click="open = false"
-                    >Shop all</Link
                 >
+                    {{ t('Shop all') }}
+                </Link>
                 <Link
                     href="/?category=Everyday#collection"
                     @click="open = false"
@@ -147,7 +153,8 @@ const current = computed(() => page.url.split('?')[0]);
                     href="/wholesale"
                     :class="{ selected: current === '/wholesale' }"
                     @click="open = false"
-                    >For businesses <ArrowUpRight :size="13"
+                >
+                    {{ t('For businesses') }} <ArrowUpRight :size="13"
                 /></Link>
             </nav>
         </header>
@@ -155,10 +162,13 @@ const current = computed(() => page.url.split('?')[0]);
             ><div v-if="notice" class="shop-toast" role="status">
                 <span class="toast-check"><Check :size="17" /></span>
                 <div>
-                    <strong>{{ notice }}</strong
-                    ><Link href="/cart">View your bag →</Link>
+                    <strong>{{ t(notice) }}</strong
+                    ><Link href="/cart"> {{ t('View your bag →') }} </Link>
                 </div>
-                <button @click="notice = ''" aria-label="Dismiss notification">
+                <button
+                    @click="notice = ''"
+                    :aria-label="t('Dismiss notification')"
+                >
                     <X :size="17" />
                 </button></div
         ></Transition>
@@ -169,25 +179,31 @@ const current = computed(() => page.url.split('?')[0]);
                     ><span class="brand-symbol"><Mountain :size="22" /></span
                     >{{ page.props.name }}</Link
                 >
-                <p>A little more comfort.<br />A lot more possibility.</p>
+                <p>
+                    {{ t('A little more comfort.') }} <br />
+                    {{ t('A lot more possibility.') }}
+                </p>
             </div>
             <div class="footer-links">
-                <strong>Find your next step</strong
-                ><Link href="/">Shop all shoes</Link
-                ><Link href="/wholesale">Wholesale partners</Link
-                ><Link :href="user ? '/dashboard' : '/login'"
-                    >Your account</Link
-                >
+                <strong> {{ t('Find your next step') }} </strong
+                ><Link href="/"> {{ t('Shop all shoes') }} </Link
+                ><Link href="/wholesale"> {{ t('Wholesale partners') }} </Link
+                ><Link :href="user ? '/dashboard' : '/login'">
+                    {{ t('Your account') }}
+                </Link>
             </div>
             <div class="footer-note">
                 <span class="eyebrow"> {{ t('FOR EVERY WAY YOU MOVE') }} </span>
-                <p>From one perfect pair<br />to your next bulk order.</p>
+                <p>
+                    {{ t('From one perfect pair') }} <br />
+                    {{ t('to your next bulk order.') }}
+                </p>
             </div>
             <div class="footer-bottom">
                 <span
-                    >© {{ new Date().getFullYear() }}
+                    >© {{ num(new Date().getFullYear(), false) }}
                     {{ page.props.name }}</span
-                ><span>Retail & wholesale · All in one place</span>
+                ><span> {{ t('Retail & wholesale · All in one place') }} </span>
             </div>
         </footer>
     </div>

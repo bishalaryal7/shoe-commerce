@@ -32,10 +32,10 @@ class PaymentController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Payment lookup unavailable.', ['attempt_id' => $attempt->id]);
 
-            return back()->withErrors(['payment' => 'The provider is unavailable. Your payment status has not been changed. Please check again shortly.']);
+            return back()->withErrors(['payment' => __('The provider is unavailable. Your payment status has not been changed. Please check again shortly.')]);
         }
 
-        return back()->with('success', $status === 'paid' ? 'Payment verified. Thank you!' : 'Payment status checked: '.$status.'.');
+        return back()->with('success', $status === 'paid' ? __('Payment verified. Thank you!') : __('Payment status checked: :status.', ['status' => __($status)]));
     }
 
     public function callback(Request $request, PaymentAttempt $attempt, OrderPayments $payments)

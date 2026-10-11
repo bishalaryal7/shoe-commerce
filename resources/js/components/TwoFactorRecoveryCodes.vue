@@ -8,11 +8,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useLocale } from '@/composables/useLocale';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { regenerateRecoveryCodes } from '@/routes/two-factor';
 import { Form } from '@inertiajs/vue3';
 import { Eye, EyeOff, LockKeyhole, RefreshCw } from 'lucide-vue-next';
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
+const { t } = useLocale();
 
 const { recoveryCodesList, fetchRecoveryCodes, errors } = useTwoFactorAuth();
 const isRecoveryCodesVisible = ref<boolean>(false);
@@ -42,11 +44,14 @@ onMounted(async () => {
     <Card class="w-full">
         <CardHeader>
             <CardTitle class="flex gap-3">
-                <LockKeyhole class="size-4" />2FA Recovery Codes
+                <LockKeyhole class="size-4" /> {{ t('2FA Recovery Codes') }}
             </CardTitle>
             <CardDescription>
-                Recovery codes let you regain access if you lose your 2FA
-                device. Store them in a secure password manager.
+                {{
+                    t(
+                        'Recovery codes let you regain access if you lose your 2FA device. Store them in a secure password manager.',
+                    )
+                }}
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -58,8 +63,8 @@ onMounted(async () => {
                         :is="isRecoveryCodesVisible ? EyeOff : Eye"
                         class="size-4"
                     />
-                    {{ isRecoveryCodesVisible ? 'Hide' : 'View' }} Recovery
-                    Codes
+                    {{ isRecoveryCodesVisible ? t('Hide') : t('View') }}
+                    {{ t('Recovery Codes') }}
                 </Button>
 
                 <Form
@@ -75,7 +80,7 @@ onMounted(async () => {
                         type="submit"
                         :disabled="processing"
                     >
-                        <RefreshCw /> Regenerate Codes
+                        <RefreshCw /> {{ t('Regenerate Codes') }}
                     </Button>
                 </Form>
             </div>
@@ -111,10 +116,15 @@ onMounted(async () => {
                         </div>
                     </div>
                     <p class="text-xs text-muted-foreground select-none">
-                        Each recovery code can be used once to access your
-                        account and will be removed after use. If you need more,
-                        click
-                        <span class="font-bold">Regenerate Codes</span> above.
+                        {{
+                            t(
+                                'Each recovery code can be used once to access your account and will be removed after use. If you need more, click',
+                            )
+                        }}
+                        <span class="font-bold">
+                            {{ t('Regenerate Codes') }}
+                        </span>
+                        {{ t('above.') }}
                     </p>
                 </div>
             </div>

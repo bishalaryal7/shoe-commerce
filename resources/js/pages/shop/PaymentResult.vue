@@ -1,35 +1,44 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+const { t } = useLocale();
 defineProps<{ status: string; sandbox: boolean }>();
 </script>
 <template>
-    <Head title="Payment status" /><ShopLayout
+    <Head :title="t('Payment status')" /><ShopLayout
         ><section class="wrap inner-page received">
             <span class="eyebrow">{{
-                sandbox ? 'SANDBOX PAYMENT' : 'PAYMENT STATUS'
+                sandbox ? t('SANDBOX PAYMENT') : t('PAYMENT STATUS')
             }}</span>
             <h1>
                 {{
                     status === 'paid'
-                        ? 'Payment verified.'
+                        ? t('Payment verified.')
                         : status === 'failed'
-                          ? 'Payment wasn’t completed.'
-                          : 'Payment is being checked.'
+                          ? t('Payment wasn’t completed.')
+                          : t('Payment is being checked.')
                 }}
             </h1>
             <p>
                 {{
                     status === 'paid'
-                        ? 'The payment provider confirmed this transaction.'
-                        : 'A successful payment has not been confirmed. Check your order before attempting another payment.'
+                        ? t('The payment provider confirmed this transaction.')
+                        : t(
+                              'A successful payment has not been confirmed. Check your order before attempting another payment.',
+                          )
                 }}
             </p>
             <p v-if="sandbox">
-                This was a sandbox test, not a real customer purchase.
+                {{
+                    t('This was a sandbox test, not a real customer purchase.')
+                }}
             </p>
-            <Link href="/orders" class="button dark">View your orders →</Link
-            ><Link href="/" class="text-button">Back to the store</Link>
+            <Link href="/orders" class="button dark">
+                {{ t('View your orders →') }} </Link
+            ><Link href="/" class="text-button">
+                {{ t('Back to the store') }}
+            </Link>
         </section></ShopLayout
     >
 </template>

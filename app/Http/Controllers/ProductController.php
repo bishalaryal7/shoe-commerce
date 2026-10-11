@@ -27,7 +27,7 @@ class ProductController extends Controller
         $data = $request->validated();
         $catalog->create($data);
 
-        return back()->with('success', 'Product created. Add a real photo before publishing your collection.');
+        return back()->with('success', __('Product created. Add a real photo before publishing your collection.'));
     }
 
     public function image(Request $request, Product $product, ProductCatalog $catalog)
@@ -35,6 +35,6 @@ class ProductController extends Controller
         $request->validate(['image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120']);
         $catalog->replacePhoto($product, $request->file('image'));
 
-        return back()->with('success', 'Product photo updated.');
+        return back()->with('success', __('Product photo updated.'));
     }
 }

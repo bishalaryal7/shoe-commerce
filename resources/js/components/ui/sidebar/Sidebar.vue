@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
+const { t } = useLocale();
 import type { SidebarProps } from "."
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent } from '@/components/ui/sheet'
@@ -42,8 +44,8 @@ const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
       }"
     >
       <SheetHeader class="sr-only">
-        <SheetTitle>Sidebar</SheetTitle>
-        <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+        <SheetTitle> {{ t('Sidebar') }} </SheetTitle>
+        <SheetDescription> {{ t('Displays the mobile sidebar.') }} </SheetDescription>
       </SheetHeader>
       <div class="flex h-full w-full flex-col">
         <slot />

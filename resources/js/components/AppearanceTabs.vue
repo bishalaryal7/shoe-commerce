@@ -1,5 +1,7 @@
 <script setup lang="ts">
+const { t } = useLocale();
 import { useAppearance } from '@/composables/useAppearance';
+import { useLocale } from '@/composables/useLocale';
 import { Monitor, Moon, Sun } from 'lucide-vue-next';
 
 const { appearance, updateAppearance } = useAppearance();
@@ -27,7 +29,7 @@ const tabs = [
             ]"
         >
             <component :is="Icon" class="-ml-1 h-4 w-4" />
-            <span class="ml-1.5 text-sm">{{ label }}</span>
+            <span class="ml-1.5 text-sm">{{ t(label) }}</span>
         </button>
     </div>
 </template>

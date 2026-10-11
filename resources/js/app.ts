@@ -1,12 +1,13 @@
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
+import { installValidationMessages } from './i18n/validation';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'EVE';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -27,3 +28,9 @@ createInertiaApp({
 
 // This will set light / dark mode on page load...
 initializeTheme();
+installValidationMessages();
+
+router.on('navigate', (event) => {
+    document.documentElement.lang =
+        event.detail.page.props.locale === 'ne' ? 'ne' : 'en';
+});

@@ -15,7 +15,7 @@ class StaffAccess
     {
         $user = $this->users->byEmail($email);
         if (! $user) {
-            throw ValidationException::withMessages(['email' => 'This person must register an account first.']);
+            throw ValidationException::withMessages(['email' => __('This person must register an account first.')]);
         }
         $this->users->grant($user);
         Log::notice('Staff access granted.', ['actor_id' => $actor, 'user_id' => $user->id]);
@@ -24,7 +24,7 @@ class StaffAccess
     public function revoke(User $user, int $actor): void
     {
         if ($user->id === $actor) {
-            throw ValidationException::withMessages(['team' => 'You cannot remove your own staff access.']);
+            throw ValidationException::withMessages(['team' => __('You cannot remove your own staff access.')]);
         }
         $this->users->revoke($user);
         Log::notice('Staff access revoked.', ['actor_id' => $actor, 'user_id' => $user->id]);

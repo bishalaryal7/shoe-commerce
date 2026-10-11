@@ -30,12 +30,20 @@ import {
 } from '@/components/ui/tooltip';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
+import { useLocale } from '@/composables/useLocale';
 import { toUrl, urlIsActive } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { InertiaLinkProps, Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import {
+    LayoutGrid,
+    Menu,
+    Package,
+    Search,
+    ShoppingBag,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
+const { t } = useLocale();
 
 interface Props {
     breadcrumbs?: BreadcrumbItem[];
@@ -70,14 +78,14 @@ const mainNavItems: NavItem[] = [
 
 const rightNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
+        title: 'Shop',
+        href: '/',
+        icon: ShoppingBag,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Your orders',
+        href: '/orders',
+        icon: Package,
     },
 ];
 </script>
@@ -99,9 +107,9 @@ const rightNavItems: NavItem[] = [
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
-                            <SheetTitle class="sr-only"
-                                >Navigation Menu</SheetTitle
-                            >
+                            <SheetTitle class="sr-only">
+                                {{ t('Navigation Menu') }}
+                            </SheetTitle>
                             <SheetHeader class="flex justify-start text-left">
                                 <AppLogoIcon
                                     class="size-6 fill-current text-black dark:text-white"
@@ -123,7 +131,7 @@ const rightNavItems: NavItem[] = [
                                             :is="item.icon"
                                             class="h-5 w-5"
                                         />
-                                        {{ item.title }}
+                                        {{ t(item.title) }}
                                     </Link>
                                 </nav>
                                 <div class="flex flex-col space-y-4">
@@ -140,7 +148,7 @@ const rightNavItems: NavItem[] = [
                                             :is="item.icon"
                                             class="h-5 w-5"
                                         />
-                                        <span>{{ item.title }}</span>
+                                        <span>{{ t(item.title) }}</span>
                                     </a>
                                 </div>
                             </div>
@@ -176,7 +184,7 @@ const rightNavItems: NavItem[] = [
                                         :is="item.icon"
                                         class="mr-2 h-4 w-4"
                                     />
-                                    {{ item.title }}
+                                    {{ t(item.title) }}
                                 </Link>
                                 <div
                                     v-if="isCurrentRoute(item.href)"
@@ -219,7 +227,7 @@ const rightNavItems: NavItem[] = [
                                                     rel="noopener noreferrer"
                                                 >
                                                     <span class="sr-only">{{
-                                                        item.title
+                                                        t(item.title)
                                                     }}</span>
                                                     <component
                                                         :is="item.icon"
@@ -229,7 +237,7 @@ const rightNavItems: NavItem[] = [
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>{{ item.title }}</p>
+                                            <p>{{ t(item.title) }}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>

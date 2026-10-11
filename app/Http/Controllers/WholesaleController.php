@@ -18,10 +18,10 @@ class WholesaleController extends Controller
     {
         $data = $request->validated();
         if (WholesaleAccount::where('user_id', $request->user()->id)->exists()) {
-            return back()->withErrors(['company' => 'You already have a wholesale application.']);
+            return back()->withErrors(['company' => __('You already have a wholesale application.')]);
         }
         WholesaleAccount::create([...$data, 'user_id' => $request->user()->id, 'status' => 'pending']);
 
-        return back()->with('success', 'Application received. Our team will review your business.');
+        return back()->with('success', __('Application received. Our team will review your business.'));
     }
 }

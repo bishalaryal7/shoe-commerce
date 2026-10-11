@@ -24,7 +24,7 @@ class OrderRepository
     {
         foreach ($lines as $line) {
             if (! Variant::whereKey($line['id'])->where('stock', '>=', $line['quantity'])->decrement('stock', $line['quantity'])) {
-                throw ValidationException::withMessages(['cart' => 'A selected size is no longer available in that quantity. Please review your bag.']);
+                throw ValidationException::withMessages(['cart' => __('A selected size is no longer available in that quantity. Please review your bag.')]);
             }
             InventoryMovement::create(['variant_id' => $line['id'], 'order_id' => $order->id, 'actor_id' => $actor, 'quantity' => -$line['quantity'], 'reason' => 'order_reserved']);
             $order->items()->create(['variant_id' => $line['id'], 'name' => $line['name'], 'sku' => $line['sku'], 'size' => $line['size'], 'color' => $line['color'], 'quantity' => $line['quantity'], 'unit_price' => $line['unit_price']]);

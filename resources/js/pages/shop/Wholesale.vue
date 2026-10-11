@@ -2,42 +2,60 @@
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-const { t } = useLocale();
+const { t, label } = useLocale();
 defineProps<{ account: { company: string; status: string } | null }>();
 const page = usePage();
 const form = useForm({ company: '', phone: '', message: '' });
 </script>
 <template>
-    <Head title="Wholesale partners" /><ShopLayout
+    <Head :title="t('Wholesale partners')" /><ShopLayout
         ><section class="wrap inner-page">
-            <div class="eyebrow">GOOD COMPANY. GREAT PARTNERS.</div>
-            <h1>Let’s grow<br /><em>together.</em></h1>
+            <div class="eyebrow">{{ t('GOOD COMPANY. GREAT PARTNERS.') }}</div>
+            <h1>
+                {{ t('Let’s grow') }} <br /><em> {{ t('together.') }} </em>
+            </h1>
             <div class="checkout-grid">
                 <div class="wholesale-copy">
                     <p>
-                        Bring the collection to your customers. Our wholesale
-                        program gives approved businesses access to partner
-                        pricing and bulk ordering.
+                        {{
+                            t(
+                                'Bring the collection to your customers. Our wholesale program gives approved businesses access to partner pricing and bulk ordering.',
+                            )
+                        }}
                     </p>
                     <ol>
                         <li>
-                            <strong>Tell us about your business.</strong>
+                            <strong>
+                                {{ t('Tell us about your business.') }}
+                            </strong>
                             <p>
-                                Create an account and submit your application.
+                                {{
+                                    t(
+                                        'Create an account and submit your application.',
+                                    )
+                                }}
                             </p>
                         </li>
                         <li>
-                            <strong>We review your application.</strong>
+                            <strong>
+                                {{ t('We review your application.') }}
+                            </strong>
                             <p>
-                                Your team’s wholesale prices stay private until
-                                approval.
+                                {{
+                                    t(
+                                        'Your team’s wholesale prices stay private until approval.',
+                                    )
+                                }}
                             </p>
                         </li>
                         <li>
-                            <strong>Build your next order.</strong>
+                            <strong> {{ t('Build your next order.') }} </strong>
                             <p>
-                                Mix sizes and styles with a minimum of 12 pairs
-                                per order.
+                                {{
+                                    t(
+                                        'Mix sizes and styles with a minimum of 12 pairs per order.',
+                                    )
+                                }}
                             </p>
                         </li>
                     </ol>
@@ -45,22 +63,33 @@ const form = useForm({ company: '', phone: '', message: '' });
                 <div class="form-card">
                     <template v-if="account"
                         ><h2>{{ account.company }}</h2>
-                        <span class="status-pill">{{ account.status }}</span>
+                        <span class="status-pill">{{
+                            label(account.status)
+                        }}</span>
                         <p v-if="account.status === 'approved'">
-                            Your partner pricing is ready. Prices in the shop
-                            and your bag now reflect your wholesale account.
+                            {{
+                                t(
+                                    'Your partner pricing is ready. Prices in the shop and your bag now reflect your wholesale account.',
+                                )
+                            }}
                         </p>
                         <p v-else-if="account.status === 'pending'">
-                            Your application is with our team. You can continue
-                            shopping at retail prices while we review it.
+                            {{
+                                t(
+                                    'Your application is with our team. You can continue shopping at retail prices while we review it.',
+                                )
+                            }}
                         </p>
                         <p v-else>
-                            Your application was not approved. Contact the
-                            company team to discuss your business.
+                            {{
+                                t(
+                                    'Your application was not approved. Contact the company team to discuss your business.',
+                                )
+                            }}
                         </p>
-                        <Link href="/" class="button dark"
-                            >Explore the collection ↗</Link
-                        ></template
+                        <Link href="/" class="button dark">
+                            {{ t('Explore the collection ↗') }}
+                        </Link></template
                     ><template v-else-if="!(page.props.auth as any)?.user"
                         ><h2>{{ t('Join the partner program') }}</h2>
                         <p>
@@ -70,9 +99,9 @@ const form = useForm({ company: '', phone: '', message: '' });
                                 )
                             }}
                         </p>
-                        <Link href="/register" class="button dark"
-                            >Create an account ↗</Link
-                        >
+                        <Link href="/register" class="button dark">
+                            {{ t('Create an account ↗') }}
+                        </Link>
                         <p>
                             {{ t('Already registered?') }}
                             <Link href="/login" class="text-button">{{
@@ -121,7 +150,7 @@ const form = useForm({ company: '', phone: '', message: '' });
                             class="button dark"
                             :disabled="form.processing"
                         >
-                            Submit application ↗
+                            {{ t('Submit application ↗') }}
                         </button>
                     </form>
                 </div>

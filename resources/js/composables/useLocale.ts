@@ -1,173 +1,41 @@
+import {
+    formatMoney,
+    labels,
+    number,
+    translate,
+    type Locale,
+    type Replacements,
+} from '@/i18n/locale';
 import type { ShopSharedProps } from '@/types/shop';
 import { usePage } from '@inertiajs/vue3';
-const nepali: Record<string, string> = {
-    'All shoes': 'सबै जुत्ता',
-    Everyday: 'दैनिक',
-    Running: 'दौडका लागि',
-    Outdoor: 'बाहिरी गतिविधि',
-    'Your orders': 'तपाईंका अर्डरहरू',
-    'My account': 'मेरो खाता',
-    'Team workspace': 'कर्मचारी कार्यक्षेत्र',
-    'Sign in': 'लग इन',
-    'Sign out': 'लग आउट',
-    'Create an account': 'खाता खोल्नुहोस्',
-    'Skip to content': 'मुख्य सामग्रीमा जानुहोस्',
-    'Explore wholesale': 'थोक कारोबार हेर्नुहोस्',
-    Shop: 'पसल',
-    Wholesale: 'थोक',
-    'Your bag': 'तपाईंको झोला',
-    'Reach higher. Walk further.': 'उचाइ छुनुहोस्। अझ टाढा हिँड्नुहोस्।',
-    'Find my pair': 'आफ्नो जुत्ता छान्नुहोस्',
-    'Buying in bulk?': 'थोकमा किन्नुहुन्छ?',
-    'Full name': 'पूरा नाम',
-    'Email address': 'इमेल ठेगाना',
-    'Phone number': 'फोन नम्बर',
-    'Delivery address': 'डेलिभरी ठेगाना',
-    'Where should your next pair go?': 'तपाईंको जुत्ता कहाँ पठाउने?',
-    'How would you like to pay?': 'कसरी भुक्तानी गर्नुहुन्छ?',
-    'Request confirmation': 'अर्डर पुष्टिका लागि अनुरोध',
-    Subtotal: 'उपजम्मा',
-    Shipping: 'ढुवानी',
-    Tax: 'कर',
-    Total: 'जम्मा',
-    'Your order': 'तपाईंको अर्डर',
-    'Wholesale order': 'थोक अर्डर',
-    'Place order request': 'अर्डर अनुरोध पठाउनुहोस्',
-    'Continue to payment': 'भुक्तानीतर्फ जानुहोस्',
-    'Preparing your order…': 'अर्डर तयार हुँदैछ…',
-    'Back to your bag': 'झोलामा फर्कनुहोस्',
-    'Company name': 'कम्पनीको नाम',
-    'Business phone': 'व्यावसायिक फोन',
-    'Tell us about your business': 'आफ्नो व्यवसायबारे बताउनुहोस्',
-    'Apply for wholesale': 'थोक कारोबारका लागि आवेदन',
-    'Submit application ↗': 'आवेदन पठाउनुहोस् ↗',
-    'Your next step': 'अबको चरण',
-    'Order total': 'अर्डरको जम्मा',
-    'Product details': 'जुत्ताको विवरण',
-    'Choose your size': 'साइज छान्नुहोस्',
-    'Add to bag': 'झोलामा राख्नुहोस्',
-    Quantity: 'परिमाण',
-    'View order': 'अर्डर हेर्नुहोस्',
-    Search: 'खोज्नुहोस्',
-    'Let’s make it yours.': 'अब तपाईंको बनाऔँ।',
-    'Search shoes, styles, your next favorite…': 'जुत्ता र शैली खोज्नुहोस्…',
-    'FOR EVERY WAY YOU MOVE': 'हरेक यात्राका लागि',
-    'GOOD SHOES. NO OVERTHINKING.': 'आरामदायी जुत्ता। सहज छनोट।',
-    'A FRESH PERSPECTIVE': 'नयाँ दृष्टिकोण',
-    'Comfort looks good on you.': 'आराम र शैली एकैसाथ।',
-    'YOUR NEXT FAVORITES': 'तपाईंको अर्को रोजाइ',
-    'One pair or a dozen': 'एक जोडी वा दर्जनौँ',
-    'Retail & wholesale': 'खुद्रा र थोक',
-    'Easy to order': 'सहज अर्डर',
-    'Your team confirms the details': 'हाम्रो टोलीले विवरण पुष्टि गर्छ',
-    'A pair for every kind of day.': 'हरेक दिनका लागि जुत्ता।',
-    'Search the store': 'पसलमा खोज्नुहोस्',
-    'Search shoes…': 'जुत्ता खोज्नुहोस्…',
-    'Filter by size': 'साइजअनुसार छान्नुहोस्',
-    Featured: 'विशेष',
-    'Price: low to high': 'मूल्य: कमदेखि बढी',
-    'Price: high to low': 'मूल्य: बढीबाट कम',
-    'Name: A to Z': 'नाम: A देखि Z',
-    'Reset filters': 'फिल्टर हटाउनुहोस्',
-    Reset: 'रिसेट',
-    'Your bag is waiting.': 'तपाईंको झोला खाली छ।',
-    'Find your next pair': 'आफ्नो अर्को जुत्ता खोज्नुहोस्',
-    'Find another pair': 'अर्को जुत्ता खोज्नुहोस्',
-    'Looking good.': 'राम्रो छनोट।',
-    'Shipping & taxes': 'ढुवानी र कर',
-    'Calculated at checkout': 'चेकआउटमा गणना हुन्छ',
-    'Product subtotal': 'जुत्ताको उपजम्मा',
-    'Continue to your details': 'आफ्नो विवरण भर्नुहोस्',
-    'Add more pairs': 'थप जुत्ता राख्नुहोस्',
-    'No payment has been recorded yet. Our team will confirm your order and payment arrangements.':
-        'भुक्तानी रेकर्ड भएको छैन। हाम्रो टोलीले अर्डर र भुक्तानी व्यवस्था पुष्टि गर्छ।',
-    'Order received': 'अर्डर प्राप्त भयो',
-    'Order confirmed': 'अर्डर पुष्टि भयो',
-    'Order fulfilled': 'अर्डर पूरा भयो',
-    'Your order details': 'अर्डरको विवरण',
-    'DELIVER TO': 'पठाउने ठेगाना',
-    'ORDER UPDATES': 'अर्डरसम्बन्धी सूचना',
-    'Keep your private tracking link to check this order later.':
-        'अर्डर पछि हेर्न आफ्नो निजी ट्र्याकिङ लिंक सुरक्षित राख्नुहोस्।',
-    'Open private tracking link': 'निजी ट्र्याकिङ लिंक खोल्नुहोस्',
-    'Your payment has been refunded by the provider.':
-        'भुक्तानी प्रदायकले तपाईंको रकम फिर्ता गरेको छ।',
-    'Our team needs to review this payment. Please don’t pay again while it is being checked.':
-        'हाम्रो टोलीले यो भुक्तानी जाँच गर्दैछ। जाँच नसकिँदासम्म फेरि भुक्तानी नगर्नुहोस्।',
-    'We’re waiting for the payment provider. If you already paid, check the payment status before trying again.':
-        'भुक्तानी प्रदायकको पुष्टि पर्खिरहेका छौँ। भुक्तानी गरिसक्नुभएको भए फेरि तिर्नुअघि स्थिति जाँच्नुहोस्।',
-    'You can follow your order’s progress here anytime.':
-        'यहाँ आफ्नो अर्डरको स्थिति हेर्न सक्नुहुन्छ।',
-    'Cancel unpaid order': 'भुक्तानी नभएको अर्डर रद्द गर्नुहोस्',
-    'Cancel this order and release your reserved shoes?':
-        'यो अर्डर रद्द गरी सुरक्षित राखिएका जुत्ता उपलब्ध गराउने?',
-    'Keep my order': 'मेरो अर्डर राख्नुहोस्',
-    'YOUR ACCOUNT': 'तपाईंको खाता',
-    'Your orders.': 'तपाईंका अर्डरहरू।',
-    'Your first good find is waiting.': 'तपाईंको पहिलो रोजाइ पर्खिरहेको छ।',
-    'Orders placed while signed in will appear here.':
-        'लग इन गरेर गरिएका अर्डर यहाँ देखिन्छन्।',
-    'SIZE & FIT': 'साइज र फिट',
-    'Details that matter.': 'आवश्यक विवरण।',
-    'Choose your pair': 'आफ्नो जुत्ता छान्नुहोस्',
-    'Related styles': 'मिल्दोजुल्दो शैली',
-    'Back to the collection': 'सङ्ग्रहमा फर्कनुहोस्',
-    'Online payment is currently unavailable. You can still place an order request.':
-        'अहिले अनलाइन भुक्तानी उपलब्ध छैन। अर्डर अनुरोध भने पठाउन सक्नुहुन्छ।',
-    'Place your order request. Arrange payment with our team.':
-        'अर्डर अनुरोध पठाउनुहोस्। भुक्तानी व्यवस्था हाम्रो टोलीसँग मिलाउनुहोस्।',
-    'Join the partner program': 'थोक साझेदार बन्नुहोस्',
-    'Sign in or register to apply for a wholesale account.':
-        'थोक खाताका लागि आवेदन दिन लग इन गर्नुहोस् वा खाता खोल्नुहोस्।',
-    'Already registered?': 'खाता पहिल्यै छ?',
-    'Your shop, location, and expected order sizes':
-        'पसल, स्थान र अपेक्षित अर्डर परिमाण',
-    'Your contact number': 'सम्पर्क नम्बर',
-    'Street, area, city, and a nearby landmark':
-        'सडक, क्षेत्र, सहर र नजिकको चिनारी',
-    'Log in to your account': 'आफ्नो खातामा लग इन गर्नुहोस्',
-    'Enter your email and password below to log in':
-        'लग इन गर्न आफ्नो इमेल र पासवर्ड लेख्नुहोस्',
-    'Log in': 'लग इन',
-    Password: 'पासवर्ड',
-    'Forgot password?': 'पासवर्ड बिर्सनुभयो?',
-    'Remember me': 'मलाई सम्झनुहोस्',
-    'Don’t have an account?': 'खाता छैन?',
-    'Sign up': 'खाता खोल्नुहोस्',
-    'Enter your details below to create your account':
-        'खाता खोल्न आफ्नो विवरण भर्नुहोस्',
-    Name: 'नाम',
-    'Confirm password': 'पासवर्ड पुष्टि',
-    'Already have an account?': 'खाता छ?',
-    'Reset password': 'पासवर्ड रिसेट',
-    'Send password reset link': 'पासवर्ड रिसेट लिंक पठाउनुहोस्',
-    'Forgot password': 'पासवर्ड बिर्सनुभयो',
-    'Email password reset link': 'रिसेट लिंक इमेल गर्नुहोस्',
-    'Verify email': 'इमेल पुष्टि गर्नुहोस्',
-    'Resend verification email': 'पुष्टि इमेल फेरि पठाउनुहोस्',
-    'Email verification': 'इमेल पुष्टि',
-    'Back to home': 'मुख्य पृष्ठमा फर्कनुहोस्',
-    'No payment is collected when you submit a request.':
-        'अनुरोध पठाउँदा भुक्तानी लिइँदैन।',
-    'Your order is marked paid only after the provider confirms it.':
-        'प्रदायकले पुष्टि गरेपछि मात्र अर्डर भुक्तानी भएको मानिन्छ।',
-    'Minimum reached': 'न्यूनतम परिमाण पुग्यो',
-    'Wholesale minimum': 'थोक न्यूनतम',
-    'Copy tracking link': 'ट्र्याकिङ लिंक कपी गर्नुहोस्',
-    'Tracking link copied': 'ट्र्याकिङ लिंक कपी भयो',
-    'Check payment status': 'भुक्तानी स्थिति जाँच्नुहोस्',
-    'Checking…': 'जाँच हुँदैछ…',
-    'Cancelling…': 'रद्द हुँदैछ…',
-    'Yes, cancel order': 'हो, अर्डर रद्द गर्नुहोस्',
-    'Order cancelled.': 'अर्डर रद्द भयो।',
-    'You’re all set.': 'सबै तयार छ।',
-    'Your order is in.': 'तपाईंको अर्डर प्राप्त भयो।',
-    'Payment verified. Thank you.': 'भुक्तानी पुष्टि भयो। धन्यवाद।',
-};
+
 export function useLocale() {
     const page = usePage<ShopSharedProps>();
+    const locale = (): Locale => (page.props.locale === 'ne' ? 'ne' : 'en');
+    const t = (text: string | null | undefined, values: Replacements = {}) =>
+        translate(locale(), text ?? '', values);
     return {
-        t: (text: string) =>
-            page.props.locale === 'ne' ? nepali[text] || text : text,
+        t,
+        label: (value: string) => t(labels[value] ?? value),
+        num: (value: number | string, grouping = true) =>
+            number(locale(), value, grouping),
+        money: (amount: number, currency = page.props.currency || 'NPR') =>
+            formatMoney(locale(), amount, currency),
+        date: (value: string, time = false) =>
+            new Intl.DateTimeFormat(
+                locale() === 'ne' ? 'ne-NP-u-nu-deva' : 'en-US',
+                {
+                    dateStyle: 'medium',
+                    ...(time ? { timeStyle: 'short' as const } : {}),
+                },
+            ).format(new Date(value)),
+        paginationLabel: (value: string) => {
+            const decoded = value
+                .replaceAll('&laquo;', '«')
+                .replaceAll('&raquo;', '»');
+            return /^\d+$/.test(decoded)
+                ? number(locale(), decoded)
+                : t(decoded);
+        },
     };
 }

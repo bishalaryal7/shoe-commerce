@@ -33,7 +33,7 @@ class ProductCatalog
     {
         $path = $image->store('products', 'public');
         if (! $path) {
-            throw ValidationException::withMessages(['image' => 'Photo upload could not be saved.']);
+            throw ValidationException::withMessages(['image' => __('Photo upload could not be saved.')]);
         }
         try {
             $this->products->update($product, ['image' => Storage::disk('public')->url($path)]);

@@ -18,7 +18,7 @@ const { t } = useLocale();
         :title="t('Create an account')"
         :description="t('Enter your details below to create your account')"
     >
-        <Head title="Register" />
+        <Head :title="t('Register')" />
 
         <Form
             v-bind="store.form()"
@@ -37,7 +37,7 @@ const { t } = useLocale();
                         :tabindex="1"
                         autocomplete="name"
                         name="name"
-                        placeholder="Full name"
+                        :placeholder="t('Full name')"
                     />
                     <InputError :message="errors.name" />
                 </div>
@@ -51,7 +51,7 @@ const { t } = useLocale();
                         :tabindex="2"
                         autocomplete="email"
                         name="email"
-                        placeholder="email@example.com"
+                        :placeholder="t('email@example.com')"
                     />
                     <InputError :message="errors.email" />
                 </div>
@@ -93,8 +93,7 @@ const { t } = useLocale();
                     :disabled="processing"
                     data-test="register-user-button"
                 >
-                    <Spinner v-if="processing" />
-                    Create account
+                    <Spinner v-if="processing" /> {{ t('Create account') }}
                 </Button>
             </div>
 

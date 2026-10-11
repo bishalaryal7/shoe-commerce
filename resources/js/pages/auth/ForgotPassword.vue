@@ -10,7 +10,7 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
-const { t } = useLocale();
+const { t, label } = useLocale();
 
 defineProps<{
     status?: string;
@@ -20,7 +20,7 @@ defineProps<{
 <template>
     <AuthLayout
         :title="t('Forgot password')"
-        description="Enter your email to receive a password reset link"
+        :description="t('Enter your email to receive a password reset link')"
     >
         <Head :title="t('Forgot password')" />
 
@@ -28,7 +28,7 @@ defineProps<{
             v-if="status"
             class="mb-4 text-center text-sm font-medium text-green-600"
         >
-            {{ status }}
+            {{ label(status) }}
         </div>
 
         <div class="space-y-6">
@@ -41,7 +41,7 @@ defineProps<{
                         name="email"
                         autocomplete="off"
                         autofocus
-                        placeholder="email@example.com"
+                        :placeholder="t('email@example.com')"
                     />
                     <InputError :message="errors.email" />
                 </div>
@@ -59,8 +59,8 @@ defineProps<{
             </Form>
 
             <div class="space-x-1 text-center text-sm text-muted-foreground">
-                <span>Or, return to</span>
-                <TextLink :href="login()">log in</TextLink>
+                <span> {{ t('Or, return to') }} </span>
+                <TextLink :href="login()"> {{ t('log in') }} </TextLink>
             </div>
         </div>
     </AuthLayout>

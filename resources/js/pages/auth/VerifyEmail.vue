@@ -17,7 +17,11 @@ defineProps<{
 <template>
     <AuthLayout
         :title="t('Verify email')"
-        description="Please verify your email address by clicking on the link we just emailed to you."
+        :description="
+            t(
+                'Please verify your email address by clicking on the link we just emailed to you.',
+            )
+        "
     >
         <Head :title="t('Email verification')" />
 
@@ -25,8 +29,11 @@ defineProps<{
             v-if="status === 'verification-link-sent'"
             class="mb-4 text-center text-sm font-medium text-green-600"
         >
-            A new verification link has been sent to the email address you
-            provided during registration.
+            {{
+                t(
+                    'A new verification link has been sent to the email address you provided during registration.',
+                )
+            }}
         </div>
 
         <Form
@@ -44,7 +51,7 @@ defineProps<{
                 as="button"
                 class="mx-auto block text-sm"
             >
-                Log out
+                {{ t('Log out') }}
             </TextLink>
         </Form>
     </AuthLayout>

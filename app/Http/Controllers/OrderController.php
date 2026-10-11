@@ -34,7 +34,7 @@ class OrderController extends Controller
         app(OrderAccess::class)->authorize($request, $order);
         $cancellation->cancel($order, $request->user()?->id);
 
-        return back()->with('success', 'Order cancelled. Your reserved stock has been released.');
+        return back()->with('success', __('Order cancelled. Your reserved stock has been released.'));
     }
 
     public function page(Order $order, Gateways $gateways, ?string $accessUrl = null)

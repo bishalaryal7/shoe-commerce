@@ -24,7 +24,7 @@ class Cart
 
         return $this->variants->forCart(array_keys($cart))
             ->filter(fn ($v) => $v->product->active)->map(fn ($v) => [
-                'id' => $v->id, 'name' => $v->product->name, 'image' => $v->product->image,
+                'id' => $v->id, 'name' => app()->getLocale() === 'ne' ? ($v->product->name_ne ?: __($v->product->name)) : $v->product->name, 'image' => $v->product->image,
                 'sku' => $v->sku, 'size' => $v->size, 'color' => $v->color, 'stock' => $v->stock,
                 'quantity' => (int) $cart[$v->id],
                 'unit_price' => $wholesale ? $v->product->wholesale_price : $v->product->retail_price,
@@ -38,7 +38,7 @@ class Cart
         $cart = $request->session()->get('cart', []);
         $quantity += ($cart[$variant->id] ?? 0);
         if ($quantity > min($variant->stock, 999)) {
-            throw ValidationException::withMessages(['quantity' => 'There is not enough stock for that size.']);
+            throw ValidationException::withMessages(['quantity' => __('There is not enough stock for that size.')]);
         }
         $cart[$variant->id] = $quantity;
         $this->save($request, $cart);
@@ -49,7 +49,7 @@ class Cart
         $cart = $request->session()->get('cart', []);
         abort_unless(isset($cart[$variant->id]) && $variant->product->active, 404);
         if ($quantity > $variant->stock) {
-            throw ValidationException::withMessages(['quantity' => 'That quantity is no longer available. Please choose fewer pairs.']);
+            throw ValidationException::withMessages(['quantity' => __('That quantity is no longer available. Please choose fewer pairs.')]);
         }
         $cart[$variant->id] = $quantity;
         $this->save($request, $cart);
@@ -65,6 +65,6 @@ class Cart
     private function save(Request $request, array $cart): void
     {
         $request->session()->forget('checkout_token');
-        $request->session()->put('cart',$cart);
+        $request->session()->put('cart', $cart);
     }
 }

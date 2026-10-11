@@ -6,9 +6,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useLocale } from '@/composables/useLocale';
 import { urlIsActive } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
+const { t } = useLocale();
 
 defineProps<{
     items: NavItem[];
@@ -19,7 +21,7 @@ const page = usePage();
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel> {{ t('Platform') }} </SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
@@ -29,7 +31,7 @@ const page = usePage();
                 >
                     <Link :href="item.href">
                         <component :is="item.icon" />
-                        <span>{{ item.title }}</span>
+                        <span>{{ t(item.title) }}</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

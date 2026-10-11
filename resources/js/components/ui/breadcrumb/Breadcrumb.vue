@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { useLocale } from '@/composables/useLocale';
+const { t } = useLocale();
 import type { HTMLAttributes } from "vue"
 
 const props = defineProps<{
@@ -8,7 +10,7 @@ const props = defineProps<{
 
 <template>
   <nav
-    aria-label="breadcrumb"
+    :aria-label="t('breadcrumb')"
     data-slot="breadcrumb"
     :class="props.class"
   >

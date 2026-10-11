@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { money, type CustomerOrder } from '@/types/shop';
+import { type CustomerOrder } from '@/types/shop';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowRight, ShoppingBag } from 'lucide-vue-next';
-const { t } = useLocale();
+const { t, label, num, date, money, paginationLabel } = useLocale();
 defineProps<{
     orders: {
         data: CustomerOrder[];
@@ -13,7 +13,7 @@ defineProps<{
 }>();
 </script>
 <template>
-    <Head title="Your orders" /><ShopLayout
+    <Head :title="t('Your orders')" /><ShopLayout
         ><section class="wrap inner-page">
             <span class="eyebrow"> {{ t('YOUR ACCOUNT') }} </span>
             <h1>{{ t('Your orders.') }}</h1>
@@ -33,27 +33,29 @@ defineProps<{
                 class="customer-order-card"
             >
                 <div class="customer-order-meta">
-                    <span>{{
-                        new Date(order.created_at).toLocaleDateString()
-                    }}</span
+                    <span>{{ date(order.created_at) }}</span
                     ><span class="status-pill" :data-status="order.status">{{
-                        order.status.replaceAll('_', ' ')
+                        label(order.status)
                     }}</span
                     ><span
                         class="status-pill"
                         :data-status="order.payment_status"
-                        >{{ order.payment_status }}</span
+                        >{{ label(order.payment_status) }}</span
                     ><strong>{{ money(order.total, order.currency) }}</strong>
                 </div>
-                <h3>{{ order.items.map((item) => item.name).join(', ') }}</h3>
+                <h3>
+                    {{ order.items.map((item) => t(item.name)).join(', ') }}
+                </h3>
                 <p>
                     {{
-                        order.items.reduce(
-                            (sum, item) => sum + item.quantity,
-                            0,
+                        num(
+                            order.items.reduce(
+                                (sum, item) => sum + item.quantity,
+                                0,
+                            ),
                         )
                     }}
-                    pairs · {{ order.reference }}
+                    {{ t('pairs ·') }} {{ order.reference }}
                 </p>
                 <Link
                     :href="'/orders/track/' + order.reference"
@@ -65,15 +67,15 @@ defineProps<{
             <nav
                 v-if="orders.links.length > 3"
                 class="pagination"
-                aria-label="Order pages"
+                :aria-label="t('Order pages')"
             >
                 <template v-for="(link, i) in orders.links" :key="i"
                     ><Link
                         v-if="link.url"
                         :href="link.url"
                         :class="{ active: link.active }"
-                        ><span v-html="link.label" /></Link
-                    ><span v-else v-html="link.label"
+                        ><span v-text="paginationLabel(link.label)" /></Link
+                    ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav></section
     ></ShopLayout>

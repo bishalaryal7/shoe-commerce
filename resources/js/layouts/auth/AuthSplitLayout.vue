@@ -1,11 +1,12 @@
 <script setup lang="ts">
+const { t } = useLocale();
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { useLocale } from '@/composables/useLocale';
 import { home } from '@/routes';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const name = page.props.name;
-const quote = page.props.quote;
 
 defineProps<{
     title?: string;
@@ -28,14 +29,9 @@ defineProps<{
                 <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
                 {{ name }}
             </Link>
-            <div v-if="quote" class="relative z-20 mt-auto">
-                <blockquote class="space-y-2">
-                    <p class="text-lg">&ldquo;{{ quote.message }}&rdquo;</p>
-                    <footer class="text-sm text-neutral-300">
-                        {{ quote.author }}
-                    </footer>
-                </blockquote>
-            </div>
+            <p class="relative z-20 mt-auto text-lg">
+                Reach higher. Walk further.
+            </p>
         </div>
         <div class="lg:p-8">
             <div
@@ -43,10 +39,10 @@ defineProps<{
             >
                 <div class="flex flex-col space-y-2 text-center">
                     <h1 class="text-xl font-medium tracking-tight" v-if="title">
-                        {{ title }}
+                        {{ t(title) }}
                     </h1>
                     <p class="text-sm text-muted-foreground" v-if="description">
-                        {{ description }}
+                        {{ t(description) }}
                     </p>
                 </div>
                 <slot />

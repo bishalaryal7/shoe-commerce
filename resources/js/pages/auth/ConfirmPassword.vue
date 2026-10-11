@@ -13,8 +13,12 @@ const { t } = useLocale();
 
 <template>
     <AuthLayout
-        title="Confirm your password"
-        description="This is a secure area of the application. Please confirm your password before continuing."
+        :title="t('Confirm your password')"
+        :description="
+            t(
+                'This is a secure area of the application. Please confirm your password before continuing.',
+            )
+        "
     >
         <Head :title="t('Confirm password')" />
 
@@ -46,7 +50,7 @@ const { t } = useLocale();
                         data-test="confirm-password-button"
                     >
                         <Spinner v-if="processing" />
-                        Confirm Password
+                        {{ t('Confirm Password') }}
                     </Button>
                 </div>
             </div>

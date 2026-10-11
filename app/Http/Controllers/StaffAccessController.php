@@ -13,13 +13,13 @@ class StaffAccessController extends Controller
     {
         $access->grant($request->validated('email'), $request->user()->id);
 
-        return back()->with('success', 'Staff access granted. They can sign in with their own account.');
+        return back()->with('success', __('Staff access granted. They can sign in with their own account.'));
     }
 
     public function destroy(Request $request, User $user, StaffAccess $access)
     {
         $access->revoke($user, $request->user()->id);
 
-        return back()->with('success', 'Staff access removed.');
+        return back()->with('success', __('Staff access removed.'));
     }
 }

@@ -15,7 +15,7 @@ import {
     X,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-const { t } = useLocale();
+const { t, num, paginationLabel } = useLocale();
 const props = defineProps<{
     products: {
         data: Product[];
@@ -63,10 +63,14 @@ function reset() {
 }
 </script>
 <template>
-    <Head title="Find your next favorite pair"
+    <Head :title="t('Find your next favorite pair')"
         ><meta
             name="description"
-            content="Shop everyday sneakers, running shoes, and outdoor footwear. Find your size, shop individual pairs, or apply for wholesale prices."
+            :content="
+                t(
+                    'Shop everyday sneakers, running shoes, and outdoor footwear. Find your size, shop individual pairs, or apply for wholesale prices.',
+                )
+            "
     /></Head>
     <ShopLayout>
         <section v-if="!hasFilters" class="hero wrap">
@@ -78,9 +82,11 @@ function reset() {
                     </span>
                     <h1>{{ t('Reach higher. Walk further.') }}</h1>
                     <p>
-                        EVE takes its name from Everest: a reminder to keep
-                        moving. Find everyday comfort, running shoes and outdoor
-                        styles for your next journey.
+                        {{
+                            t(
+                                'EVE takes its name from Everest: a reminder to keep moving. Find everyday comfort, running shoes and outdoor styles for your next journey.',
+                            )
+                        }}
                     </p>
                     <div class="hero-buttons">
                         <a href="#collection" class="button lime"
@@ -98,14 +104,18 @@ function reset() {
                 <div class="hero-visual eve-hero-visual">
                     <img
                         src="/images/eve-everest-hero.webp"
-                        alt="Everest-inspired snowy mountain landscape at dawn"
+                        :alt="
+                            t(
+                                'Everest-inspired snowy mountain landscape at dawn',
+                            )
+                        "
                         class="eve-hero-image"
                         width="1536"
                         height="1024"
                         fetchpriority="high"
                     />
                     <div class="eve-hero-overlay">
-                        <span>EVE / NEPAL</span
+                        <span> {{ t('EVE / NEPAL') }} </span
                         ><strong>{{ t('Reach higher. Walk further.') }}</strong>
                     </div>
                 </div>
@@ -115,8 +125,8 @@ function reset() {
             <div>
                 <span class="benefit-icon"><Footprints :size="19" /></span
                 ><span
-                    ><strong>Find your fit</strong
-                    ><small>Sizes EU 36–45</small></span
+                    ><strong> {{ t('Find your fit') }} </strong
+                    ><small> {{ t('Sizes EU 36–45') }} </small></span
                 >
             </div>
             <div>
@@ -145,19 +155,19 @@ function reset() {
                     <h2>
                         {{
                             wholesale
-                                ? 'Your partner collection.'
-                                : 'Meet your new rotation.'
+                                ? t('Your partner collection.')
+                                : t('Meet your new rotation.')
                         }}
                     </h2>
                 </div>
-                <span v-if="wholesale" class="wholesale-pill"
-                    >Wholesale pricing · 12 pair minimum</span
+                <span v-if="wholesale" class="wholesale-pill">
+                    {{ t('Wholesale pricing · 12 pair minimum') }} </span
                 ><span v-else class="collection-caption">
                     {{ t('A pair for every kind of day.') }}
                 </span>
             </div>
             <div class="collection-tools">
-                <div class="filter-tabs" aria-label="Shoe categories">
+                <div class="filter-tabs" :aria-label="t('Shoe categories')">
                     <button
                         v-for="category in [
                             'All shoes',
@@ -185,12 +195,12 @@ function reset() {
                         v-model="search"
                         type="search"
                         maxlength="100"
-                        placeholder="Search your next pair…"
-                        aria-label="Search shoe names"
+                        :placeholder="t('Search your next pair…')"
+                        :aria-label="t('Search shoe names')"
                     /><button
                         type="submit"
                         class="search-submit"
-                        aria-label="Search"
+                        :aria-label="t('Search')"
                     >
                         <ArrowRight :size="16" />
                     </button>
@@ -200,32 +210,38 @@ function reset() {
                 <span class="result-count" role="status"
                     >{{
                         loading
-                            ? 'Finding your shoes…'
-                            : products.total +
-                              (products.total === 1 ? ' style' : ' styles')
+                            ? t('Finding your shoes…')
+                            : t(
+                                  products.total === 1
+                                      ? ':count style'
+                                      : ':count styles',
+                                  {
+                                      count: num(products.total),
+                                  },
+                              )
                     }}<button
                         v-if="hasFilters"
                         class="clear-filters"
                         @click="reset()"
                     >
-                        Clear filters <X :size="12" /></button
+                        {{ t('Clear filters') }} <X :size="12" /></button
                 ></span>
                 <div class="catalog-selects">
                     <label
-                        ><SlidersHorizontal :size="14" /><span class="sr-only"
-                            >Filter by EU size</span
+                        ><SlidersHorizontal :size="14" /><span class="sr-only">
+                            {{ t('Filter by EU size') }} </span
                         ><select v-model="size" @change="filter()">
-                            <option value="">All sizes</option>
+                            <option value="">{{ t('All sizes') }}</option>
                             <option
                                 v-for="n in 10"
                                 :key="n"
                                 :value="String(n + 35)"
                             >
-                                EU {{ n + 35 }}
+                                {{ t('EU') }} {{ num(n + 35) }}
                             </option>
                         </select></label
                     ><label
-                        ><span class="sr-only">Sort products</span
+                        ><span class="sr-only"> {{ t('Sort products') }} </span
                         ><select v-model="sort" @change="filter()">
                             <option value="featured">
                                 {{ t('Featured') }}
@@ -236,7 +252,7 @@ function reset() {
                             <option value="price_high">
                                 {{ t('Price: high to low') }}
                             </option>
-                            <option value="name">Name: A–Z</option>
+                            <option value="name">{{ t('Name: A–Z') }}</option>
                         </select></label
                     >
                 </div>
@@ -255,10 +271,13 @@ function reset() {
             </div>
             <div v-if="!products.data.length" class="empty-state">
                 <span class="empty-icon"><Search :size="29" /></span>
-                <h3>No matches this time.</h3>
+                <h3>{{ t('No matches this time.') }}</h3>
                 <p>
-                    Try another name, size, or category. Your next pair is out
-                    there.
+                    {{
+                        t(
+                            'Try another name, size, or category. Your next pair is out there.',
+                        )
+                    }}
                 </p>
                 <button class="button dark" @click="reset()">
                     {{ t('Reset filters') }} <ArrowRight :size="16" />
@@ -267,7 +286,7 @@ function reset() {
             <nav
                 v-if="products.links.length > 3"
                 class="pagination"
-                aria-label="Catalog pages"
+                :aria-label="t('Catalog pages')"
             >
                 <template v-for="(link, i) in products.links" :key="i"
                     ><Link
@@ -275,31 +294,43 @@ function reset() {
                         :href="link.url"
                         :class="{ active: link.active }"
                         :aria-current="link.active ? 'page' : undefined"
-                        ><span v-html="link.label" /></Link
-                    ><span v-else v-html="link.label"
+                        ><span v-text="paginationLabel(link.label)" /></Link
+                    ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav>
         </section>
         <section class="wholesale-banner wrap">
             <div class="partner-panel">
                 <div>
-                    <span class="eyebrow">GOOD BUSINESS STARTS HERE</span>
-                    <h2>Your shelves.<br /><em>Our next chapter.</em></h2>
+                    <span class="eyebrow">
+                        {{ t('GOOD BUSINESS STARTS HERE') }}
+                    </span>
+                    <h2>
+                        {{ t('Your shelves.') }} <br /><em>
+                            {{ t('Our next chapter.') }}
+                        </em>
+                    </h2>
                     <p>
-                        More pairs. More possibilities. Apply for private
-                        partner pricing, mix your sizes, and build your next
-                        bulk order.
+                        {{
+                            t(
+                                'More pairs. More possibilities. Apply for private partner pricing, mix your sizes, and build your next bulk order.',
+                            )
+                        }}
                     </p>
-                    <Link href="/wholesale" class="button dark"
-                        >Let’s work together <ArrowUpRight :size="18"
+                    <Link href="/wholesale" class="button dark">
+                        {{ t('Let’s work together') }} <ArrowUpRight :size="18"
                     /></Link>
                 </div>
                 <div class="partner-art">
-                    <span class="partner-large">12<span>+</span></span
-                    ><span class="partner-caption">PAIRS TO GET STARTED</span>
+                    <span class="partner-large"
+                        >{{ num(12) }}<span>+</span></span
+                    ><span class="partner-caption">
+                        {{ t('PAIRS TO GET STARTED') }}
+                    </span>
                     <div class="partner-tags">
-                        <span>Mix your styles</span><span>Find your sizes</span
-                        ><span>Grow together ↗</span>
+                        <span> {{ t('Mix your styles') }} </span
+                        ><span> {{ t('Find your sizes') }} </span
+                        ><span> {{ t('Grow together ↗') }} </span>
                     </div>
                 </div>
             </div>

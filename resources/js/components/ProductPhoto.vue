@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { useLocale } from '@/composables/useLocale';
 import type { Product } from '@/types/shop';
 import { useForm } from '@inertiajs/vue3';
 import { Upload } from 'lucide-vue-next';
 import { onBeforeUnmount, ref, watch } from 'vue';
+const { t, num } = useLocale();
 defineProps<{ product: Product }>();
 const form = useForm({ image: null as File | null });
 const preview = ref<string | null>(null);
@@ -32,7 +34,7 @@ function file(event: Event) {
         form.image = null;
         form.setError(
             'image',
-            'Choose a JPG, PNG or WebP photo no larger than 5 MB.',
+            t('Choose a JPG, PNG or WebP photo no larger than 5 MB.'),
         );
         return;
     }
@@ -49,34 +51,42 @@ function file(event: Event) {
             })
         "
     >
-        <img :src="preview || product.image" :alt="product.name" />
+        <img :src="preview || product.image" :alt="t(product.name)" />
         <div>
-            <label
-                >Replace product photo<input
+            <label>
+                {{ t('Replace product photo') }}
+                <input
                     ref="input"
                     type="file"
+                    class="sr-only"
                     accept="image/jpeg,image/png,image/webp"
                     @change="file"
-                    required /></label
-            ><small>JPG, PNG, or WebP · Up to 5 MB</small>
+                    required
+                /><span class="button outline">{{ t('Choose a photo') }}</span
+                ><span>{{
+                    form.image?.name || t('No photo selected')
+                }}</span></label
+            ><small> {{ t('JPG, PNG, or WebP · Up to 5 MB') }} </small>
             <p v-if="form.errors.image" class="field-error" role="alert">
                 {{ form.errors.image }}
             </p>
             <p v-if="form.progress" role="status">
-                Uploading {{ form.progress.percentage }}%
+                {{ t('Uploading') }} {{ num(form.progress.percentage ?? 0) }}%
             </p>
             <progress
                 v-if="form.progress"
                 :value="form.progress.percentage"
                 max="100"
-                aria-label="Photo upload progress"
+                :aria-label="t('Photo upload progress')"
             />
             <button
                 class="button outline"
                 :disabled="!form.image || form.processing"
             >
                 <Upload :size="14" />{{
-                    form.processing ? 'Uploading…' : 'Save replacement photo'
+                    form.processing
+                        ? t('Uploading…')
+                        : t('Save replacement photo')
                 }}
             </button>
         </div>

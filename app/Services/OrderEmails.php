@@ -12,7 +12,10 @@ class OrderEmails
 {
     public function record(Order $order, string $event): void
     {
+        $original = OrderEmail::where('order_id', $order->id)->where('event', 'created')->first();
+        $locale = $original?->payload['locale'] ?? app()->getLocale();
         $record = OrderEmail::firstOrCreate(['order_id' => $order->id, 'event' => $event], ['payload' => [
+            'locale' => in_array($locale, ['en', 'ne'], true) ? $locale : 'en',
             'name' => $order->name, 'email' => $order->email, 'reference' => $order->reference, 'currency' => $order->currency,
             'subtotal' => $order->subtotal, 'shipping_amount' => $order->shipping_amount, 'tax_amount' => $order->tax_amount, 'total' => $order->total,
             'status' => $order->status, 'payment_status' => $order->payment_status,

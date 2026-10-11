@@ -2,10 +2,12 @@
 import ProductCreate from '@/components/ProductCreate.vue';
 import ProductEditor from '@/components/ProductEditor.vue';
 import ProductPhoto from '@/components/ProductPhoto.vue';
+import { useLocale } from '@/composables/useLocale';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { money, type Product } from '@/types/shop';
+import { type Product } from '@/types/shop';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+const { t, label, num, date, money, paginationLabel } = useLocale();
 type Order = {
     id: number;
     reference: string;
@@ -122,33 +124,41 @@ function stock(id: number, event: Event) {
 }
 </script>
 <template>
-    <Head title="Team dashboard" /><AdminLayout v-model:tab="tab"
+    <Head :title="t('Team dashboard')" /><AdminLayout v-model:tab="tab"
         ><section class="wrap inner-page admin-page">
-            <div class="eyebrow">TEAM WORKSPACE</div>
+            <div class="eyebrow">{{ t('TEAM WORKSPACE') }}</div>
             <h1>
                 {{
                     tab === 'Orders'
-                        ? 'Orders, at a glance.'
+                        ? t('Orders, at a glance.')
                         : tab === 'Inventory'
-                          ? 'Keep your shelves moving.'
+                          ? t('Keep your shelves moving.')
                           : tab === 'Payments'
-                            ? 'Every payment, accounted for.'
+                            ? t('Every payment, accounted for.')
                             : tab === 'Team'
-                              ? 'Your people. Your workspace.'
-                              : 'Good partners. Better business.'
+                              ? t('Your people. Your workspace.')
+                              : t('Good partners. Better business.')
                 }}
             </h1>
             <p class="workspace-description">
                 {{
                     tab === 'Orders'
-                        ? 'Review requests and keep every next step on track.'
+                        ? t(
+                              'Review requests and keep every next step on track.',
+                          )
                         : tab === 'Inventory'
-                          ? 'Manage your collection, pricing, and available sizes.'
+                          ? t(
+                                'Manage your collection, pricing, and available sizes.',
+                            )
                           : tab === 'Payments'
-                            ? 'Check provider status and monitor your integrations.'
+                            ? t(
+                                  'Check provider status and monitor your integrations.',
+                              )
                             : tab === 'Team'
-                              ? 'Manage access for registered team members.'
-                              : 'Review applications and manage your wholesale relationships.'
+                              ? t('Manage access for registered team members.')
+                              : t(
+                                    'Review applications and manage your wholesale relationships.',
+                                )
                 }}
             </p>
             <div class="stats-grid">
@@ -157,8 +167,8 @@ function stock(id: number, event: Event) {
                     :key="key"
                     class="summary-card"
                 >
-                    <span>{{ key }}</span
-                    ><strong>{{ value }}</strong>
+                    <span>{{ label(key) }}</span
+                    ><strong>{{ num(value) }}</strong>
                 </div>
             </div>
             <p
@@ -167,19 +177,23 @@ function stock(id: number, event: Event) {
                 class="field-error"
                 role="alert"
             >
-                {{ error }}
+                {{ t(error) }}
             </p>
             <div v-if="tab === 'Orders'">
                 <form class="order-actions" @submit.prevent="filterOrders">
-                    <label
-                        >Find an order<input
+                    <label>
+                        {{ t('Find an order') }}
+                        <input
                             v-model="filters.search"
                             maxlength="150"
-                            placeholder="Reference, customer, email or phone"
+                            :placeholder="
+                                t('Reference, customer, email or phone')
+                            "
                     /></label>
-                    <label
-                        >Order status<select v-model="filters.status">
-                            <option value="">All statuses</option>
+                    <label>
+                        {{ t('Order status') }}
+                        <select v-model="filters.status">
+                            <option value="">{{ t('All statuses') }}</option>
                             <option
                                 v-for="status in [
                                     'pending_confirmation',
@@ -190,13 +204,14 @@ function stock(id: number, event: Event) {
                                 :key="status"
                                 :value="status"
                             >
-                                {{ status.replaceAll('_', ' ') }}
+                                {{ label(status) }}
                             </option>
                         </select></label
                     >
-                    <label
-                        >Payment<select v-model="filters.payment">
-                            <option value="">All payments</option>
+                    <label>
+                        {{ t('Payment') }}
+                        <select v-model="filters.payment">
+                            <option value="">{{ t('All payments') }}</option>
                             <option
                                 v-for="status in [
                                     'unpaid',
@@ -208,11 +223,11 @@ function stock(id: number, event: Event) {
                                 :key="status"
                                 :value="status"
                             >
-                                {{ status }}
+                                {{ label(status) }}
                             </option>
                         </select></label
                     >
-                    <button class="button dark">Search</button>
+                    <button class="button dark">{{ t('Search') }}</button>
                     <button
                         type="button"
                         class="text-button"
@@ -221,15 +236,19 @@ function stock(id: number, event: Event) {
                             filterOrders();
                         "
                     >
-                        Reset
+                        {{ t('Reset') }}
                     </button>
                 </form>
                 <p class="muted">
-                    {{ orders.total }} matching orders. Fulfillment requires
-                    verified online payment or a recorded offline receipt.
+                    {{ num(orders.total) }}
+                    {{
+                        t(
+                            'matching orders. Fulfillment requires verified online payment or a recorded offline receipt.',
+                        )
+                    }}
                 </p>
                 <div v-if="!orders.data.length" class="empty-state">
-                    No order requests yet.
+                    {{ t('No order requests yet.') }}
                 </div>
                 <article
                     v-for="order in orders.data"
@@ -242,57 +261,64 @@ function stock(id: number, event: Event) {
                             <p>{{ order.email }} · {{ order.phone }}</p>
                         </div>
                         <span class="status-pill">{{
-                            order.status.replaceAll('_', ' ')
+                            label(order.status)
                         }}</span>
                     </div>
                     <p>{{ order.address }}</p>
-                    <small>{{ order.reference }} · {{ order.channel }}</small>
+                    <small
+                        >{{ order.reference }} ·
+                        {{ label(order.channel) }}</small
+                    >
                     <div
                         v-for="item in order.items"
                         :key="item.id"
                         class="summary-line"
                     >
-                        <span>{{ item.name }} · EU {{ item.size }}</span
-                        ><span>{{ item.quantity }} pairs · {{ item.sku }}</span>
+                        <span
+                            >{{ t(item.name) }} {{ t('· EU') }}
+                            {{ num(item.size) }}</span
+                        ><span
+                            >{{ num(item.quantity) }} {{ t('pairs ·') }}
+                            {{ item.sku }}</span
+                        >
                     </div>
                     <details class="order-audit">
-                        <summary>Order history</summary>
+                        <summary>{{ t('Order history') }}</summary>
                         <div
                             v-for="event in order.events"
                             :key="event.id"
                             class="summary-line"
                         >
                             <span
-                                >{{ event.event.replaceAll('_', ' ')
+                                >{{ label(event.event)
                                 }}<small
                                     >{{
-                                        event.actor?.name ?? 'System / customer'
+                                        event.actor?.name ??
+                                        t('System / customer')
                                     }}
                                     ·
-                                    {{
-                                        new Date(
-                                            event.created_at,
-                                        ).toLocaleString()
-                                    }}</small
+                                    {{ date(event.created_at, true) }}</small
                                 ><small v-if="event.details">{{
                                     Object.entries(event.details)
                                         .map(
                                             ([key, value]) =>
-                                                key.replaceAll('_', ' ') +
+                                                label(key) +
                                                 ': ' +
-                                                value,
+                                                (typeof value === 'number'
+                                                    ? num(value)
+                                                    : label(value)),
                                         )
                                         .join(' · ')
                                 }}</small></span
                             >
                         </div>
                         <p v-if="!order.events.length" class="muted">
-                            No recorded events for this older order.
+                            {{ t('No recorded events for this older order.') }}
                         </p>
                     </details>
                     <p class="muted">
-                        Payment: {{ order.payment_status }} ·
-                        {{ order.payment_method }}
+                        {{ t('Payment:') }} {{ label(order.payment_status) }} ·
+                        {{ label(order.payment_method) }}
                     </p>
                     <form
                         v-if="
@@ -312,15 +338,16 @@ function stock(id: number, event: Event) {
                             )
                         "
                     >
-                        <label
-                            >Receipt or bank reference<input
+                        <label>
+                            {{ t('Receipt or bank reference') }}
+                            <input
                                 v-model="receipts[order.id]"
                                 required
                                 maxlength="150"
-                                placeholder="Verified receipt reference"
+                                :placeholder="t('Verified receipt reference')"
                         /></label>
                         <button class="button outline" :disabled="busy">
-                            Record received payment
+                            {{ t('Record received payment') }}
                         </button>
                     </form>
                     <div class="order-actions">
@@ -335,7 +362,7 @@ function stock(id: number, event: Event) {
                                 })
                             "
                         >
-                            Confirm</button
+                            {{ t('Confirm') }}</button
                         ><button
                             v-if="
                                 order.status === 'confirmed' &&
@@ -349,7 +376,7 @@ function stock(id: number, event: Event) {
                                 })
                             "
                         >
-                            Mark fulfilled</button
+                            {{ t('Mark fulfilled') }}</button
                         ><button
                             v-if="
                                 ['pending_confirmation', 'confirmed'].includes(
@@ -367,7 +394,7 @@ function stock(id: number, event: Event) {
                                 })
                             "
                         >
-                            Cancel & restore stock
+                            {{ t('Cancel & restore stock') }}
                         </button>
                     </div>
                 </article>
@@ -375,7 +402,7 @@ function stock(id: number, event: Event) {
             <nav
                 v-if="tab === 'Orders' && orders.links.length > 3"
                 class="pagination"
-                aria-label="Staff order pages"
+                :aria-label="t('Staff order pages')"
             >
                 <template v-for="(link, i) in orders.links" :key="i"
                     ><Link
@@ -384,47 +411,55 @@ function stock(id: number, event: Event) {
                         :class="{ active: link.active }"
                         preserve-state
                         preserve-scroll
-                        ><span v-html="link.label" /></Link
-                    ><span v-else v-html="link.label"
+                        ><span v-text="paginationLabel(link.label)" /></Link
+                    ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav>
             <div v-if="tab === 'Payments'">
                 <div class="admin-card">
-                    <h3>Integrations</h3>
+                    <h3>{{ t('Integrations') }}</h3>
                     <p>
-                        Khalti:
+                        {{ t('Khalti:') }}
                         {{
                             integrations.khalti
-                                ? 'configured'
-                                : 'needs credentials'
+                                ? t('configured')
+                                : t('needs credentials')
                         }}
-                        · PayPay:
+                        {{ t('· PayPay:') }}
                         {{
                             integrations.paypay
-                                ? 'configured'
-                                : 'needs credentials'
+                                ? t('configured')
+                                : t('needs credentials')
                         }}
                     </p>
                     <p>
-                        Email transport: {{ integrations.mail }} ·
-                        {{ integrations.pendingEmails }} unsent notifications
+                        {{ t('Email transport:') }}
+                        {{ label(integrations.mail) }} ·
+                        {{ num(integrations.pendingEmails) }}
+                        {{ t('unsent notifications') }}
                     </p>
                 </div>
                 <p class="muted">
-                    {{ payments.total }} attempts. Verification asks the
-                    provider for its authoritative status. Sandbox attempts do
-                    not represent live payments.
+                    {{ num(payments.total) }}
+                    {{
+                        t(
+                            'attempts. Verification asks the provider for its authoritative status. Sandbox attempts do not represent live payments.',
+                        )
+                    }}
                 </p>
                 <article
                     v-for="payment in payments.data"
                     :key="payment.id"
                     class="admin-card"
                 >
-                    <h3>{{ payment.provider }} · {{ payment.status }}</h3>
+                    <h3>
+                        {{ label(payment.provider) }} ·
+                        {{ label(payment.status) }}
+                    </h3>
                     <p>{{ payment.reference }}</p>
                     <p>
                         {{ money(payment.amount, payment.currency) }} ·
-                        {{ payment.sandbox ? 'Sandbox' : 'Live' }}
+                        {{ payment.sandbox ? t('Sandbox') : t('Live') }}
                     </p>
                     <button
                         v-if="payment.provider_id"
@@ -434,18 +469,21 @@ function stock(id: number, event: Event) {
                             post('/admin/payments/' + payment.id + '/verify')
                         "
                     >
-                        Verify with provider
+                        {{ t('Verify with provider') }}
                     </button>
                     <p v-else class="muted">
-                        No provider session ID. Check the merchant dashboard
-                        before retrying or releasing stock.
+                        {{
+                            t(
+                                'No provider session ID. Check the merchant dashboard before retrying or releasing stock.',
+                            )
+                        }}
                     </p>
                 </article>
             </div>
             <nav
                 v-if="tab === 'Payments' && payments.links.length > 3"
                 class="pagination"
-                aria-label="Payment attempt pages"
+                :aria-label="t('Payment attempt pages')"
             >
                 <template v-for="(link, i) in payments.links" :key="i"
                     ><Link
@@ -454,8 +492,8 @@ function stock(id: number, event: Event) {
                         :class="{ active: link.active }"
                         preserve-state
                         preserve-scroll
-                        ><span v-html="link.label" /></Link
-                    ><span v-else v-html="link.label"
+                        ><span v-text="paginationLabel(link.label)" /></Link
+                    ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav>
             <div v-if="tab === 'Inventory'" class="admin-products">
@@ -465,19 +503,23 @@ function stock(id: number, event: Event) {
                     :key="product.id"
                     class="admin-card"
                 >
-                    <h3>{{ product.name }}</h3>
+                    <h3>{{ t(product.name) }}</h3>
                     <ProductEditor :product="product" /><ProductPhoto
                         :product="product"
                     />
                     <p class="muted">
-                        Available pairs by size. Stock changes save when you
-                        leave a field.
+                        {{
+                            t(
+                                'Available pairs by size. Stock changes save when you leave a field.',
+                            )
+                        }}
                     </p>
                     <div class="variant-grid">
                         <label
                             v-for="variant in product.variants"
                             :key="variant.id"
-                            >EU {{ variant.size
+                        >
+                            {{ t('EU') }} {{ num(variant.size)
                             }}<input
                                 :value="variant.stock"
                                 type="number"
@@ -485,10 +527,10 @@ function stock(id: number, event: Event) {
                                 max="1000000"
                                 :disabled="busy"
                                 :aria-label="
-                                    product.name +
-                                    ' size ' +
-                                    variant.size +
-                                    ' stock'
+                                    t('Stock for :name, size :size', {
+                                        name: t(product.name),
+                                        size: num(variant.size),
+                                    })
                                 "
                                 @change="stock(variant.id, $event)"
                         /></label>
@@ -497,11 +539,13 @@ function stock(id: number, event: Event) {
             </div>
             <div v-if="tab === 'Team'">
                 <div class="admin-card">
-                    <h2>Give your team access</h2>
+                    <h2>{{ t('Give your team access') }}</h2>
                     <p>
-                        Ask the person to register an account first, then enter
-                        their email. Staff can manage orders, products, payments
-                        and team access.
+                        {{
+                            t(
+                                'Ask the person to register an account first, then enter their email. Staff can manage orders, products, payments and team access.',
+                            )
+                        }}
                     </p>
                     <form
                         class="order-actions"
@@ -509,15 +553,16 @@ function stock(id: number, event: Event) {
                             post('/admin/team', { email: teamEmail })
                         "
                     >
-                        <label
-                            >Registered email<input
+                        <label>
+                            {{ t('Registered email') }}
+                            <input
                                 v-model="teamEmail"
                                 type="email"
                                 required
                                 maxlength="254"
                                 autocomplete="off" /></label
                         ><button class="button dark" :disabled="busy">
-                            Grant staff access
+                            {{ t('Grant staff access') }}
                         </button>
                     </form>
                 </div>
@@ -531,34 +576,36 @@ function stock(id: number, event: Event) {
                     <template
                         v-if="member.id !== (page.props.auth as any).user.id"
                         ><p v-if="removingMember === member.id">
-                            Remove this person's staff access?
+                            {{ t("Remove this person's staff access?") }}
                         </p>
                         <button
                             v-if="removingMember === member.id"
                             class="button outline"
                             @click="removeMember(member.id)"
                         >
-                            Confirm removal</button
+                            {{ t('Confirm removal') }}</button
                         ><button
                             v-else
                             class="text-button"
                             @click="removingMember = member.id"
                         >
-                            Remove staff access</button
+                            {{ t('Remove staff access') }}</button
                         ><button
                             v-if="removingMember === member.id"
                             class="text-button"
                             @click="removingMember = null"
                         >
-                            Keep access
+                            {{ t('Keep access') }}
                         </button></template
                     >
-                    <p v-else class="muted">Your account · Staff access</p>
+                    <p v-else class="muted">
+                        {{ t('Your account · Staff access') }}
+                    </p>
                 </article>
             </div>
             <div v-if="tab === 'Partners'">
                 <div v-if="!applications.length" class="empty-state">
-                    No wholesale applications yet.
+                    {{ t('No wholesale applications yet.') }}
                 </div>
                 <article
                     v-for="application in applications"
@@ -568,7 +615,7 @@ function stock(id: number, event: Event) {
                     <div class="section-heading">
                         <h3>{{ application.company }}</h3>
                         <span class="status-pill">{{
-                            application.status
+                            label(application.status)
                         }}</span>
                     </div>
                     <p>
@@ -587,7 +634,7 @@ function stock(id: number, event: Event) {
                                 })
                             "
                         >
-                            Approve partner</button
+                            {{ t('Approve partner') }}</button
                         ><button
                             v-if="application.status !== 'rejected'"
                             class="button outline"
@@ -600,8 +647,8 @@ function stock(id: number, event: Event) {
                         >
                             {{
                                 application.status === 'approved'
-                                    ? 'Revoke approval'
-                                    : 'Reject'
+                                    ? t('Revoke approval')
+                                    : t('Reject')
                             }}
                         </button>
                     </div>
