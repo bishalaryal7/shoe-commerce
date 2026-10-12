@@ -12,7 +12,7 @@ class ProductReviewController extends Controller
 {
     public function store(ReviewRequest $request, Product $product, ProductReviews $reviews)
     {
-        $reviews->save($request->user(), $product, $request->validated());
+        $reviews->save($request->user(), $product, $request->validated(), $request->file('photo'));
 
         return back()->with('success', __('Thank you for sharing your review.'));
     }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\OrderEmail;
+use App\Models\OrderReturnRequest;
 use App\Models\PaymentAttempt;
 use App\Models\Product;
 use App\Models\ProductQuestion;
@@ -51,6 +52,8 @@ class AdminWorkspace
             'reviews' => ProductReview::with(['product:id,name,slug', 'user:id,name,email'])->latest('id')->paginate(20, ['*'], 'reviews_page')->withQueryString(),
             'conversations' => SupportConversation::with(['user:id,name,email', 'messages' => fn ($messages) => $messages->orderByDesc('id')->limit(8)])
                 ->latest('last_message_at')->paginate(20, ['*'], 'messages_page')->withQueryString(),
+            'returnRequests' => OrderReturnRequest::with(['order:id,reference,name,email,phone', 'item:id,order_id,name,size,quantity', 'user:id,name,email', 'reviewer:id,name'])
+                ->latest('id')->paginate(20, ['*'], 'returns_page')->withQueryString(),
         ];
     }
 
@@ -97,6 +100,7 @@ class AdminWorkspace
                 ->whereHas('product', fn (Builder $products) => $products->where('active', true))
                 ->count(),
             'applications' => WholesaleAccount::where('status', 'pending')->count(),
+            'return_requests' => OrderReturnRequest::where('status', 'requested')->count(),
         ];
     }
 }

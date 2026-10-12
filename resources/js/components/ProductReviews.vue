@@ -17,6 +17,7 @@ interface Review {
     voted_helpful: boolean;
     seller_reply: string | null;
     seller_replied_at: string | null;
+    photo_url: string | null;
     comments: {
         id: number;
         body: string;
@@ -49,6 +50,7 @@ const form = useForm({
     fit: props.ownReview?.fit ?? '',
     title: props.ownReview?.title ?? '',
     body: props.ownReview?.body ?? '',
+    photo: null as File | null,
 });
 function submit() {
     form.post('/products/' + props.productSlug + '/reviews', {
@@ -206,6 +208,14 @@ const fitOptions = ['small', 'true', 'large'] as const;
                         }}</span>
                     </div>
                     <p>{{ review.body }}</p>
+                    <img
+                        v-if="review.photo_url"
+                        class="review-photo"
+                        :src="review.photo_url"
+                        :alt="t('Customer photo attached to a verified review')"
+                        loading="lazy"
+                        decoding="async"
+                    />
                     <aside
                         v-if="review.seller_reply"
                         class="seller-review-reply"
@@ -374,6 +384,26 @@ const fitOptions = ['small', 'true', 'large'] as const;
                     />
                     <p v-if="form.errors.body" class="form-error">
                         {{ form.errors.body }}
+                    </p>
+                    <label class="review-label" for="review-photo">{{
+                        t('Add a shoe photo (optional)')
+                    }}</label>
+                    <input
+                        id="review-photo"
+                        class="review-photo-input"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        @input="
+                            form.photo =
+                                ($event.target as HTMLInputElement)
+                                    .files?.[0] ?? null
+                        "
+                    />
+                    <small class="review-photo-hint">{{
+                        t('Use a clear JPG, PNG, or WebP image up to 5 MB.')
+                    }}</small>
+                    <p v-if="form.errors.photo" class="form-error">
+                        {{ form.errors.photo }}
                     </p>
                     <p v-if="page.props.errors?.review" class="form-error">
                         {{ page.props.errors.review }}

@@ -14,7 +14,7 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['paid_at' => 'datetime'];
+        return ['paid_at' => 'datetime', 'delivered_at' => 'datetime'];
     }
 
     public function events(): HasMany
@@ -25,6 +25,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function returnRequests(): HasMany
+    {
+        return $this->hasMany(OrderReturnRequest::class);
     }
 
     public function user(): BelongsTo

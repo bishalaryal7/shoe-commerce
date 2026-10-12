@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
+import { recommendEuropeanSize } from '@/lib/shoeSize';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowRight, Footprints, Ruler } from 'lucide-vue-next';
+import { ArrowRight, Footprints, Ruler, Sparkles } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 const { t, num } = useLocale();
 const sizes = Array.from({ length: 10 }, (_, index) => index + 36);
+const footLength = ref<number | null>(null);
+const recommendation = computed(() => {
+    return footLength.value === null
+        ? null
+        : recommendEuropeanSize(footLength.value);
+});
 </script>
 
 <template>
@@ -23,6 +31,68 @@ const sizes = Array.from({ length: 10 }, (_, index) => index + 36);
             </p>
 
             <div class="size-guide-grid">
+                <article class="size-guide-card size-finder-card">
+                    <span class="size-guide-icon"><Sparkles :size="21" /></span>
+                    <span class="eyebrow">{{ t('PERSONAL SIZE FINDER') }}</span>
+                    <h2>{{ t('Get a starting size') }}</h2>
+                    <p>
+                        {{
+                            t(
+                                'Measure your longer foot, then enter the length in centimeters.',
+                            )
+                        }}
+                    </p>
+                    <label class="size-finder-label" for="foot-length">{{
+                        t('Foot length in centimeters')
+                    }}</label>
+                    <div class="size-finder-input">
+                        <input
+                            id="foot-length"
+                            v-model.number="footLength"
+                            type="number"
+                            min="22.5"
+                            max="28.5"
+                            step="0.1"
+                            inputmode="decimal"
+                            :placeholder="t('For example, 25.4')"
+                        />
+                        <span>{{ t('cm') }}</span>
+                    </div>
+                    <div
+                        v-if="recommendation"
+                        class="size-finder-result"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span>{{ t('Suggested EVE size') }}</span>
+                        <strong>{{
+                            t('EU :size', { size: num(recommendation) })
+                        }}</strong>
+                        <small>{{
+                            t('Starting estimate based on a :length cm foot.', {
+                                length: num(footLength!, false),
+                            })
+                        }}</small>
+                    </div>
+                    <p
+                        v-else-if="footLength !== null"
+                        class="size-guide-note"
+                        role="status"
+                    >
+                        {{
+                            t(
+                                'For this measurement, ask our team to confirm the closest size.',
+                            )
+                        }}
+                    </p>
+                    <p class="size-guide-note">
+                        {{
+                            t(
+                                'This guide is an estimate. Shoe shape and personal fit can vary; check verified fit reviews before ordering.',
+                            )
+                        }}
+                    </p>
+                </article>
                 <article class="size-guide-card">
                     <span class="size-guide-icon"><Ruler :size="21" /></span>
                     <span class="eyebrow">{{ t('MEASURE AT HOME') }}</span>

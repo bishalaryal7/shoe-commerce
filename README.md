@@ -42,12 +42,13 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 - Responsive storefront, global search, category/size/rating filters, price and rating sorting, product pages, size selection, stock checks and quantity controls.
 - Saved shoes (guest session, merged into the signed-in account), recently viewed shoes with a clear-history control, and practical foot-measuring guidance on product pages. Guests' saved shoes remain on their current browser until sign-in; signed-in lists persist in MySQL.
 - Side-by-side comparison for up to three shoes, including current customer or approved wholesale price, available sizes, color options, review rating, and product description. The comparison list stays in the current browser session.
-- Verified-purchase reviews with 1–5 star ratings and optional fit feedback, sorted by newest, rating or helpful votes. Signed-in accounts can vote once per review and remove their vote; authors cannot vote on their own review. Public pages do not expose buyer or order details. Reviews are not prefilled with demo ratings.
+- Verified-purchase reviews with 1–5 star ratings, optional fit feedback and customer photos, sorted by newest, rating or helpful votes. Signed-in accounts can vote once per review and remove their vote; authors cannot vote on their own review. Public pages do not expose buyer or order details. Reviews are not prefilled with demo ratings.
 - Public shop replies to reviews, customer comments on reviews, and private customer care conversations with staff replies. Customers receive an in-app notification for shop replies, product answers, order progress and support messages; unread counts refresh as they browse.
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
 - Customer order history, private signed guest tracking links, unpaid order cancellation and resuming unexpired provider checkout.
-- Size-specific back-in-stock email alerts, staff shipment tracking and delivery updates, scheduled retail/wholesale promotion codes, moderated product Q&A, verified best-selling shoe discovery and a private saved-address book.
+- An interactive EU size finder based on foot length, size-specific back-in-stock email alerts, staff shipment tracking and delivery updates, scheduled retail/wholesale promotion codes, moderated product Q&A, verified best-selling shoe discovery and a private saved-address book.
+- Customer self-service exchange/refund requests for paid deliveries within `SHOP_RETURN_WINDOW_DAYS` (default 30). Staff can approve, decline or complete a request and send an in-app update; payment refunds, carrier labels and stock changes still require staff handling.
 - Staff product creation, prices, photo uploads, inventory adjustments, spreadsheet-ready inventory export and atomic bulk stock import, searchable and paginated orders/payments, order audit history, confirmation, payment receipt recording, fulfillment and cancellation.
 - Khalti server-side initiation and authoritative lookup verification. Redirect parameters never mark an order paid.
 - PayPay HMAC integration and isolated JPY sandbox testing. PayPay is excluded from NPR checkout.
@@ -57,7 +58,7 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 - Cash on delivery for NPR orders, with unpaid status until staff record a collection receipt. Wholesale phone numbers are mandatory.
 - Automated tests, GitHub quality/security workflows, release packaging and manual SSH deployment workflow.
 
-Shipping is a configured flat amount in minor units; tax is configured in basis points. Defaults are zero. This is not a shipping carrier or jurisdictional tax integration. Reservations require staff cancellation; automatic expiration and a returns/refund processing workflow are not implemented. Refund lookup records provider status but never initiates a refund or automatically restocks. Partial refunds hold fulfillment for staff review.
+Shipping is a configured flat amount in minor units; tax is configured in basis points. Defaults are zero. This is not a shipping carrier or jurisdictional tax integration. Reservations require staff cancellation and do not expire automatically. Return requests do not trigger payment refunds, carrier labels or automatic restocking. Refund lookup records provider status but never initiates a refund or automatically restocks. Partial refunds hold fulfillment for staff review.
 
 ## Sign-in providers
 

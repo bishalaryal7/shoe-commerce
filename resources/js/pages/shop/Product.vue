@@ -42,6 +42,7 @@ const props = defineProps<{
             voted_helpful: boolean;
             seller_reply: string | null;
             seller_replied_at: string | null;
+            photo_url: string | null;
             comments: {
                 id: number;
                 body: string;

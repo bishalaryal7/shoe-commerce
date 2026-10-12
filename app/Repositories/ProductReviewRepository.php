@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProductReviewRepository
 {
@@ -46,7 +47,7 @@ class ProductReviewRepository
         $query = DB::table('product_reviews')->select([
             'product_reviews.id', 'product_reviews.rating', 'product_reviews.fit',
             'product_reviews.title', 'product_reviews.body', 'product_reviews.created_at',
-            'product_reviews.seller_reply', 'product_reviews.seller_replied_at',
+            'product_reviews.seller_reply', 'product_reviews.seller_replied_at', 'product_reviews.photo_path',
         ])->where('product_id', $product->id)
             ->addSelect(['helpful_count' => DB::table('product_review_helpful_votes')->selectRaw('COUNT(*)')
                 ->whereColumn('review_id', 'product_reviews.id')]);
@@ -73,6 +74,8 @@ class ProductReviewRepository
 
         $page->getCollection()->transform(function ($review) use ($voted, $comments) {
             $review->helpful_count = (int) $review->helpful_count;
+            $review->photo_url = $review->photo_path ? Storage::disk('public')->url($review->photo_path) : null;
+            unset($review->photo_path);
             $review->voted_helpful = $voted->contains($review->id);
             $review->comments = $comments->get($review->id, collect())->map(fn ($comment) => [
                 'id' => $comment->id,
@@ -112,13 +115,19 @@ class ProductReviewRepository
         });
     }
 
-    public function save(User $user, Product $product, int $orderId, array $data): void
+    public function save(User $user, Product $product, int $orderId, array $data, ?string $photoPath = null): void
     {
-        DB::table('product_reviews')->upsert([[
+        $values = [
             'user_id' => $user->id, 'product_id' => $product->id, 'order_id' => $orderId,
             'rating' => $data['rating'], 'fit' => $data['fit'] ?? null,
             'title' => $data['title'], 'body' => $data['body'],
             'created_at' => now(), 'updated_at' => now(),
-        ]], ['user_id', 'product_id'], ['order_id', 'rating', 'fit', 'title', 'body', 'updated_at']);
+        ];
+        $updates = ['order_id', 'rating', 'fit', 'title', 'body', 'updated_at'];
+        if ($photoPath !== null) {
+            $values['photo_path'] = $photoPath;
+            $updates[] = 'photo_path';
+        }
+        DB::table('product_reviews')->upsert([$values], ['user_id', 'product_id'], $updates);
     }
 }

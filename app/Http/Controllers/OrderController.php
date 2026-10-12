@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderReturnRequest;
 use App\Models\PaymentAttempt;
 use App\Payments\Gateways;
 use App\Services\CancelOrder;
 use App\Services\OrderAccess;
+use App\Services\OrderReturns;
 use App\Services\RepeatOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -65,8 +67,27 @@ class OrderController extends Controller
 
         $order->loadMissing('events');
 
+        $customer = auth()->user();
+        $canRequestReturn = $customer && $order->user_id === $customer->id && app(OrderReturns::class)->canRequest($order, $customer);
+        $returnRequests = $customer && $order->user_id === $customer->id
+            ? OrderReturnRequest::with('item:id,name,size,quantity')->where('order_id', $order->id)->latest('id')->get()
+                ->map(fn (OrderReturnRequest $request) => [
+                    'id' => $request->id,
+                    'item' => $request->item?->only(['name', 'size', 'quantity']),
+                    'action' => $request->action,
+                    'reason' => $request->reason,
+                    'details' => $request->details,
+                    'status' => $request->status,
+                    'staff_note' => $request->staff_note,
+                    'created_at' => $request->created_at,
+                ])
+            : collect();
+
         return Inertia::render('shop/Order', ['order' => $order->only(['reference', 'name', 'email', 'address', 'phone', 'currency', 'subtotal', 'shipping_amount', 'tax_amount', 'total', 'status', 'payment_status', 'payment_method', 'paid_at', 'created_at', 'items', 'events', 'tracking_carrier', 'tracking_number', 'shipped_at', 'delivered_at', 'promotion_code', 'discount_amount']),
             'resumePayment' => $resume,
+            'canRequestReturn' => (bool) $canRequestReturn,
+            'returnRequests' => $returnRequests,
+            'returnWindowDays' => max(1, (int) config('shop.return_window_days', 30)),
             'paymentOptions' => in_array($order->status, ['pending_confirmation', 'confirmed']) && $order->payment_status === 'unpaid' ? $gateways->options($order->currency) : [],
             'accessUrl' => $accessUrl ?? URL::temporarySignedRoute('orders.track', now()->addDays(30), ['reference' => $order->reference]),
         ]);

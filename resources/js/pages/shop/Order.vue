@@ -19,12 +19,30 @@ const props = defineProps<{
     paymentOptions: PaymentOption[];
     accessUrl: string | null;
     resumePayment: { url: string; provider: string; sandbox: boolean } | null;
+    canRequestReturn: boolean;
+    returnWindowDays: number;
+    returnRequests: {
+        id: number;
+        item: { name: string; size: string; quantity: number } | null;
+        action: string;
+        reason: string;
+        details: string | null;
+        status: string;
+        staff_note: string | null;
+        created_at: string;
+    }[];
 }>();
 const page = usePage();
 const form = useForm({ provider: 'khalti', access_url: props.accessUrl });
 const check = useForm({ access_url: props.accessUrl });
 const copied = ref(false);
 const cancelForm = useForm({ access_url: props.accessUrl });
+const returnForm = useForm({
+    order_item_id: props.order.items[0]?.id ?? 0,
+    action: 'exchange',
+    reason: 'wrong_size',
+    details: '',
+});
 const confirmCancel = ref(false);
 const canCancel = computed(
     () =>
@@ -54,6 +72,12 @@ function pay(provider: 'khalti' | 'paypay') {
     form.provider = provider;
     form.post('/orders/' + props.order.reference + '/pay', {
         preserveScroll: true,
+    });
+}
+function requestReturn() {
+    returnForm.post('/orders/' + props.order.reference + '/returns', {
+        preserveScroll: true,
+        onSuccess: () => returnForm.reset('details'),
     });
 }
 </script>
@@ -392,6 +416,147 @@ function pay(provider: 'khalti' | 'paypay') {
                     </div>
                 </aside>
             </div>
+            <section
+                v-if="canRequestReturn || returnRequests.length"
+                class="return-center"
+            >
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">{{
+                            t('AFTER-SALES SUPPORT')
+                        }}</span>
+                        <h2>{{ t('Returns and exchanges') }}</h2>
+                    </div>
+                </div>
+                <p>
+                    {{
+                        t(
+                            'Eligible delivered orders can request an exchange or refund within :days days of delivery.',
+                            { days: num(returnWindowDays) },
+                        )
+                    }}
+                </p>
+                <form
+                    v-if="canRequestReturn"
+                    class="return-request-form"
+                    @submit.prevent="requestReturn"
+                >
+                    <label
+                        >{{ t('Shoe to return') }}
+                        <select
+                            v-model.number="returnForm.order_item_id"
+                            required
+                        >
+                            <option
+                                v-for="item in order.items"
+                                :key="item.id"
+                                :value="item.id"
+                            >
+                                {{ t(item.name) }} · {{ t('EU') }}
+                                {{ num(item.size) }} · {{ num(item.quantity) }}
+                                {{ t('pair(s)') }}
+                            </option>
+                        </select>
+                    </label>
+                    <label
+                        >{{ t('What would you like?') }}
+                        <select v-model="returnForm.action" required>
+                            <option value="exchange">
+                                {{ t('Exchange for another size or pair') }}
+                            </option>
+                            <option value="refund">
+                                {{ t('Ask about a refund') }}
+                            </option>
+                        </select>
+                    </label>
+                    <label
+                        >{{ t('Reason for your request') }}
+                        <select v-model="returnForm.reason" required>
+                            <option value="wrong_size">
+                                {{ t('Wrong size or fit') }}
+                            </option>
+                            <option value="defective">
+                                {{ t('Item arrived damaged or defective') }}
+                            </option>
+                            <option value="wrong_item">
+                                {{ t('I received a different item') }}
+                            </option>
+                            <option value="changed_mind">
+                                {{ t('I changed my mind') }}
+                            </option>
+                            <option value="other">
+                                {{ t('Another reason') }}
+                            </option>
+                        </select>
+                    </label>
+                    <label class="return-details"
+                        >{{ t('More details (optional)') }}
+                        <textarea
+                            v-model="returnForm.details"
+                            rows="3"
+                            maxlength="1000"
+                            :placeholder="t('Tell our team what would help.')"
+                        />
+                    </label>
+                    <p
+                        v-for="(error, key) in returnForm.errors"
+                        :key="key"
+                        class="field-error"
+                        role="alert"
+                    >
+                        {{ t(error) }}
+                    </p>
+                    <button
+                        class="button dark"
+                        :disabled="returnForm.processing"
+                    >
+                        {{
+                            returnForm.processing
+                                ? t('Sending…')
+                                : t('Send return request')
+                        }}
+                    </button>
+                    <small>{{
+                        t(
+                            'Our team will review your request and message you with next steps. This does not issue a refund automatically.',
+                        )
+                    }}</small>
+                </form>
+                <div v-if="returnRequests.length" class="return-request-list">
+                    <article
+                        v-for="request in returnRequests"
+                        :key="request.id"
+                        class="return-request-card"
+                    >
+                        <div class="section-heading">
+                            <strong
+                                >{{ t(request.item?.name ?? 'Order item') }} ·
+                                {{
+                                    t(
+                                        request.action === 'refund'
+                                            ? 'Refund request'
+                                            : 'Exchange request',
+                                    )
+                                }}</strong
+                            ><span
+                                class="status-pill"
+                                :data-status="request.status"
+                                >{{ label(request.status) }}</span
+                            >
+                        </div>
+                        <p>
+                            {{ t(request.reason)
+                            }}<span v-if="request.details">
+                                · {{ request.details }}</span
+                            >
+                        </p>
+                        <p v-if="request.staff_note" class="return-staff-note">
+                            <strong>{{ t('Message from our team') }}</strong
+                            ><br />{{ request.staff_note }}
+                        </p>
+                    </article>
+                </div>
+            </section>
         </section></ShopLayout
     >
 </template>

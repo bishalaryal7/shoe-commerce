@@ -7,5 +7,6 @@ return [
     'test_email' => env('SHOP_TEST_EMAIL'),
     'wholesale_minimum' => 12,
     'low_stock_threshold' => (int) env('SHOP_LOW_STOCK_THRESHOLD', 5),
+    'return_window_days' => (int) env('SHOP_RETURN_WINDOW_DAYS', 30),
     'cash_on_delivery' => (bool) env('SHOP_CASH_ON_DELIVERY', true),
 ];

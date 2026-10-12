@@ -22,6 +22,7 @@ const tab = defineModel<string>('tab', { required: true });
 const page = usePage<ShopSharedProps>();
 const sections = [
     { label: 'Orders', icon: ShoppingBag },
+    { label: 'Returns', icon: ShoppingBag },
     { label: 'Inventory', icon: Boxes },
     { label: 'Payments', icon: CreditCard },
     { label: 'Partners', icon: UsersRound },

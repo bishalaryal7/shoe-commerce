@@ -82,6 +82,7 @@ const props = defineProps<{
         stock: number;
         low_stock: number;
         applications: number;
+        return_requests: number;
     };
     lowStockThreshold: number;
     promotions: {
@@ -124,6 +125,22 @@ const props = defineProps<{
             sender: { name: string };
         }[];
     }>;
+    returnRequests: Paginated<{
+        id: number;
+        action: string;
+        reason: string;
+        details: string | null;
+        status: string;
+        staff_note: string | null;
+        order: {
+            reference: string;
+            name: string;
+            email: string;
+            phone: string;
+        };
+        item: { name: string; size: string; quantity: number };
+        user: { name: string; email: string };
+    }>;
 }>();
 const page = usePage();
 const requestedTab = new URL(page.url, 'http://eve.local').searchParams.get(
@@ -132,6 +149,7 @@ const requestedTab = new URL(page.url, 'http://eve.local').searchParams.get(
 const tab = ref(
     [
         'Orders',
+        'Returns',
         'Inventory',
         'Payments',
         'Partners',
@@ -181,6 +199,7 @@ const promotion = ref({
 const answers = ref<Record<number, string>>({});
 const reviewReplies = ref<Record<number, string>>({});
 const customerReplies = ref<Record<number, string>>({});
+const returnNotes = ref<Record<number, string>>({});
 function post(url: string, data: Record<string, any> = {}) {
     busy.value = true;
     router.post(url, data, {
@@ -193,6 +212,15 @@ function patch(url: string, data: Record<string, any>) {
     router.patch(url, data, {
         preserveScroll: true,
         onFinish: () => (busy.value = false),
+    });
+}
+function reviewReturn(
+    id: number,
+    status: 'approved' | 'declined' | 'completed',
+) {
+    patch('/admin/returns/' + id, {
+        status,
+        staff_note: returnNotes.value[id] ?? '',
     });
 }
 function shippingForm(id: number) {
@@ -229,23 +257,27 @@ function importInventory() {
                 {{
                     tab === 'Orders'
                         ? t('Orders, at a glance.')
-                        : tab === 'Inventory'
-                          ? t('Keep your shelves moving.')
-                          : tab === 'Payments'
-                            ? t('Every payment, accounted for.')
-                            : tab === 'Promotions'
-                              ? t('Offers that bring customers back.')
-                              : tab === 'Reviews'
-                                ? t('Customer reviews, answered with care.')
-                                : tab === 'Messages'
-                                  ? t(
-                                        'Every customer conversation, in one place.',
-                                    )
-                                  : tab === 'Questions'
-                                    ? t('Help shoppers choose with confidence.')
-                                    : tab === 'Team'
-                                      ? t('Your people. Your workspace.')
-                                      : t('Good partners. Better business.')
+                        : tab === 'Returns'
+                          ? t('Help customers find the right fit.')
+                          : tab === 'Inventory'
+                            ? t('Keep your shelves moving.')
+                            : tab === 'Payments'
+                              ? t('Every payment, accounted for.')
+                              : tab === 'Promotions'
+                                ? t('Offers that bring customers back.')
+                                : tab === 'Reviews'
+                                  ? t('Customer reviews, answered with care.')
+                                  : tab === 'Messages'
+                                    ? t(
+                                          'Every customer conversation, in one place.',
+                                      )
+                                    : tab === 'Questions'
+                                      ? t(
+                                            'Help shoppers choose with confidence.',
+                                        )
+                                      : tab === 'Team'
+                                        ? t('Your people. Your workspace.')
+                                        : t('Good partners. Better business.')
                 }}
             </h1>
             <p class="workspace-description">
@@ -254,37 +286,41 @@ function importInventory() {
                         ? t(
                               'Review requests and keep every next step on track.',
                           )
-                        : tab === 'Inventory'
+                        : tab === 'Returns'
                           ? t(
-                                'Manage your collection, pricing, and available sizes.',
+                                'Review exchange and refund requests, then keep customers updated on the next step.',
                             )
-                          : tab === 'Payments'
+                          : tab === 'Inventory'
                             ? t(
-                                  'Check provider status and monitor your integrations.',
+                                  'Manage your collection, pricing, and available sizes.',
                               )
-                            : tab === 'Promotions'
+                            : tab === 'Payments'
                               ? t(
-                                    'Create discount codes for seasonal campaigns and wholesale orders.',
+                                    'Check provider status and monitor your integrations.',
                                 )
-                              : tab === 'Reviews'
+                              : tab === 'Promotions'
                                 ? t(
-                                      'Reply publicly to verified buyer feedback and let customers know their experience matters.',
+                                      'Create discount codes for seasonal campaigns and wholesale orders.',
                                   )
-                                : tab === 'Messages'
+                                : tab === 'Reviews'
                                   ? t(
-                                        'Reply privately to order, delivery, fit, and product questions from your customers.',
+                                        'Reply publicly to verified buyer feedback and let customers know their experience matters.',
                                     )
-                                  : tab === 'Questions'
+                                  : tab === 'Messages'
                                     ? t(
-                                          'Answer product questions and publish useful fit, material, and care advice.',
+                                          'Reply privately to order, delivery, fit, and product questions from your customers.',
                                       )
-                                    : tab === 'Team'
+                                    : tab === 'Questions'
                                       ? t(
-                                            'Manage access for registered team members.',
+                                            'Answer product questions and publish useful fit, material, and care advice.',
                                         )
-                                      : t(
-                                            'Review applications and manage your wholesale relationships.',
-                                        )
+                                      : tab === 'Team'
+                                        ? t(
+                                              'Manage access for registered team members.',
+                                          )
+                                        : t(
+                                              'Review applications and manage your wholesale relationships.',
+                                          )
                 }}
             </p>
             <div class="stats-grid">
@@ -580,6 +616,117 @@ function importInventory() {
                     ><span v-else v-text="paginationLabel(link.label)"
                 /></template>
             </nav>
+            <div v-if="tab === 'Returns'">
+                <p v-if="!returnRequests.data.length" class="empty-state">
+                    {{ t('No return or exchange requests yet.') }}
+                </p>
+                <article
+                    v-for="item in returnRequests.data"
+                    :key="item.id"
+                    class="admin-card return-admin-card"
+                >
+                    <div class="section-heading">
+                        <div>
+                            <h3>
+                                {{ t(item.item.name) }} · {{ t('EU') }}
+                                {{ num(item.item.size) }}
+                            </h3>
+                            <small
+                                >{{ item.user.name }} ·
+                                {{ item.user.email }}</small
+                            >
+                        </div>
+                        <span class="status-pill" :data-status="item.status">{{
+                            label(item.status)
+                        }}</span>
+                    </div>
+                    <p>
+                        <strong>{{
+                            t(
+                                item.action === 'refund'
+                                    ? 'Refund request'
+                                    : 'Exchange request',
+                            )
+                        }}</strong>
+                        · {{ t(item.reason) }}
+                    </p>
+                    <p v-if="item.details">{{ item.details }}</p>
+                    <p>
+                        {{ t('Order') }} {{ item.order.reference }} ·
+                        {{ item.order.phone }}
+                    </p>
+                    <p v-if="item.staff_note" class="return-staff-note">
+                        <strong>{{ t('Previous team message') }}</strong
+                        ><br />{{ item.staff_note }}
+                    </p>
+                    <div
+                        v-if="
+                            item.status === 'requested' ||
+                            item.status === 'approved'
+                        "
+                        class="return-admin-controls"
+                    >
+                        <label
+                            >{{ t('Message to customer (optional)')
+                            }}<textarea
+                                v-model="returnNotes[item.id]"
+                                maxlength="1000"
+                                :placeholder="
+                                    t(
+                                        'Explain the next step or what the customer should do.',
+                                    )
+                                "
+                            />
+                        </label>
+                        <div
+                            class="return-admin-actions"
+                            v-if="item.status === 'requested'"
+                        >
+                            <button
+                                class="button dark"
+                                type="button"
+                                :disabled="busy"
+                                @click="reviewReturn(item.id, 'approved')"
+                            >
+                                {{ t('Approve request') }}
+                            </button>
+                            <button
+                                class="button outline"
+                                type="button"
+                                :disabled="busy"
+                                @click="reviewReturn(item.id, 'declined')"
+                            >
+                                {{ t('Decline request') }}
+                            </button>
+                        </div>
+                        <button
+                            v-else
+                            class="button dark"
+                            type="button"
+                            :disabled="busy"
+                            @click="reviewReturn(item.id, 'completed')"
+                        >
+                            {{ t('Mark completed') }}
+                        </button>
+                    </div>
+                </article>
+                <nav
+                    v-if="returnRequests.links.length > 3"
+                    class="pagination"
+                    :aria-label="t('Return request pages')"
+                >
+                    <template v-for="(link, i) in returnRequests.links" :key="i"
+                        ><Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="{ active: link.active }"
+                            preserve-state
+                            preserve-scroll
+                            ><span v-text="paginationLabel(link.label)" /></Link
+                        ><span v-else v-text="paginationLabel(link.label)"
+                    /></template>
+                </nav>
+            </div>
             <div v-if="tab === 'Payments'">
                 <div class="admin-card">
                     <h3>{{ t('Integrations') }}</h3>

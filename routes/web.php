@@ -8,6 +8,7 @@ use App\Http\Controllers\CompareController;
 use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderReturnController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductQuestionController;
@@ -50,7 +51,9 @@ Route::get('/ready', function () {
             && Schema::hasTable('product_review_comments')
             && Schema::hasTable('support_conversations')
             && Schema::hasTable('support_messages')
-            && Schema::hasTable('notifications');
+            && Schema::hasTable('notifications')
+            && Schema::hasColumn('product_reviews', 'photo_path')
+            && Schema::hasTable('order_return_requests');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -96,6 +99,7 @@ Route::middleware('auth')->prefix('settings/addresses')->name('addresses.')->gro
     Route::delete('/{address}', [AddressBookController::class, 'destroy'])->name('destroy');
 });
 Route::post('/orders/{reference}/reorder', [OrderController::class, 'reorder'])->middleware(['auth', 'throttle:5,1'])->name('orders.reorder');
+Route::post('/orders/{reference}/returns', [OrderReturnController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('orders.returns.store');
 Route::get('/orders/track/{reference}', [OrderController::class, 'show'])->name('orders.track');
 Route::post('/orders/{reference}/pay', [PaymentController::class, 'start'])->middleware('throttle:5,1')->name('payments.start');
 Route::post('/orders/{reference}/cancel', [OrderController::class, 'cancel'])->middleware('throttle:5,1')->name('orders.cancel');
@@ -119,6 +123,7 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::post('/payments/{attempt}/verify', [AdminController::class, 'verifyPayment'])->name('payments.verify');
     Route::patch('/orders/{order}', [AdminController::class, 'order'])->name('order');
     Route::patch('/orders/{order}/shipping', [AdminController::class, 'shipping'])->name('orders.shipping');
+    Route::patch('/returns/{returnRequest}', [OrderReturnController::class, 'review'])->name('returns.review');
     Route::post('/promotions', [AdminController::class, 'promotion'])->name('promotions.store');
     Route::patch('/promotions/{promotion}', [AdminController::class, 'togglePromotion'])->name('promotions.toggle');
     Route::patch('/questions/{question}', [ProductQuestionController::class, 'answer'])->name('questions.answer');

@@ -8,6 +8,8 @@ use App\Models\ProductReviewComment;
 use App\Models\User;
 use App\Notifications\StoreUpdate;
 use App\Repositories\ProductReviewRepository;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ProductReviews
@@ -24,14 +26,26 @@ class ProductReviews
         ];
     }
 
-    public function save(User $user, Product $product, array $data): void
+    public function save(User $user, Product $product, array $data, ?UploadedFile $photo = null): void
     {
         abort_unless($product->active, 404);
         $orderId = $this->reviews->eligibleOrderId($user, $product);
         if ($orderId === null) {
             throw ValidationException::withMessages(['review' => __('You can review a shoe after your paid order is fulfilled.')]);
         }
-        $this->reviews->save($user, $product, $orderId, $data);
+        $existing = ProductReview::where('user_id', $user->id)->where('product_id', $product->id)->first();
+        $newPath = $photo?->store('review-photos', 'public');
+        try {
+            $this->reviews->save($user, $product, $orderId, $data, $newPath);
+        } catch (\Throwable $exception) {
+            if ($newPath) {
+                Storage::disk('public')->delete($newPath);
+            }
+            throw $exception;
+        }
+        if ($newPath && $existing?->photo_path) {
+            Storage::disk('public')->delete($existing->photo_path);
+        }
     }
 
     public function toggleHelpful(User $user, Product $product, int $reviewId): bool

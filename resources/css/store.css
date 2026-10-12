@@ -2969,6 +2969,23 @@
     overflow-wrap: anywhere;
     white-space: pre-wrap;
 }
+.review-photo {
+    display: block;
+    width: min(100%, 360px);
+    max-height: 400px;
+    margin: 14px 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    object-fit: cover;
+}
+.review-photo-hint {
+    color: var(--muted);
+    font-size: 10px;
+}
+.review-write .review-photo-input {
+    padding: 8px;
+    font-size: 11px;
+}
 .review-tags {
     display: flex;
     flex-wrap: wrap;
@@ -4101,7 +4118,7 @@ html[lang='ne'] .store .wordmark {
 }
 .size-guide-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
 }
 .size-guide-card {
@@ -4154,6 +4171,48 @@ html[lang='ne'] .store .wordmark {
     border-radius: 9px;
     background: #f7f5fa;
 }
+.size-finder-label {
+    display: block;
+    margin: 16px 0 7px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.size-finder-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.size-finder-input input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    background: #fff;
+}
+.size-finder-input > span {
+    color: var(--muted);
+    font-size: 12px;
+}
+.size-finder-result {
+    display: grid;
+    gap: 4px;
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid #dfd3f4;
+    border-radius: 10px;
+    background: #faf7ff;
+}
+.size-finder-result span,
+.size-finder-result small {
+    color: var(--muted);
+    font-size: 11px;
+}
+.size-finder-result strong {
+    color: #634395;
+    font-size: 24px;
+}
 .size-guide-sizes {
     display: flex;
     flex-wrap: wrap;
@@ -4204,6 +4263,14 @@ html[lang='ne'] .store .wordmark {
     .size-guide-next {
         align-items: flex-start;
         flex-direction: column;
+    }
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+    .size-guide-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .size-finder-card {
+        grid-column: 1 / -1;
     }
 }
 
@@ -4516,6 +4583,103 @@ html[lang='ne'] .store .wordmark {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: white;
+}
+.return-center {
+    margin-top: 28px;
+    padding: 26px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+}
+.return-center > p,
+.return-request-card > p,
+.return-admin-card > p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+.return-request-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+}
+.return-request-form label,
+.return-admin-controls label {
+    display: grid;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.return-request-form select,
+.return-request-form textarea,
+.return-admin-controls textarea {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    color: var(--ink);
+    background: #fff;
+    font: inherit;
+    font-size: 12px;
+}
+.return-request-form .return-details,
+.return-request-form .field-error,
+.return-request-form > button,
+.return-request-form > small {
+    grid-column: 1 / -1;
+}
+.return-request-form > small {
+    color: var(--muted);
+    font-size: 10px;
+}
+.return-request-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px;
+}
+.return-request-card {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fcfbfd;
+}
+.return-staff-note {
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f0ff;
+    color: var(--ink) !important;
+}
+.return-admin-controls {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+}
+.return-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.return-admin-card .section-heading h3 {
+    margin: 0 0 5px;
+}
+.return-admin-card a {
+    color: var(--brand);
+}
+@media (max-width: 700px) {
+    .return-center {
+        padding: 17px;
+    }
+    .return-request-form {
+        grid-template-columns: 1fr;
+    }
+    .return-request-form .return-details,
+    .return-request-form .field-error,
+    .return-request-form > button,
+    .return-request-form > small {
+        grid-column: 1;
+    }
 }
 @media (max-width: 760px) {
     .message-center {
