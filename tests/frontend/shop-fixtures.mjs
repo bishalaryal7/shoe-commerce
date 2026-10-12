@@ -92,6 +92,9 @@ export const fixtures = {
                     created_at: '2026-10-11T10:00:00Z',
                     helpful_count: 0,
                     voted_helpful: false,
+                    seller_reply: null,
+                    seller_replied_at: null,
+                    comments: [],
                 },
             ],
             links,
@@ -123,6 +126,11 @@ export const fixtures = {
         resumePayment: null,
     },
     'shop/Orders': { orders: { data: [order], links } },
+    'shop/Messages': {
+        conversations: { data: [], links },
+        activeConversation: null,
+    },
+    'shop/Notifications': { notifications: { data: [], links } },
     'shop/Wholesale': {
         account: { company: 'परीक्षण पसल', status: 'pending' },
     },
@@ -150,6 +158,8 @@ export const fixtures = {
         lowStockThreshold: 5,
         promotions: [],
         questions: { data: [], total: 0, links },
+        reviews: { data: [], total: 0, links },
+        conversations: { data: [], total: 0, links },
     },
     'admin/Access': {},
     'auth/Login': {

@@ -46,6 +46,7 @@ class ProductReviewRepository
         $query = DB::table('product_reviews')->select([
             'product_reviews.id', 'product_reviews.rating', 'product_reviews.fit',
             'product_reviews.title', 'product_reviews.body', 'product_reviews.created_at',
+            'product_reviews.seller_reply', 'product_reviews.seller_replied_at',
         ])->where('product_id', $product->id)
             ->addSelect(['helpful_count' => DB::table('product_review_helpful_votes')->selectRaw('COUNT(*)')
                 ->whereColumn('review_id', 'product_reviews.id')]);
@@ -64,10 +65,21 @@ class ProductReviewRepository
         $ids = $page->getCollection()->pluck('id');
         $voted = $user ? DB::table('product_review_helpful_votes')->where('user_id', $user->id)
             ->whereIn('review_id', $ids)->pluck('review_id') : collect();
+        $comments = DB::table('product_review_comments')
+            ->whereIn('product_review_id', $ids)
+            ->orderBy('id')
+            ->get(['id', 'product_review_id', 'body', 'is_staff', 'created_at'])
+            ->groupBy('product_review_id');
 
-        $page->getCollection()->transform(function ($review) use ($voted) {
+        $page->getCollection()->transform(function ($review) use ($voted, $comments) {
             $review->helpful_count = (int) $review->helpful_count;
             $review->voted_helpful = $voted->contains($review->id);
+            $review->comments = $comments->get($review->id, collect())->map(fn ($comment) => [
+                'id' => $comment->id,
+                'body' => $comment->body,
+                'is_staff' => (bool) $comment->is_staff,
+                'created_at' => $comment->created_at,
+            ])->values();
 
             return $review;
         });

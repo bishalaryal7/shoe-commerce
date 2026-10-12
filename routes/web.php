@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\AddressBookController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminSupportController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompareController;
+use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SizeGuideController;
 use App\Http\Controllers\StaffAccessController;
 use App\Http\Controllers\StockAlertController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\WholesaleController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -42,7 +45,12 @@ Route::get('/ready', function () {
         $ready = $ready && Schema::hasTable('product_reviews')
             && Schema::hasTable('stock_alerts') && Schema::hasTable('promotions')
             && Schema::hasTable('product_questions') && Schema::hasTable('user_addresses')
-            && Schema::hasColumn('orders', 'tracking_number');
+            && Schema::hasColumn('orders', 'tracking_number')
+            && Schema::hasColumn('product_reviews', 'seller_reply')
+            && Schema::hasTable('product_review_comments')
+            && Schema::hasTable('support_conversations')
+            && Schema::hasTable('support_messages')
+            && Schema::hasTable('notifications');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -56,6 +64,16 @@ Route::post('/products/{product:slug}/questions', [ProductQuestionController::cl
 Route::get('/size-guide', SizeGuideController::class)->name('size-guide');
 Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('products.reviews.store');
 Route::post('/products/{product:slug}/reviews/{review}/helpful', [ProductReviewController::class, 'helpful'])->middleware(['auth', 'throttle:30,1'])->whereNumber('review')->name('products.reviews.helpful');
+Route::post('/products/{product:slug}/reviews/{review}/comments', [ProductReviewController::class, 'comment'])->middleware(['auth', 'throttle:10,1'])->whereNumber('review')->name('products.reviews.comments');
+Route::middleware('auth')->group(function () {
+    Route::get('/messages', [SupportController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [SupportController::class, 'store'])->middleware('throttle:5,1')->name('messages.store');
+    Route::post('/messages/{conversation}', [SupportController::class, 'reply'])->middleware('throttle:10,1')->name('messages.reply');
+    Route::patch('/messages/{conversation}/close', [SupportController::class, 'close'])->name('messages.close');
+    Route::get('/notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [CustomerNotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/read', [CustomerNotificationController::class, 'read'])->name('notifications.read');
+});
 Route::get('/saved', [SavedProductsController::class, 'index'])->name('saved.index');
 Route::get('/compare', [CompareController::class, 'index'])->name('compare.index');
 Route::post('/compare/{product}', [CompareController::class, 'toggle'])->middleware('throttle:30,1')->name('compare.toggle');
@@ -104,6 +122,9 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::post('/promotions', [AdminController::class, 'promotion'])->name('promotions.store');
     Route::patch('/promotions/{promotion}', [AdminController::class, 'togglePromotion'])->name('promotions.toggle');
     Route::patch('/questions/{question}', [ProductQuestionController::class, 'answer'])->name('questions.answer');
+    Route::patch('/reviews/{review}', [ProductReviewController::class, 'reply'])->name('reviews.reply');
+    Route::post('/messages/{conversation}', [AdminSupportController::class, 'reply'])->middleware('throttle:20,1')->name('messages.reply');
+    Route::patch('/messages/{conversation}/status', [AdminSupportController::class, 'status'])->name('messages.status');
 });
 require __DIR__.'/settings.php';
 require __DIR__.'/connections.php';

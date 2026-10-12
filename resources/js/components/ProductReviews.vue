@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ReviewCommentForm from '@/components/ReviewCommentForm.vue';
 import { useLocale } from '@/composables/useLocale';
 import type { ShopSharedProps } from '@/types/shop';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
@@ -14,6 +15,14 @@ interface Review {
     created_at: string;
     helpful_count: number;
     voted_helpful: boolean;
+    seller_reply: string | null;
+    seller_replied_at: string | null;
+    comments: {
+        id: number;
+        body: string;
+        is_staff: boolean;
+        created_at: string;
+    }[];
 }
 const props = defineProps<{
     productSlug: string;
@@ -197,6 +206,16 @@ const fitOptions = ['small', 'true', 'large'] as const;
                         }}</span>
                     </div>
                     <p>{{ review.body }}</p>
+                    <aside
+                        v-if="review.seller_reply"
+                        class="seller-review-reply"
+                    >
+                        <strong>{{ t('A reply from EVE Shoes') }}</strong>
+                        <p>{{ review.seller_reply }}</p>
+                        <small v-if="review.seller_replied_at">{{
+                            date(review.seller_replied_at)
+                        }}</small>
+                    </aside>
                     <div class="review-helpful">
                         <button
                             v-if="
@@ -233,6 +252,11 @@ const fitOptions = ['small', 'true', 'large'] as const;
                             }}
                         </span>
                     </div>
+                    <ReviewCommentForm
+                        :product-slug="productSlug"
+                        :review-id="review.id"
+                        :comments="review.comments"
+                    />
                 </article>
                 <div v-if="!reviews.data.length" class="review-empty">
                     <Star :size="22" />

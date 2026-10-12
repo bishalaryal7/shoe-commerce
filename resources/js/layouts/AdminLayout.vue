@@ -2,9 +2,10 @@
 import LanguageSwitch from '@/components/LanguageSwitch.vue';
 import { useLocale } from '@/composables/useLocale';
 import type { ShopSharedProps } from '@/types/shop';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowUpRight,
+    Bell,
     Boxes,
     Check,
     ChevronRight,
@@ -15,7 +16,8 @@ import {
     ShoppingBag,
     UsersRound,
 } from 'lucide-vue-next';
-const { t } = useLocale();
+import { onMounted, onUnmounted } from 'vue';
+const { t, num } = useLocale();
 const tab = defineModel<string>('tab', { required: true });
 const page = usePage<ShopSharedProps>();
 const sections = [
@@ -24,9 +26,26 @@ const sections = [
     { label: 'Payments', icon: CreditCard },
     { label: 'Partners', icon: UsersRound },
     { label: 'Promotions', icon: CreditCard },
+    { label: 'Reviews', icon: UsersRound },
     { label: 'Questions', icon: UsersRound },
+    { label: 'Messages', icon: UsersRound },
     { label: 'Team', icon: UsersRound },
 ];
+let notificationPoll: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+    if (page.props.auth.user) {
+        notificationPoll = setInterval(
+            () =>
+                router.reload({
+                    only: ['auth'],
+                }),
+            60_000,
+        );
+    }
+});
+onUnmounted(() => {
+    if (notificationPoll) clearInterval(notificationPoll);
+});
 </script>
 <template>
     <div class="store admin-shell">
@@ -55,6 +74,11 @@ const sections = [
                 <Link href="/" class="view-store">
                     {{ t('Visit storefront') }}
                     <ArrowUpRight :size="16" /></Link
+                ><Link href="/notifications">
+                    <Bell :size="16" /> {{ t('Notifications') }}
+                    <span v-if="page.props.auth.unreadNotifications"
+                        >({{ num(page.props.auth.unreadNotifications) }})</span
+                    > </Link
                 ><Link href="/settings/profile"
                     ><Settings2 :size="16" /> {{ t('Account settings') }} </Link
                 ><Link href="/logout" method="post" as="button"

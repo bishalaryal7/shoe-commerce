@@ -23,4 +23,9 @@ class ProductQuestion extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function answeredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'answered_by');
+    }
 }

@@ -68,7 +68,8 @@ class CommerceTest extends TestCase
 
     public function test_order_uses_server_prices_and_duplicate_submission_reserves_stock_once(): void
     {
-        $this->actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $this->actingAs($user);
         $variant = Product::first()->variants()->first();
         $token = (string) Str::uuid();
         $this->withSession(['cart' => [$variant->id => 2], 'checkout_token' => $token])->post('/checkout', $this->payload($token))->assertRedirect();
@@ -79,6 +80,7 @@ class CommerceTest extends TestCase
         $this->post('/checkout', $this->payload($token))->assertRedirect();
         $this->assertSame(1, Order::count());
         $this->assertSame(18, $variant->fresh()->stock);
+        $this->assertSame('order', $user->notifications()->firstOrFail()->data['category']);
     }
 
     public function test_stock_shortage_rolls_back_the_entire_order(): void

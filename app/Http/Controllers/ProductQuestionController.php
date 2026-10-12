@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductQuestion;
+use App\Notifications\StoreUpdate;
 use Illuminate\Http\Request;
 
 class ProductQuestionController extends Controller
@@ -21,6 +22,14 @@ class ProductQuestionController extends Controller
     {
         $data = $request->validate(['answer' => ['required', 'string', 'min:2', 'max:2000']]);
         $question->update(['answer' => trim($data['answer']), 'answered_by' => $request->user()->id, 'answered_at' => now()]);
+        if ($question->user) {
+            $question->user->notify(new StoreUpdate(
+                __('Your product question has an answer'),
+                __('Open the shoe page to read the answer from our team.'),
+                '/products/'.$question->product()->value('slug').'#questions',
+                'product_answer',
+            ));
+        }
 
         return back()->with('success', __('Product answer published.'));
     }

@@ -7,7 +7,9 @@ use App\Models\OrderEmail;
 use App\Models\PaymentAttempt;
 use App\Models\Product;
 use App\Models\ProductQuestion;
+use App\Models\ProductReview;
 use App\Models\Promotion;
+use App\Models\SupportConversation;
 use App\Models\Variant;
 use App\Models\WholesaleAccount;
 use App\Payments\KhaltiGateway;
@@ -46,6 +48,9 @@ class AdminWorkspace
             'lowStockThreshold' => max(0, config('shop.low_stock_threshold')),
             'promotions' => Promotion::latest('id')->get(),
             'questions' => ProductQuestion::with(['product:id,name,slug', 'user:id,name'])->latest('id')->paginate(20, ['*'], 'questions_page')->withQueryString(),
+            'reviews' => ProductReview::with(['product:id,name,slug', 'user:id,name,email'])->latest('id')->paginate(20, ['*'], 'reviews_page')->withQueryString(),
+            'conversations' => SupportConversation::with(['user:id,name,email', 'messages' => fn ($messages) => $messages->orderByDesc('id')->limit(8)])
+                ->latest('last_message_at')->paginate(20, ['*'], 'messages_page')->withQueryString(),
         ];
     }
 

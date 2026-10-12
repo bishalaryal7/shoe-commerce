@@ -40,6 +40,14 @@ const props = defineProps<{
             created_at: string;
             helpful_count: number;
             voted_helpful: boolean;
+            seller_reply: string | null;
+            seller_replied_at: string | null;
+            comments: {
+                id: number;
+                body: string;
+                is_staff: boolean;
+                created_at: string;
+            }[];
         }[];
         links: { url: string | null; label: string; active: boolean }[];
     };
@@ -475,6 +483,12 @@ const available = computed(() =>
                         'No answered questions yet. Ask our team and we’ll help you choose.',
                     )
                 }}
+            </p>
+            <p class="product-contact-link">
+                {{ t('Need a personal recommendation or order help?') }}
+                <Link :href="page.props.auth.user ? '/messages' : '/login'">{{
+                    t('Message our customer care team')
+                }}</Link>
             </p>
         </section>
         ></ShopLayout

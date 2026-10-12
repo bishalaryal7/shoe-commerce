@@ -7,16 +7,18 @@ import {
     ArrowLeftRight,
     ArrowRight,
     ArrowUpRight,
+    Bell,
     Check,
     Heart,
     Menu,
+    MessageCircle,
     Mountain,
     Search,
     ShoppingBag,
     UserRound,
     X,
 } from 'lucide-vue-next';
-import { computed, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 const { t, num } = useLocale();
 const page = usePage<ShopSharedProps>();
 const open = ref(false);
@@ -58,6 +60,21 @@ watch(
     { immediate: true },
 );
 onUnmounted(() => clearTimeout(timer));
+let notificationPoll: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+    if (user.value) {
+        notificationPoll = setInterval(
+            () =>
+                router.reload({
+                    only: ['auth'],
+                }),
+            60_000,
+        );
+    }
+});
+onUnmounted(() => {
+    if (notificationPoll) clearInterval(notificationPoll);
+});
 const current = computed(() => page.url.split('?')[0]);
 </script>
 <template>
@@ -107,6 +124,16 @@ const current = computed(() => page.url.split('?')[0]);
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
                             ><Link href="/orders">{{ t('Your orders') }}</Link
+                            ><Link href="/messages">{{ t('Messages') }}</Link
+                            ><Link href="/notifications"
+                                >{{ t('Notifications') }}
+                                <span v-if="page.props.auth.unreadNotifications"
+                                    >({{
+                                        num(
+                                            page.props.auth.unreadNotifications,
+                                        )
+                                    }})</span
+                                ></Link
                             ><Link href="/settings/addresses">{{
                                 t('Address book')
                             }}</Link
@@ -194,6 +221,23 @@ const current = computed(() => page.url.split('?')[0]);
                     ></Link
                 >
                 <Link
+                    v-if="user"
+                    href="/messages"
+                    :class="{ selected: current === '/messages' }"
+                    @click="open = false"
+                    ><MessageCircle :size="15" /> {{ t('Messages') }}</Link
+                >
+                <Link
+                    v-if="user"
+                    href="/notifications"
+                    :class="{ selected: current === '/notifications' }"
+                    @click="open = false"
+                    ><Bell :size="15" /> {{ t('Notifications')
+                    }}<span v-if="page.props.auth.unreadNotifications"
+                        >({{ num(page.props.auth.unreadNotifications) }})</span
+                    ></Link
+                >
+                <Link
                     href="/wholesale"
                     :class="{ selected: current === '/wholesale' }"
                     @click="open = false"
@@ -246,6 +290,9 @@ const current = computed(() => page.url.split('?')[0]);
                 ><Link href="/size-guide">{{ t('Size guide') }}</Link
                 ><Link href="/saved"> {{ t('Saved shoes') }} </Link
                 ><Link href="/compare"> {{ t('Compare shoes') }} </Link
+                ><Link :href="user ? '/messages' : '/login'">{{
+                    t('Contact EVE Shoes')
+                }}</Link
                 ><Link href="/wholesale"> {{ t('Wholesale partners') }} </Link
                 ><Link :href="user ? '/dashboard' : '/login'">
                     {{ t('Your account') }}

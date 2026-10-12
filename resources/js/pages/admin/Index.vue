@@ -102,9 +102,48 @@ const props = defineProps<{
         product: { name: string; slug: string };
         user: { name: string } | null;
     }>;
+    reviews: Paginated<{
+        id: number;
+        rating: number;
+        title: string;
+        body: string;
+        seller_reply: string | null;
+        user: { name: string; email: string };
+        product: { name: string; slug: string };
+    }>;
+    conversations: Paginated<{
+        id: number;
+        subject: string;
+        status: string;
+        user: { name: string; email: string };
+        messages: {
+            id: number;
+            body: string;
+            is_staff: boolean;
+            created_at: string;
+            sender: { name: string };
+        }[];
+    }>;
 }>();
 const page = usePage();
-const tab = ref('Orders');
+const requestedTab = new URL(page.url, 'http://eve.local').searchParams.get(
+    'tab',
+);
+const tab = ref(
+    [
+        'Orders',
+        'Inventory',
+        'Payments',
+        'Partners',
+        'Promotions',
+        'Reviews',
+        'Questions',
+        'Messages',
+        'Team',
+    ].includes(requestedTab ?? '')
+        ? requestedTab!
+        : 'Orders',
+);
 const inventoryFile = ref<File | null>(null);
 const filters = ref({
     search: props.filters.search ?? '',
@@ -140,6 +179,8 @@ const promotion = ref({
     ends_at: '',
 });
 const answers = ref<Record<number, string>>({});
+const reviewReplies = ref<Record<number, string>>({});
+const customerReplies = ref<Record<number, string>>({});
 function post(url: string, data: Record<string, any> = {}) {
     busy.value = true;
     router.post(url, data, {
@@ -194,11 +235,17 @@ function importInventory() {
                             ? t('Every payment, accounted for.')
                             : tab === 'Promotions'
                               ? t('Offers that bring customers back.')
-                              : tab === 'Questions'
-                                ? t('Help shoppers choose with confidence.')
-                                : tab === 'Team'
-                                  ? t('Your people. Your workspace.')
-                                  : t('Good partners. Better business.')
+                              : tab === 'Reviews'
+                                ? t('Customer reviews, answered with care.')
+                                : tab === 'Messages'
+                                  ? t(
+                                        'Every customer conversation, in one place.',
+                                    )
+                                  : tab === 'Questions'
+                                    ? t('Help shoppers choose with confidence.')
+                                    : tab === 'Team'
+                                      ? t('Your people. Your workspace.')
+                                      : t('Good partners. Better business.')
                 }}
             </h1>
             <p class="workspace-description">
@@ -219,17 +266,25 @@ function importInventory() {
                               ? t(
                                     'Create discount codes for seasonal campaigns and wholesale orders.',
                                 )
-                              : tab === 'Questions'
+                              : tab === 'Reviews'
                                 ? t(
-                                      'Answer product questions and publish useful fit, material, and care advice.',
+                                      'Reply publicly to verified buyer feedback and let customers know their experience matters.',
                                   )
-                                : tab === 'Team'
+                                : tab === 'Messages'
                                   ? t(
-                                        'Manage access for registered team members.',
+                                        'Reply privately to order, delivery, fit, and product questions from your customers.',
                                     )
-                                  : t(
-                                        'Review applications and manage your wholesale relationships.',
-                                    )
+                                  : tab === 'Questions'
+                                    ? t(
+                                          'Answer product questions and publish useful fit, material, and care advice.',
+                                      )
+                                    : tab === 'Team'
+                                      ? t(
+                                            'Manage access for registered team members.',
+                                        )
+                                      : t(
+                                            'Review applications and manage your wholesale relationships.',
+                                        )
                 }}
             </p>
             <div class="stats-grid">
@@ -1031,6 +1086,190 @@ function importInventory() {
                     :aria-label="t('Product question pages')"
                 >
                     <template v-for="(link, i) in questions.links" :key="i"
+                        ><Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="{ active: link.active }"
+                            preserve-state
+                            preserve-scroll
+                            ><span v-text="paginationLabel(link.label)" /></Link
+                        ><span v-else v-text="paginationLabel(link.label)"
+                    /></template>
+                </nav>
+            </div>
+            <div v-if="tab === 'Reviews'">
+                <p v-if="!reviews.data.length" class="empty-state">
+                    {{ t('No customer reviews yet.') }}
+                </p>
+                <article
+                    v-for="item in reviews.data"
+                    :key="item.id"
+                    class="admin-card"
+                >
+                    <div class="section-heading">
+                        <div>
+                            <h3>{{ t(item.product.name) }}</h3>
+                            <small
+                                >{{ item.user.name }} ·
+                                {{ item.user.email }}</small
+                            >
+                        </div>
+                        <span class="status-pill"
+                            >{{ num(item.rating) }} / 5 ★</span
+                        >
+                    </div>
+                    <strong>{{ item.title }}</strong>
+                    <p>{{ item.body }}</p>
+                    <p v-if="item.seller_reply" class="seller-review-reply">
+                        <strong>{{ t('Current shop reply') }}</strong
+                        ><br />{{ item.seller_reply }}
+                    </p>
+                    <form
+                        class="order-actions"
+                        @submit.prevent="
+                            patch('/admin/reviews/' + item.id, {
+                                reply:
+                                    reviewReplies[item.id] ??
+                                    item.seller_reply ??
+                                    '',
+                            })
+                        "
+                    >
+                        <label
+                            >{{ t('Reply publicly as EVE Shoes') }}
+                            <textarea
+                                v-model="reviewReplies[item.id]"
+                                required
+                                minlength="2"
+                                maxlength="2000"
+                                :placeholder="
+                                    t(
+                                        'Thank the customer and address their feedback…',
+                                    )
+                                "
+                            />
+                        </label>
+                        <button class="button dark" :disabled="busy">
+                            {{
+                                item.seller_reply
+                                    ? t('Update public reply')
+                                    : t('Publish public reply')
+                            }}
+                        </button>
+                    </form>
+                    <Link
+                        :href="'/products/' + item.product.slug + '#reviews'"
+                        class="text-button"
+                        >{{ t('View on product page') }}</Link
+                    >
+                </article>
+                <nav
+                    v-if="reviews.links.length > 3"
+                    class="pagination"
+                    :aria-label="t('Customer review pages')"
+                >
+                    <template v-for="(link, i) in reviews.links" :key="i"
+                        ><Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="{ active: link.active }"
+                            preserve-state
+                            preserve-scroll
+                            ><span v-text="paginationLabel(link.label)" /></Link
+                        ><span v-else v-text="paginationLabel(link.label)"
+                    /></template>
+                </nav>
+            </div>
+            <div v-if="tab === 'Messages'">
+                <p v-if="!conversations.data.length" class="empty-state">
+                    {{ t('No customer messages yet.') }}
+                </p>
+                <article
+                    v-for="item in conversations.data"
+                    :key="item.id"
+                    class="admin-card"
+                >
+                    <div class="section-heading">
+                        <div>
+                            <h3>{{ item.subject }}</h3>
+                            <small
+                                >{{ item.user.name }} ·
+                                {{ item.user.email }}</small
+                            >
+                        </div>
+                        <span class="status-pill">{{
+                            t(label(item.status))
+                        }}</span>
+                    </div>
+                    <div class="admin-conversation">
+                        <div
+                            v-for="message in item.messages.slice().reverse()"
+                            :key="message.id"
+                            class="admin-message"
+                            :class="{ 'from-team': message.is_staff }"
+                        >
+                            <strong>{{
+                                message.is_staff
+                                    ? t('EVE Shoes team')
+                                    : item.user.name
+                            }}</strong>
+                            <small>{{ date(message.created_at, true) }}</small>
+                            <p>{{ message.body }}</p>
+                        </div>
+                    </div>
+                    <form
+                        class="order-actions"
+                        @submit.prevent="
+                            post('/admin/messages/' + item.id, {
+                                body: customerReplies[item.id] ?? '',
+                            })
+                        "
+                    >
+                        <label
+                            >{{ t('Reply to customer')
+                            }}<textarea
+                                v-model="customerReplies[item.id]"
+                                required
+                                minlength="2"
+                                maxlength="4000"
+                                :placeholder="
+                                    t('Write a helpful, personal reply…')
+                                "
+                            />
+                        </label>
+                        <button class="button dark" :disabled="busy">
+                            {{ t('Send reply') }}
+                        </button>
+                    </form>
+                    <label class="admin-status-control"
+                        >{{ t('Conversation status') }}
+                        <select
+                            :value="item.status"
+                            @change="
+                                patch(
+                                    '/admin/messages/' + item.id + '/status',
+                                    {
+                                        status: (
+                                            $event.target as HTMLSelectElement
+                                        ).value,
+                                    },
+                                )
+                            "
+                        >
+                            <option value="open">{{ t('Open') }}</option>
+                            <option value="answered">
+                                {{ t('Answered') }}
+                            </option>
+                            <option value="closed">{{ t('Resolved') }}</option>
+                        </select>
+                    </label>
+                </article>
+                <nav
+                    v-if="conversations.links.length > 3"
+                    class="pagination"
+                    :aria-label="t('Customer message pages')"
+                >
+                    <template v-for="(link, i) in conversations.links" :key="i"
                         ><Link
                             v-if="link.url"
                             :href="link.url"

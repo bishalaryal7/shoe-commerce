@@ -17,7 +17,7 @@ php artisan serve --port=8002
 
 Open http://127.0.0.1:8002. Match `APP_URL` to this address; reuse an existing server on that port. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation and unsent mail retries. Use `npm run dev` while editing frontend code.
 
-MariaDB persists in the Docker volume. The local `.env` selects the host port through `DB_PORT` (currently 3340); Docker forwards it to MariaDB port 3306. Database: `shoe_commerce`, user: `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
+MariaDB persists in the Docker volume. The local `.env` selects the host port through `DB_PORT` (set it to the port published by Docker Desktop, such as 3309); Docker forwards it to MariaDB port 3306. Database: `shoe_commerce`, user: `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
 
 Mailpit: http://localhost:8026. Local SMTP uses 127.0.0.1:1026. `php artisan shop:mail-test` sends to the private test address configured in `.env`, captured in Mailpit; it does not deliver to Gmail. Configure a real SMTP provider later. `php artisan shop:mail-outbox` retries unsent notifications.
 
@@ -27,7 +27,7 @@ After signing in as staff, use **Inventory** to edit names, descriptions, catego
 
 ## Brand and languages
 
-EVE Shoes takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Storefront, checkout, order, review and authentication interface copy are translated. Inventory supports optional Nepali product names and descriptions, with English fallback for merchant content. Search matches either name. Run `php artisan migrate` before editing bilingual fields or using saved shoes and reviews.
+EVE Shoes takes its name from Everest. The storefront uses the slogan **Reach higher. Walk further.** The header includes English/नेपाली selection, persisted in the session and a language-preference cookie. Storefront, checkout, order, review, customer message, notification and authentication interface copy are translated. Inventory supports optional Nepali product names and descriptions, with English fallback for merchant content. Search matches either name. Run `php artisan migrate` before editing bilingual fields or using saved shoes and reviews.
 
 ## Application structure and validation
 
@@ -43,6 +43,7 @@ After the initial owner grant, **Admin → Team** lets staff grant/revoke access
 - Saved shoes (guest session, merged into the signed-in account), recently viewed shoes with a clear-history control, and practical foot-measuring guidance on product pages. Guests' saved shoes remain on their current browser until sign-in; signed-in lists persist in MySQL.
 - Side-by-side comparison for up to three shoes, including current customer or approved wholesale price, available sizes, color options, review rating, and product description. The comparison list stays in the current browser session.
 - Verified-purchase reviews with 1–5 star ratings and optional fit feedback, sorted by newest, rating or helpful votes. Signed-in accounts can vote once per review and remove their vote; authors cannot vote on their own review. Public pages do not expose buyer or order details. Reviews are not prefilled with demo ratings.
+- Public shop replies to reviews, customer comments on reviews, and private customer care conversations with staff replies. Customers receive an in-app notification for shop replies, product answers, order progress and support messages; unread counts refresh as they browse.
 - Retail and approved wholesale pricing, shared inventory, partner applications and a 12-pair wholesale minimum.
 - Server-calculated checkout totals, immutable order item snapshots, atomic inventory reservation and duplicate submission protection.
 - Customer order history, private signed guest tracking links, unpaid order cancellation and resuming unexpired provider checkout.

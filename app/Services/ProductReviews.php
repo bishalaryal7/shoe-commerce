@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductReview;
+use App\Models\ProductReviewComment;
 use App\Models\User;
+use App\Notifications\StoreUpdate;
 use App\Repositories\ProductReviewRepository;
 use Illuminate\Validation\ValidationException;
 
@@ -36,5 +39,43 @@ class ProductReviews
         abort_unless($product->active, 404);
 
         return $this->reviews->toggleHelpful($user, $product, $reviewId);
+    }
+
+    public function reply(User $staff, ProductReview $review, string $reply): void
+    {
+        $review->update([
+            'seller_reply' => trim($reply),
+            'seller_replied_by' => $staff->id,
+            'seller_replied_at' => now(),
+        ]);
+
+        if ($review->user) {
+            $review->user->notify(new StoreUpdate(
+                __('EVE Shoes replied to your review'),
+                __('Open the product page to read the shop reply.'),
+                '/products/'.$review->product()->value('slug').'#reviews',
+                'review_reply',
+            ));
+        }
+    }
+
+    public function comment(User $user, Product $product, ProductReview $review, string $body): void
+    {
+        abort_unless($product->active && $review->product_id === $product->id, 404);
+
+        ProductReviewComment::create([
+            'product_review_id' => $review->id,
+            'user_id' => $user->id,
+            'body' => trim($body),
+        ]);
+
+        if ($review->user && $review->user->isNot($user)) {
+            $review->user->notify(new StoreUpdate(
+                __('Someone commented on your review'),
+                __('Open the product page to read the comment.'),
+                '/products/'.$product->slug.'#reviews',
+                'review_comment',
+            ));
+        }
     }
 }
