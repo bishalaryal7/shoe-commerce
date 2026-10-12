@@ -93,7 +93,13 @@ const form = useForm({
                         </p>
                         <Link href="/" class="button dark">
                             {{ t('Explore the collection ↗') }}
-                        </Link></template
+                        </Link>
+                        <Link
+                            v-if="account.status === 'approved'"
+                            href="/merchant"
+                            class="button outline"
+                            >{{ t('Build your own storefront') }}</Link
+                        > </template
                     ><template v-else-if="!(page.props.auth as any)?.user"
                         ><h2>{{ t('Join the partner program') }}</h2>
                         <p>

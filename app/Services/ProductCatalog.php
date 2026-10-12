@@ -38,12 +38,76 @@ class ProductCatalog
         }
         $previousImage = $product->image;
         try {
-            $this->products->update($product, ['image' => Storage::disk('public')->url($path)]);
+            DB::transaction(function () use ($product, $path, $previousImage) {
+                $previousPath = parse_url($previousImage, PHP_URL_PATH);
+                if (is_string($previousPath) && str_starts_with($previousPath, '/storage/products/')) {
+                    $product->photos()->where('path', substr($previousPath, strlen('/storage/')))->delete();
+                }
+                $product->photos()->increment('position');
+                $product->photos()->create(['path' => $path, 'position' => 0]);
+                $this->products->update($product, ['image' => Storage::disk('public')->url($path)]);
+            });
         } catch (\Throwable $e) {
             Storage::disk('public')->delete($path);
             throw $e;
         }
         $this->deletePreviousPhoto($previousImage, $path);
+    }
+
+    public function addPhoto(Product $product, UploadedFile $image): void
+    {
+        if ($product->photos()->count() >= 8) {
+            throw ValidationException::withMessages(['image' => __('A product can have up to eight photos.')]);
+        }
+        $path = $image->store('products', 'public');
+        if (! $path) {
+            throw ValidationException::withMessages(['image' => __('Photo upload could not be saved.')]);
+        }
+        try {
+            $product->photos()->create(['path' => $path, 'position' => $product->photos()->max('position') + 1]);
+        } catch (\Throwable $e) {
+            Storage::disk('public')->delete($path);
+            throw $e;
+        }
+    }
+
+    public function removePhoto(Product $product, int $photoId): void
+    {
+        $photo = $product->photos()->findOrFail($photoId);
+        abort_if($product->photos()->count() <= 1, 422, __('Keep at least one uploaded product photo.'));
+        $wasPrimary = $product->image === Storage::disk('public')->url($photo->path);
+        DB::transaction(function () use ($product, $photo, $wasPrimary) {
+            $photo->delete();
+            if ($wasPrimary) {
+                $next = $product->photos()->firstOrFail();
+                $product->update(['image' => Storage::disk('public')->url($next->path)]);
+            }
+        });
+        Storage::disk('public')->delete($photo->path);
+    }
+
+    public function makePrimary(Product $product, int $photoId): void
+    {
+        $photo = $product->photos()->findOrFail($photoId);
+        $product->update(['image' => Storage::disk('public')->url($photo->path)]);
+    }
+
+    public function movePhoto(Product $product, int $photoId, string $direction): void
+    {
+        $photos = $product->photos()->get();
+        $index = $photos->search(fn ($photo) => $photo->id === $photoId);
+        abort_if($index === false, 404);
+        $neighborIndex = $index + ($direction === 'up' ? -1 : 1);
+        if (! $photos->get($neighborIndex)) {
+            return;
+        }
+        $ordered = $photos->all();
+        [$ordered[$index], $ordered[$neighborIndex]] = [$ordered[$neighborIndex], $ordered[$index]];
+        DB::transaction(function () use ($ordered) {
+            foreach ($ordered as $position => $photo) {
+                $photo->update(['position' => $position]);
+            }
+        });
     }
 
     private function deletePreviousPhoto(string $url, string $newPath): void

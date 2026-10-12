@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, CheckCheck, MessageCircle, Send } from 'lucide-vue-next';
 import { ref } from 'vue';
 
@@ -27,8 +27,11 @@ const props = defineProps<{
     activeConversation: Conversation | null;
 }>();
 const { t, date, label, paginationLabel } = useLocale();
-const composeOpen = ref(!props.conversations.data.length);
-const newForm = useForm({ subject: '', body: '' });
+const page = usePage();
+const initialSubject =
+    new URL(page.url, 'http://localhost').searchParams.get('subject') ?? '';
+const composeOpen = ref(!!initialSubject || !props.conversations.data.length);
+const newForm = useForm({ subject: initialSubject, body: '' });
 const replyForm = useForm({ body: '' });
 function startConversation() {
     newForm.post('/messages', {

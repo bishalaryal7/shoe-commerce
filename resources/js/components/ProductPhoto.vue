@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useLocale } from '@/composables/useLocale';
 import type { Product } from '@/types/shop';
-import { useForm } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import { Upload } from 'lucide-vue-next';
 import { onBeforeUnmount, ref, watch } from 'vue';
 const { t, num } = useLocale();
 defineProps<{ product: Product }>();
 const form = useForm({ image: null as File | null });
+const galleryForm = useForm({ image: null as File | null });
 const preview = ref<string | null>(null);
 const input = ref<HTMLInputElement | null>(null);
 watch(
@@ -40,8 +41,128 @@ function file(event: Event) {
     }
     form.image = selected;
 }
+function removePhoto(productId: number, photoId: number) {
+    if (!window.confirm(t('Remove this photo?'))) return;
+    router.delete('/admin/products/' + productId + '/photos/' + photoId, {
+        preserveScroll: true,
+    });
+}
 </script>
 <template>
+    <div class="admin-gallery" v-if="product.photos?.length">
+        <h4>{{ t('Product photos') }}</h4>
+        <div class="admin-gallery-list">
+            <div
+                v-for="photo in product.photos"
+                :key="photo.id"
+                class="admin-gallery-item"
+            >
+                <img
+                    :src="photo.url || '/storage/' + photo.path"
+                    :alt="t(product.name)"
+                />
+                <button
+                    type="button"
+                    class="text-button"
+                    @click="
+                        router.patch(
+                            '/admin/products/' +
+                                product.id +
+                                '/photos/' +
+                                photo.id +
+                                '/primary',
+                            {},
+                            { preserveScroll: true },
+                        )
+                    "
+                >
+                    {{
+                        product.image ===
+                        (photo.url || '/storage/' + photo.path)
+                            ? t('Primary photo')
+                            : t('Make primary')
+                    }}
+                </button>
+                <div class="admin-gallery-move">
+                    <button
+                        type="button"
+                        :disabled="product.photos?.[0]?.id === photo.id"
+                        @click="
+                            router.patch(
+                                '/admin/products/' +
+                                    product.id +
+                                    '/photos/' +
+                                    photo.id +
+                                    '/move',
+                                { direction: 'up' },
+                                { preserveScroll: true },
+                            )
+                        "
+                    >
+                        {{ t('Move earlier') }}</button
+                    ><button
+                        type="button"
+                        :disabled="
+                            product.photos?.[product.photos.length - 1]?.id ===
+                            photo.id
+                        "
+                        @click="
+                            router.patch(
+                                '/admin/products/' +
+                                    product.id +
+                                    '/photos/' +
+                                    photo.id +
+                                    '/move',
+                                { direction: 'down' },
+                                { preserveScroll: true },
+                            )
+                        "
+                    >
+                        {{ t('Move later') }}
+                    </button>
+                </div>
+                <button
+                    type="button"
+                    class="text-button"
+                    @click="removePhoto(product.id, photo.id)"
+                >
+                    {{ t('Remove photo') }}
+                </button>
+            </div>
+        </div>
+    </div>
+    <form
+        class="product-photo-form"
+        @submit.prevent="
+            galleryForm.post('/admin/products/' + product.id + '/photos', {
+                preserveScroll: true,
+                onSuccess: () => galleryForm.reset(),
+            })
+        "
+    >
+        <div>
+            <strong>{{ t('Add gallery photo') }}</strong>
+            <p>{{ t('Show more angles, details, and materials.') }}</p>
+            <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required
+                @change="
+                    galleryForm.image =
+                        ($event.target as HTMLInputElement).files?.[0] || null
+                "
+            />
+            <p v-if="galleryForm.errors.image" class="field-error">
+                {{ galleryForm.errors.image }}
+            </p>
+            <button
+                class="button outline"
+                :disabled="!galleryForm.image || galleryForm.processing"
+            >
+                {{ t('Add photo') }}
+            </button>
+        </div>
+    </form>
     <form
         class="product-photo-form"
         @submit.prevent="

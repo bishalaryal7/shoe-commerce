@@ -13,6 +13,7 @@ import {
     Footprints,
     Heart,
     Layers3,
+    MessageCircle,
     PackageCheck,
     ShoppingBag,
     Star,
@@ -110,6 +111,14 @@ function toggleCompare() {
 const available = computed(() =>
     props.product.variants.filter((v) => v.stock > 0),
 );
+const gallery = computed(() =>
+    [
+        props.product.image,
+        ...(props.product.photos ?? []).map((photo) => photo.url ?? ''),
+    ].filter((url, index, photos) => !!url && photos.indexOf(url) === index),
+);
+const selectedPhoto = ref(props.product.image);
+const zoomOpen = ref(false);
 </script>
 <template>
     <Head :title="t(product.name)"
@@ -128,16 +137,43 @@ const available = computed(() =>
                 ><ChevronRight :size="12" /><span>{{ t(product.name) }}</span>
             </nav>
             <div class="product-page-grid">
-                <div
-                    class="product-page-image"
-                    :data-color="product.variants[0]?.color"
-                >
-                    <span class="category-label">{{ t(product.category) }}</span
-                    ><img
-                        :src="product.image"
-                        :alt="t(product.name)"
-                        fetchpriority="high"
-                    />
+                <div class="product-gallery">
+                    <button
+                        type="button"
+                        class="product-page-image"
+                        :data-color="product.variants[0]?.color"
+                        @click="zoomOpen = true"
+                        :aria-label="t('Enlarge product photo')"
+                    >
+                        <span class="category-label">{{
+                            t(product.category)
+                        }}</span>
+                        <img
+                            :src="selectedPhoto"
+                            :alt="t(product.name)"
+                            fetchpriority="high"
+                        />
+                    </button>
+                    <div
+                        v-if="gallery.length > 1"
+                        class="product-gallery-thumbs"
+                        :aria-label="t('Product photos')"
+                    >
+                        <button
+                            v-for="(photo, index) in gallery"
+                            :key="photo"
+                            type="button"
+                            :class="{ selected: photo === selectedPhoto }"
+                            @click="selectedPhoto = photo"
+                            :aria-label="
+                                t('View photo :count', {
+                                    count: num(index + 1),
+                                })
+                            "
+                        >
+                            <img :src="photo" :alt="''" loading="lazy" />
+                        </button>
+                    </div>
                 </div>
                 <div class="product-page-copy">
                     <span class="eyebrow"
@@ -169,6 +205,20 @@ const available = computed(() =>
                     <p class="product-page-description">
                         {{ t(product.description) }}
                     </p>
+                    <Link
+                        :href="
+                            page.props.auth.user
+                                ? '/messages?subject=' +
+                                  encodeURIComponent(
+                                      'Question about ' + product.name,
+                                  )
+                                : '/login'
+                        "
+                        class="button outline"
+                        ><MessageCircle :size="17" />{{
+                            t('Message the seller')
+                        }}</Link
+                    >
                     <div class="product-page-availability">
                         <span
                             class="availability-dot"
@@ -492,6 +542,26 @@ const available = computed(() =>
                 }}</Link>
             </p>
         </section>
+        <div
+            v-if="zoomOpen"
+            class="product-lightbox"
+            role="dialog"
+            aria-modal="true"
+            :aria-label="t('Product photo preview')"
+            tabindex="-1"
+            @click.self="zoomOpen = false"
+            @keydown.esc="zoomOpen = false"
+        >
+            <button
+                type="button"
+                class="button outline"
+                autofocus
+                @click="zoomOpen = false"
+            >
+                {{ t('Close photo') }}
+            </button>
+            <img :src="selectedPhoto" :alt="t(product.name)" />
+        </div>
         ></ShopLayout
     >
 </template>

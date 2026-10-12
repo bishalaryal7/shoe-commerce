@@ -33,7 +33,7 @@ class AdminWorkspace
     public function data(array $filters): array
     {
         return [
-            'products' => Product::with('variants')
+            'products' => Product::with('variants', 'photos')
                 ->orderBy('id')
                 ->get()
                 ->makeVisible('wholesale_price'),

@@ -124,7 +124,14 @@ const current = computed(() => page.url.split('?')[0]);
                         <div class="account-dropdown">
                             <strong>{{ user.name }}</strong
                             ><Link href="/orders">{{ t('Your orders') }}</Link
+                            ><Link href="/partner-orders">{{
+                                t('Partner store orders')
+                            }}</Link
                             ><Link href="/messages">{{ t('Messages') }}</Link
+                            ><Link
+                                v-if="page.props.auth.merchantEligible"
+                                href="/merchant"
+                                >{{ t('My store workspace') }}</Link
                             ><Link href="/notifications"
                                 >{{ t('Notifications') }}
                                 <span v-if="page.props.auth.unreadNotifications"
@@ -244,6 +251,16 @@ const current = computed(() => page.url.split('?')[0]);
                 >
                     {{ t('For businesses') }} <ArrowUpRight :size="13"
                 /></Link>
+                <Link
+                    :href="user ? '/messages' : '/login'"
+                    @click="open = false"
+                    ><MessageCircle :size="15" />{{
+                        t('Message EVE Shoes')
+                    }}</Link
+                >
+                <Link href="/stores" @click="open = false">{{
+                    t('Partner stores')
+                }}</Link>
             </nav>
         </header>
         <Transition name="toast"

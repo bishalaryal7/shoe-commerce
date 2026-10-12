@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\WholesaleAccount;
 use App\Services\ProductComparison;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'unreadNotifications' => $request->user()?->unreadNotifications()->count() ?? 0,
+                'merchantEligible' => $request->user() && WholesaleAccount::where('user_id', $request->user()->id)->where('status', 'approved')->exists(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

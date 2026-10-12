@@ -78,6 +78,7 @@ test('all customer, admin and account pages render in Nepali without English int
                         .replaceAll('EVE Shoes', '')
                         .replaceAll('ORDER-TEST', '')
                         .replaceAll('CITY-LOW-40', '')
+                        .replace(/\/stores\/[a-z0-9-]+/g, '')
                         .replaceAll('buyer@example.com', '');
                     assert.doesNotMatch(
                         copy,

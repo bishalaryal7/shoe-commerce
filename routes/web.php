@@ -7,6 +7,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\MerchantShopController;
+use App\Http\Controllers\MerchantStoreController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderReturnController;
 use App\Http\Controllers\PaymentController;
@@ -54,6 +56,11 @@ Route::get('/ready', function () {
             && Schema::hasTable('notifications')
             && Schema::hasColumn('product_reviews', 'photo_path')
             && Schema::hasTable('order_return_requests');
+        $ready = $ready && Schema::hasTable('product_photos')
+            && Schema::hasTable('merchant_stores')
+            && Schema::hasTable('merchant_products')
+            && Schema::hasTable('merchant_orders')
+            && Schema::hasTable('merchant_conversations');
 
         return response()->json(['status' => $ready ? 'ready' : 'unavailable'], $ready ? 200 : 503);
     } catch (Throwable $exception) {
@@ -107,6 +114,33 @@ Route::post('/orders/{reference}/verify', [PaymentController::class, 'verify'])-
 Route::get('/payments/{attempt:reference}/return', [PaymentController::class, 'callback'])->middleware('throttle:30,1')->name('payments.return');
 Route::get('/wholesale', [WholesaleController::class, 'index'])->name('wholesale');
 Route::post('/wholesale', [WholesaleController::class, 'store'])->middleware(['auth', 'throttle:5,1'])->name('wholesale.apply');
+Route::get('/stores', [MerchantShopController::class, 'directory'])->name('stores.index');
+Route::get('/partner-orders', [MerchantShopController::class, 'myOrders'])->middleware('auth')->name('stores.orders.index');
+Route::middleware('auth')->prefix('merchant')->name('merchant.')->group(function () {
+    Route::get('/', [MerchantStoreController::class, 'index'])->name('index');
+    Route::post('/', [MerchantStoreController::class, 'create'])->name('create');
+    Route::patch('/', [MerchantStoreController::class, 'update'])->name('update');
+    Route::post('/products', [MerchantStoreController::class, 'product'])->name('products.create');
+    Route::patch('/products/{product}', [MerchantStoreController::class, 'updateProduct'])->whereNumber('product')->name('products.update');
+    Route::post('/products/{product}/variants', [MerchantStoreController::class, 'variant'])->whereNumber('product')->name('products.variants');
+    Route::patch('/orders/{order}', [MerchantStoreController::class, 'order'])->whereNumber('order')->name('orders.update');
+    Route::post('/conversations/{conversation}', [MerchantStoreController::class, 'reply'])->whereNumber('conversation')->name('messages.reply');
+});
+Route::prefix('stores/{store:slug}')->name('stores.')->group(function () {
+    Route::get('/', [MerchantShopController::class, 'index'])->name('show');
+    Route::get('/products/{product}', [MerchantShopController::class, 'product'])->name('products.show');
+    Route::get('/cart', [MerchantShopController::class, 'cart'])->name('cart');
+    Route::post('/cart', [MerchantShopController::class, 'add'])->name('cart.add');
+    Route::patch('/cart/{variant}', [MerchantShopController::class, 'updateCart'])->whereNumber('variant')->name('cart.update');
+    Route::middleware('auth')->group(function () {
+        Route::get('/checkout', [MerchantShopController::class, 'checkout'])->name('checkout');
+        Route::post('/checkout', [MerchantShopController::class, 'place'])->middleware('throttle:10,1')->name('checkout.place');
+        Route::get('/orders/{reference}', [MerchantShopController::class, 'order'])->name('orders.show');
+        Route::get('/messages', [MerchantShopController::class, 'messages'])->name('messages');
+        Route::post('/messages', [MerchantShopController::class, 'message'])->middleware('throttle:5,1')->name('messages.create');
+        Route::post('/messages/{conversation}', [MerchantShopController::class, 'reply'])->middleware('throttle:10,1')->whereNumber('conversation')->name('messages.reply');
+    });
+});
 Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
@@ -117,6 +151,10 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::patch('/variants/{variant}', [AdminController::class, 'stock'])->name('stock');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::post('/products/{product}/image', [ProductController::class, 'image'])->name('products.image');
+    Route::post('/products/{product}/photos', [ProductController::class, 'addImage'])->name('products.photos.store');
+    Route::delete('/products/{product}/photos/{photo}', [ProductController::class, 'removeImage'])->whereNumber('photo')->name('products.photos.delete');
+    Route::patch('/products/{product}/photos/{photo}/primary', [ProductController::class, 'primaryImage'])->whereNumber('photo')->name('products.photos.primary');
+    Route::patch('/products/{product}/photos/{photo}/move', [ProductController::class, 'moveImage'])->whereNumber('photo')->name('products.photos.move');
     Route::patch('/products/{product}', [AdminController::class, 'product'])->name('product');
     Route::patch('/wholesale/{account}', [AdminController::class, 'approve'])->name('wholesale');
     Route::post('/orders/{order}/offline-payment', [AdminController::class, 'offlinePayment'])->name('orders.offline-payment');

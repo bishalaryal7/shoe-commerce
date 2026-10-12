@@ -16,6 +16,7 @@ export interface Product {
     name_ne?: string | null;
     description_ne?: string | null;
     image: string;
+    photos?: { id: number; url?: string; path?: string; position?: number }[];
     price: number;
     review_count?: number;
     review_average?: number | null;
@@ -49,6 +50,7 @@ export type ShopSharedProps = AppPageProps<{
     flash: { success?: string };
     errors?: Record<string, string>;
     compareIds: number[];
+    auth: AppPageProps['auth'] & { merchantEligible?: boolean };
 }>;
 
 export interface PaymentOption {

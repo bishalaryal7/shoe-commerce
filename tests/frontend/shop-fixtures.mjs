@@ -61,7 +61,87 @@ const links = [
     { url: '/?page=2', label: '2', active: false },
     { url: '/?page=2', label: 'Next &raquo;', active: false },
 ];
+const merchantStore = {
+    id: 1,
+    slug: 'test-shop',
+    name: 'परीक्षण पसल',
+    tagline: 'आरामदायी सामान',
+    description: 'हाम्रो पसलमा स्वागत छ।',
+    accent: '#2c4540',
+    active: true,
+    logo_url: null,
+    banner_url: null,
+};
+const merchantProduct = {
+    id: 1,
+    slug: 'jacket',
+    name: 'न्यानो ज्याकेट',
+    category: 'Clothing',
+    description: 'दैनिक प्रयोगका लागि न्यानो र आरामदायी ज्याकेट।',
+    price: 250000,
+    image_url: null,
+    active: true,
+    variants: [{ id: 1, size: '४२', stock: 3 }],
+};
+const merchantLine = {
+    variant_id: 1,
+    product: merchantProduct.name,
+    slug: merchantProduct.slug,
+    image_url: null,
+    size: '४२',
+    stock: 3,
+    quantity: 1,
+    unit_price: 250000,
+};
+const merchantOrder = {
+    id: 1,
+    reference: 'ORDER-TEST',
+    name: 'परीक्षण ग्राहक',
+    email: 'buyer@example.com',
+    phone: '९८००००००००',
+    address: 'परीक्षण मार्ग, काठमाडौं',
+    total: 250000,
+    status: 'pending',
+    created_at: '2026-10-11T15:00:00Z',
+    items: [
+        {
+            id: 1,
+            name: merchantProduct.name,
+            size: '४२',
+            quantity: 1,
+            unit_price: 250000,
+        },
+    ],
+};
 export const fixtures = {
+    'merchant/Directory': {
+        stores: { data: [{ ...merchantStore, products_count: 1 }], links },
+        filters: {},
+    },
+    'merchant/Shop': {
+        store: merchantStore,
+        products: { data: [merchantProduct], links },
+        filters: {},
+        cartCount: 1,
+    },
+    'merchant/Product': { store: merchantStore, product: merchantProduct },
+    'merchant/Cart': { store: merchantStore, lines: [merchantLine] },
+    'merchant/Checkout': {
+        store: merchantStore,
+        lines: [merchantLine],
+        checkoutToken: '550e8400-e29b-41d4-a716-446655440000',
+    },
+    'merchant/Order': { store: merchantStore, order: merchantOrder },
+    'merchant/Orders': {
+        orders: { data: [{ ...merchantOrder, store: merchantStore }], links },
+    },
+    'merchant/Messages': { store: merchantStore, conversations: [] },
+    'merchant/Manage': {
+        store: merchantStore,
+        products: [merchantProduct],
+        orders: { data: [merchantOrder], links },
+        conversations: { data: [], links },
+    },
     'shop/Index': {
         products: { data: [product], total: 1, links },
         filters: {},

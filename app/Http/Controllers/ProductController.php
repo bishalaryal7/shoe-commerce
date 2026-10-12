@@ -10,6 +10,7 @@ use App\Services\ProductCatalog;
 use App\Services\ProductReviews;
 use App\Services\ShoppingDiscovery;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -26,12 +27,12 @@ class ProductController extends Controller
         $serialize = fn ($item) => $products->display($item, $wholesale);
         $discovery->recordView($request, $product);
 
-        $product->load('variants')
+        $product->load('variants', 'photos')
             ->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
 
         return Inertia::render('shop/Product', [
-            'product' => $serialize($product),
+            'product' => [...$serialize($product), 'photos' => $product->photos->map(fn ($photo) => ['id' => $photo->id, 'url' => Storage::disk('public')->url($photo->path)])->values()],
             'wholesale' => $wholesale,
             'related' => $products->related($product, $wholesale),
             'savedIds' => $discovery->savedIds($request),
@@ -57,5 +58,35 @@ class ProductController extends Controller
         $catalog->replacePhoto($product, $request->file('image'));
 
         return back()->with('success', __('Product photo updated.'));
+    }
+
+    public function addImage(Request $request, Product $product, ProductCatalog $catalog)
+    {
+        $request->validate(['image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120']);
+        $catalog->addPhoto($product, $request->file('image'));
+
+        return back()->with('success', __('Product photo added.'));
+    }
+
+    public function removeImage(Product $product, int $photo, ProductCatalog $catalog)
+    {
+        $catalog->removePhoto($product, $photo);
+
+        return back()->with('success', __('Product photo removed.'));
+    }
+
+    public function primaryImage(Product $product, int $photo, ProductCatalog $catalog)
+    {
+        $catalog->makePrimary($product, $photo);
+
+        return back()->with('success', __('Primary product photo updated.'));
+    }
+
+    public function moveImage(Request $request, Product $product, int $photo, ProductCatalog $catalog)
+    {
+        $data = $request->validate(['direction' => 'required|in:up,down']);
+        $catalog->movePhoto($product, $photo, $data['direction']);
+
+        return back()->with('success', __('Product photos reordered.'));
     }
 }
