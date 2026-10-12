@@ -6,6 +6,7 @@ use App\Models\MerchantOrder;
 use App\Models\MerchantStore;
 use App\Models\MerchantVariant;
 use App\Notifications\StoreUpdate;
+use App\Repositories\MerchantStoreRepository;
 use App\Rules\ContactPhone;
 use App\Services\MerchantCommerce;
 use Illuminate\Http\Request;
@@ -15,6 +16,8 @@ use Inertia\Inertia;
 
 class MerchantShopController extends Controller
 {
+    public function __construct(private MerchantStoreRepository $stores) {}
+
     public function myOrders(Request $request)
     {
         $orders = MerchantOrder::with(['store:id,slug,name', 'items'])
@@ -27,18 +30,14 @@ class MerchantShopController extends Controller
     public function directory(Request $request)
     {
         $filters = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
-        $stores = MerchantStore::query()->where('active', true)
-            ->whereHas('account', fn ($query) => $query->where('status', 'approved'))
-            ->when($filters['q'] ?? null, fn ($query, $term) => $query->where('name', 'like', '%'.$term.'%'))
-            ->withCount(['products' => fn ($query) => $query->where('active', true)])
-            ->latest()->paginate(12)->withQueryString();
+        $stores = $this->stores->directory($filters);
 
         return Inertia::render('merchant/Directory', ['stores' => $stores, 'filters' => $filters]);
     }
 
     private function available(MerchantStore $store): void
     {
-        abort_unless($store->active && $store->account()->where('status', 'approved')->exists(), 404);
+        $this->stores->assertPublic($store);
     }
 
     public function index(Request $request, MerchantStore $store)
@@ -48,10 +47,7 @@ class MerchantShopController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'in:Shoes,Clothing,Accessories'],
         ]);
-        $products = $store->products()->with('variants')->where('active', true)
-            ->when($filters['q'] ?? null, fn ($query, $term) => $query->where('name', 'like', '%'.$term.'%'))
-            ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
-            ->latest()->paginate(12)->withQueryString();
+        $products = $this->stores->products($store, $filters);
 
         return Inertia::render('merchant/Shop', ['store' => $store, 'products' => $products, 'filters' => $filters,
             'cartCount' => array_sum($request->session()->get('merchant_cart.'.$store->id, []))]);

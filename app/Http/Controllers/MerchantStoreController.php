@@ -6,6 +6,7 @@ use App\Models\MerchantStore;
 use App\Models\MerchantVariant;
 use App\Models\WholesaleAccount;
 use App\Notifications\StoreUpdate;
+use App\Repositories\MerchantStoreRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +17,8 @@ use Inertia\Inertia;
 
 class MerchantStoreController extends Controller
 {
+    public function __construct(private MerchantStoreRepository $stores) {}
+
     private function priceInPaisa(string|int|float $price): int
     {
         [$rupees, $paisa] = array_pad(explode('.', (string) $price, 2), 2, '0');
@@ -25,12 +28,12 @@ class MerchantStoreController extends Controller
 
     private function approvedAccount(Request $request): WholesaleAccount
     {
-        return WholesaleAccount::where('user_id', $request->user()->id)->where('status', 'approved')->firstOrFail();
+        return $this->stores->approvedAccount($request->user());
     }
 
     private function ownedStore(Request $request): MerchantStore
     {
-        return MerchantStore::where('wholesale_account_id', $this->approvedAccount($request)->id)->firstOrFail();
+        return $this->stores->ownedStore($request->user());
     }
 
     public function index(Request $request)
