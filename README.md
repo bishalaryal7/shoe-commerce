@@ -15,7 +15,7 @@ npm run build
 php artisan serve --port=8002
 ```
 
-Open http://127.0.0.1:8002. Match `APP_URL` to this address; reuse an existing server on that port. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation and unsent mail retries. Use `npm run dev` while editing frontend code.
+Open http://127.0.0.1:8002. Match `APP_URL` to this address; reuse an existing server on that port. Run `php artisan queue:work --tries=5` in another terminal for notifications, and `php artisan schedule:work` for payment reconciliation, expired-checkout stock release, and unsent mail retries. Stock is released only after the payment provider confirms that its checkout expired; an unavailable provider leaves the order and reservation alone. Staff can open **Insights** in `/admin` to see verified sales, retail/wholesale totals, and popular product sizes for the current store currency. Use `npm run dev` while editing frontend code.
 
 MariaDB persists in the Docker volume. The local `.env` selects the host port through `DB_PORT` (set it to the port published by Docker Desktop, such as 3309); Docker forwards it to MariaDB port 3306. Database: `shoe_commerce`, user: `laravel`. Adminer: http://localhost:8101, system MySQL, server `mysql`, user `laravel`, password from `.env`, database `shoe_commerce`. Do not open the database port in a browser.
 

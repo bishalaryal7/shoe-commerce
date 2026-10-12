@@ -17,5 +17,6 @@ Artisan::command('shop:admin {email}', function () {
 })->purpose('Grant staff access to an existing registered user');
 
 Schedule::command('shop:reconcile-payments')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('shop:expire-unpaid-orders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('shop:mail-outbox')->everyMinute()->withoutOverlapping();
 Schedule::command('model:prune', ['--model' => PhoneChallenge::class])->daily()->withoutOverlapping();

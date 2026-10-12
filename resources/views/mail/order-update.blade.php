@@ -1,5 +1,5 @@
 <x-mail::message>
-# {{ __(match($event) { 'paid' => 'Payment received. Thank you!', 'refunded' => 'Your payment was refunded.', 'confirmed' => 'Your order is confirmed.', 'shipped' => 'Your order has shipped.', 'fulfilled' => 'Your order is delivered.', 'cancelled' => 'Your order has been cancelled.', default => 'We received your order.' }) }}
+# {{ __(match($event) { 'paid' => 'Payment received. Thank you!', 'refunded' => 'Your payment was refunded.', 'confirmed' => 'Your order is confirmed.', 'shipped' => 'Your order has shipped.', 'fulfilled' => 'Your order is delivered.', 'cancelled' => 'Your order has been cancelled.', 'payment_expired' => 'Your checkout expired.', default => 'We received your order.' }) }}
 {{ __('Hello :name,', ['name' => $details['name']]) }}
 
 {{ __('Order reference:') }} **{{ $details['reference'] }}**
@@ -24,6 +24,9 @@
 **{{ __('Total') }}: {{ $formatMoney($details['total']) }}**
 
 {{ __('Payment:') }} {{ __($details['payment_status']) }}.
+@if($event === 'payment_expired')
+{{ __('Payment was not completed before checkout expired. Your reserved sizes are available again. You can place a new order whenever you are ready.') }}
+@endif
 @if(($details['payment_method'] ?? '') === 'cod' && $details['payment_status'] === 'unpaid' && $details['status'] !== 'cancelled')
 {{ __('Cash on delivery: pay :amount when your shoes arrive.', ['amount' => $formatMoney($details['total'])]) }}
 @elseif($details['payment_status'] !== 'paid')

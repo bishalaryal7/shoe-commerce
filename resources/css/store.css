@@ -1775,6 +1775,101 @@
     margin-top: 8px;
     color: #4e3d62;
 }
+.sales-insights {
+    display: grid;
+    gap: 4px;
+}
+.insight-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+.insight-metrics .summary-card {
+    padding: 20px;
+    box-shadow: none;
+}
+.insight-metrics span {
+    display: block;
+    color: #9a89ab;
+    font-size: 10px;
+}
+.insight-metrics strong {
+    display: block;
+    color: #4e3d62;
+    font-size: clamp(18px, 2vw, 25px);
+    letter-spacing: -0.7px;
+    margin-top: 8px;
+}
+.insight-panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+    gap: 4px 18px;
+}
+.insight-panel h2 {
+    color: #4e3d62;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.3px;
+}
+.sales-chart {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(48px, 1fr));
+    gap: 12px;
+    min-height: 220px;
+    overflow-x: auto;
+    padding: 18px 0 4px;
+}
+.sales-chart-day {
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    justify-items: center;
+    gap: 7px;
+    min-width: 48px;
+    text-align: center;
+}
+.sales-chart-day strong {
+    color: #6f5689;
+    font-size: 9px;
+    font-weight: 600;
+}
+.sales-chart-day small {
+    color: #95849f;
+    font-size: 9px;
+}
+.sales-chart-track {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    width: 100%;
+    min-height: 115px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(to top, #faf8fc, transparent);
+}
+.sales-chart-track span {
+    display: block;
+    width: min(35px, 65%);
+    border-radius: 7px 7px 2px 2px;
+    background: linear-gradient(180deg, #a98ac7, #72518d);
+    transition: height 180ms ease;
+}
+.insight-row {
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee9f2;
+}
+.insight-row > span:first-child {
+    color: #61536d;
+}
+.insight-row > span:last-child,
+.insight-row > strong {
+    color: #4e3d62;
+    text-align: right;
+}
+.insight-row small {
+    display: block;
+    margin-top: 4px;
+}
 .admin-page > .muted,
 .admin-page > div > .muted {
     font-size: 11px;
@@ -2680,9 +2775,11 @@
         flex-direction: row;
         margin-top: 17px;
         gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 3px;
     }
     .workspace-sidebar nav > button {
-        flex: 1;
+        flex: 0 0 auto;
         justify-content: center;
         font-size: 10px;
         padding: 10px 7px;
@@ -2725,6 +2822,20 @@
     }
     .admin-page {
         padding: 27px 20px 45px;
+    }
+    .insight-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .insight-metrics .summary-card {
+        padding: 15px;
+    }
+    .insight-panels {
+        grid-template-columns: 1fr;
+    }
+    .sales-chart {
+        grid-template-columns: repeat(7, minmax(55px, 1fr));
+        gap: 8px;
     }
     .admin-page > h1 {
         font-size: 28px;

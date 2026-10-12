@@ -7,6 +7,7 @@ import {
     ArrowUpRight,
     Bell,
     Boxes,
+    ChartNoAxesColumnIncreasing,
     Check,
     ChevronRight,
     CreditCard,
@@ -22,6 +23,7 @@ const tab = defineModel<string>('tab', { required: true });
 const page = usePage<ShopSharedProps>();
 const sections = [
     { label: 'Orders', icon: ShoppingBag },
+    { label: 'Insights', icon: ChartNoAxesColumnIncreasing },
     { label: 'Returns', icon: ShoppingBag },
     { label: 'Inventory', icon: Boxes },
     { label: 'Payments', icon: CreditCard },

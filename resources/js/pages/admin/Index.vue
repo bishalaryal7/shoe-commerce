@@ -52,6 +52,21 @@ type Paginated<T> = {
     links: { url: string | null; label: string; active: boolean }[];
     total: number;
 };
+type Analytics = {
+    currency: string;
+    revenue_today: number;
+    revenue_30_days: number;
+    paid_orders_30_days: number;
+    average_order_30_days: number;
+    sales_trend: { date: string; orders: number; revenue: number }[];
+    best_sellers: {
+        name: string;
+        size: string;
+        pairs: number;
+        revenue: number;
+    }[];
+    channels: { channel: string; orders: number; revenue: number }[];
+};
 const props = defineProps<{
     team: { id: number; name: string; email: string }[];
     products: Product[];
@@ -84,6 +99,7 @@ const props = defineProps<{
         applications: number;
         return_requests: number;
     };
+    analytics: Analytics;
     lowStockThreshold: number;
     promotions: {
         id: number;
@@ -143,12 +159,17 @@ const props = defineProps<{
     }>;
 }>();
 const page = usePage();
+const maxDailyRevenue = Math.max(
+    1,
+    ...props.analytics.sales_trend.map((day) => day.revenue),
+);
 const requestedTab = new URL(page.url, 'http://eve.local').searchParams.get(
     'tab',
 );
 const tab = ref(
     [
         'Orders',
+        'Insights',
         'Returns',
         'Inventory',
         'Payments',
@@ -259,25 +280,27 @@ function importInventory() {
                         ? t('Orders, at a glance.')
                         : tab === 'Returns'
                           ? t('Help customers find the right fit.')
-                          : tab === 'Inventory'
-                            ? t('Keep your shelves moving.')
-                            : tab === 'Payments'
-                              ? t('Every payment, accounted for.')
-                              : tab === 'Promotions'
-                                ? t('Offers that bring customers back.')
-                                : tab === 'Reviews'
-                                  ? t('Customer reviews, answered with care.')
-                                  : tab === 'Messages'
-                                    ? t(
-                                          'Every customer conversation, in one place.',
-                                      )
-                                    : tab === 'Questions'
+                          : tab === 'Insights'
+                            ? t('Know what is selling.')
+                            : tab === 'Inventory'
+                              ? t('Keep your shelves moving.')
+                              : tab === 'Payments'
+                                ? t('Every payment, accounted for.')
+                                : tab === 'Promotions'
+                                  ? t('Offers that bring customers back.')
+                                  : tab === 'Reviews'
+                                    ? t('Customer reviews, answered with care.')
+                                    : tab === 'Messages'
                                       ? t(
-                                            'Help shoppers choose with confidence.',
+                                            'Every customer conversation, in one place.',
                                         )
-                                      : tab === 'Team'
-                                        ? t('Your people. Your workspace.')
-                                        : t('Good partners. Better business.')
+                                      : tab === 'Questions'
+                                        ? t(
+                                              'Help shoppers choose with confidence.',
+                                          )
+                                        : tab === 'Team'
+                                          ? t('Your people. Your workspace.')
+                                          : t('Good partners. Better business.')
                 }}
             </h1>
             <p class="workspace-description">
@@ -290,37 +313,41 @@ function importInventory() {
                           ? t(
                                 'Review exchange and refund requests, then keep customers updated on the next step.',
                             )
-                          : tab === 'Inventory'
+                          : tab === 'Insights'
                             ? t(
-                                  'Manage your collection, pricing, and available sizes.',
+                                  'See paid sales, retail and wholesale activity, and the sizes customers buy most.',
                               )
-                            : tab === 'Payments'
+                            : tab === 'Inventory'
                               ? t(
-                                    'Check provider status and monitor your integrations.',
+                                    'Manage your collection, pricing, and available sizes.',
                                 )
-                              : tab === 'Promotions'
+                              : tab === 'Payments'
                                 ? t(
-                                      'Create discount codes for seasonal campaigns and wholesale orders.',
+                                      'Check provider status and monitor your integrations.',
                                   )
-                                : tab === 'Reviews'
+                                : tab === 'Promotions'
                                   ? t(
-                                        'Reply publicly to verified buyer feedback and let customers know their experience matters.',
+                                        'Create discount codes for seasonal campaigns and wholesale orders.',
                                     )
-                                  : tab === 'Messages'
+                                  : tab === 'Reviews'
                                     ? t(
-                                          'Reply privately to order, delivery, fit, and product questions from your customers.',
+                                          'Reply publicly to verified buyer feedback and let customers know their experience matters.',
                                       )
-                                    : tab === 'Questions'
+                                    : tab === 'Messages'
                                       ? t(
-                                            'Answer product questions and publish useful fit, material, and care advice.',
+                                            'Reply privately to order, delivery, fit, and product questions from your customers.',
                                         )
-                                      : tab === 'Team'
+                                      : tab === 'Questions'
                                         ? t(
-                                              'Manage access for registered team members.',
+                                              'Answer product questions and publish useful fit, material, and care advice.',
                                           )
-                                        : t(
-                                              'Review applications and manage your wholesale relationships.',
-                                          )
+                                        : tab === 'Team'
+                                          ? t(
+                                                'Manage access for registered team members.',
+                                            )
+                                          : t(
+                                                'Review applications and manage your wholesale relationships.',
+                                            )
                 }}
             </p>
             <div class="stats-grid">
@@ -341,6 +368,132 @@ function importInventory() {
             >
                 {{ t(error) }}
             </p>
+            <div v-if="tab === 'Insights'" class="sales-insights">
+                <div class="insight-metrics">
+                    <article class="summary-card">
+                        <span>{{ t('Paid sales today') }}</span>
+                        <strong>{{
+                            money(analytics.revenue_today, analytics.currency)
+                        }}</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>{{ t('Paid sales · 30 days') }}</span>
+                        <strong>{{
+                            money(analytics.revenue_30_days, analytics.currency)
+                        }}</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>{{ t('Paid orders · 30 days') }}</span>
+                        <strong>{{
+                            num(analytics.paid_orders_30_days)
+                        }}</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>{{ t('Average order · 30 days') }}</span>
+                        <strong>{{
+                            money(
+                                analytics.average_order_30_days,
+                                analytics.currency,
+                            )
+                        }}</strong>
+                    </article>
+                </div>
+                <div class="insight-panels">
+                    <section class="admin-card insight-panel">
+                        <div class="section-heading">
+                            <div>
+                                <h2>{{ t('Paid sales · last 7 days') }}</h2>
+                                <p>
+                                    {{
+                                        t(
+                                            'Only provider-verified or recorded payments are counted.',
+                                        )
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="sales-chart" role="list">
+                            <div
+                                v-for="day in analytics.sales_trend"
+                                :key="day.date"
+                                class="sales-chart-day"
+                                role="listitem"
+                                :aria-label="`${date(day.date + 'T12:00:00')}: ${money(day.revenue, analytics.currency)}, ${num(day.orders)} ${label('orders')}`"
+                            >
+                                <strong>{{
+                                    money(day.revenue, analytics.currency)
+                                }}</strong>
+                                <div class="sales-chart-track">
+                                    <span
+                                        :style="{
+                                            height: `${Math.max(4, (day.revenue / maxDailyRevenue) * 100)}%`,
+                                        }"
+                                    />
+                                </div>
+                                <small>{{
+                                    date(day.date + 'T12:00:00')
+                                }}</small>
+                                <small
+                                    >{{ num(day.orders) }}
+                                    {{ label('orders') }}</small
+                                >
+                            </div>
+                        </div>
+                    </section>
+                    <section class="admin-card insight-panel">
+                        <h2>{{ t('Best-selling shoe sizes · 30 days') }}</h2>
+                        <p>
+                            {{
+                                t(
+                                    'Pair counts and item sales before order discounts.',
+                                )
+                            }}
+                        </p>
+                        <p v-if="!analytics.best_sellers.length" class="muted">
+                            {{
+                                t(
+                                    'Paid sales will appear here when orders come in.',
+                                )
+                            }}
+                        </p>
+                        <div
+                            v-for="item in analytics.best_sellers"
+                            :key="`${item.name}-${item.size}`"
+                            class="summary-line insight-row"
+                        >
+                            <span
+                                >{{ t(item.name) }} · {{ t('EU size') }}
+                                {{ num(item.size) }}</span
+                            >
+                            <span
+                                >{{ num(item.pairs) }} {{ t('pairs')
+                                }}<small>{{
+                                    money(item.revenue, analytics.currency)
+                                }}</small></span
+                            >
+                        </div>
+                    </section>
+                    <section class="admin-card insight-panel">
+                        <h2>{{ t('Retail and wholesale · 30 days') }}</h2>
+                        <div
+                            v-for="channel in analytics.channels"
+                            :key="channel.channel"
+                            class="summary-line insight-row"
+                        >
+                            <span
+                                >{{ label(channel.channel)
+                                }}<small
+                                    >{{ num(channel.orders) }}
+                                    {{ label('orders') }}</small
+                                ></span
+                            >
+                            <strong>{{
+                                money(channel.revenue, analytics.currency)
+                            }}</strong>
+                        </div>
+                    </section>
+                </div>
+            </div>
             <div v-if="tab === 'Orders'">
                 <form class="order-actions" @submit.prevent="filterOrders">
                     <label>

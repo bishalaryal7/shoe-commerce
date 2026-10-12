@@ -21,7 +21,7 @@ class OrderUpdate extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(subject: config('app.name').' — '.__(match ($this->event) {
-            'paid' => 'Payment received', 'refunded' => 'Payment refunded','confirmed' => 'Order confirmed','shipped' => 'Your order has shipped','fulfilled' => 'Your order is delivered','cancelled' => 'Order cancelled',default => 'Order received'
+            'paid' => 'Payment received', 'refunded' => 'Payment refunded','confirmed' => 'Order confirmed','shipped' => 'Your order has shipped','fulfilled' => 'Your order is delivered','cancelled' => 'Order cancelled','payment_expired' => 'Checkout expired',default => 'Order received'
         }));
     }
 

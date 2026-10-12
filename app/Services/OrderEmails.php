@@ -31,6 +31,7 @@ class OrderEmails
                     'shipped' => [__('Your order has shipped'), __('Your order is on its way. Open tracking for the latest details.')],
                     'fulfilled' => [__('Your order was delivered'), __('Your order has been marked as delivered. We hope you love your shoes!')],
                     'cancelled' => [__('Your order was cancelled'), __('The shop cancelled your order. Open the order page for details.')],
+                    'payment_expired' => [__('Your checkout expired'), __('Payment was not completed before checkout expired. The reserved sizes are available again.')],
                     'paid' => [__('Payment received'), __('Your payment was confirmed for this order.')],
                     'refunded' => [__('Payment refunded'), __('A refund was recorded for this order.')],
                     default => [__('We received your order'), __('Your order request is saved. Open the order page to follow its progress.')],

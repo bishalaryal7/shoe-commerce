@@ -27,6 +27,7 @@ class AdminWorkspace
         private SignInOptions $signInOptions,
         private KhaltiGateway $khalti,
         private PayPayGateway $paypay,
+        private OrderAnalytics $analytics,
     ) {}
 
     public function data(array $filters): array
@@ -46,6 +47,7 @@ class AdminWorkspace
                 ->withQueryString(),
             'integrations' => $this->integrations(),
             'stats' => $this->stats(),
+            'analytics' => $this->analytics->data(),
             'lowStockThreshold' => max(0, config('shop.low_stock_threshold')),
             'promotions' => Promotion::latest('id')->get(),
             'questions' => ProductQuestion::with(['product:id,name,slug', 'user:id,name'])->latest('id')->paginate(20, ['*'], 'questions_page')->withQueryString(),

@@ -74,6 +74,47 @@ class AdminWorkspaceTest extends TestCase
         $this->actingAs(User::factory()->create())->get('/admin?search=Buyer')->assertForbidden();
     }
 
+    public function test_insights_report_paid_sales_channels_and_best_selling_sizes_in_store_currency(): void
+    {
+        $this->seed();
+        config(['shop.currency' => 'NPR']);
+        $product = Product::firstOrFail();
+        $variant = $product->variants()->firstOrFail();
+        $retail = $this->order([
+            'payment_status' => 'paid', 'paid_at' => now(), 'channel' => 'retail', 'total' => 10000,
+        ]);
+        $retail->items()->create([
+            'variant_id' => $variant->id, 'name' => 'Pace Runner', 'sku' => $variant->sku,
+            'size' => '38', 'color' => 'Cream', 'quantity' => 2, 'unit_price' => 5000,
+        ]);
+        $wholesale = $this->order([
+            'payment_status' => 'paid', 'paid_at' => now(), 'channel' => 'wholesale', 'total' => 30000,
+        ]);
+        $wholesale->items()->create([
+            'variant_id' => $variant->id, 'name' => 'Pace Runner', 'sku' => $variant->sku,
+            'size' => '38', 'color' => 'Cream', 'quantity' => 6, 'unit_price' => 5000,
+        ]);
+        $this->order(['payment_status' => 'pending', 'total' => 500000]);
+        $this->order(['currency' => 'JPY', 'payment_status' => 'paid', 'paid_at' => now(), 'total' => 900000]);
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]))
+            ->get('/admin?tab=Insights')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('analytics.currency', 'NPR')
+                ->where('analytics.revenue_today', 40000)
+                ->where('analytics.revenue_30_days', 40000)
+                ->where('analytics.paid_orders_30_days', 2)
+                ->where('analytics.average_order_30_days', 20000)
+                ->where('analytics.best_sellers.0.name', 'Pace Runner')
+                ->where('analytics.best_sellers.0.size', '38')
+                ->where('analytics.best_sellers.0.pairs', 8)
+                ->where('analytics.channels.0.channel', 'retail')
+                ->where('analytics.channels.0.revenue', 10000)
+                ->where('analytics.channels.1.channel', 'wholesale')
+                ->where('analytics.channels.1.revenue', 30000)
+                ->has('analytics.sales_trend', 7));
+    }
+
     public function test_deployment_readiness_requires_the_inventory_and_order_audit_schema(): void
     {
         $this->get('/ready')->assertOk()->assertExactJson(['status' => 'ready']);

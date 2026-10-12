@@ -12,9 +12,9 @@ class CancelOrder
 {
     public function __construct(private OrderEmails $emails, private StockAlerts $alerts) {}
 
-    public function cancel(Order $order, ?int $actorId, bool $staff = false): void
+    public function cancel(Order $order, ?int $actorId, bool $staff = false, ?string $reason = null): void
     {
-        DB::transaction(function () use ($order, $actorId, $staff) {
+        DB::transaction(function () use ($order, $actorId, $staff, $reason) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             abort_unless(in_array($locked->status, $staff ? ['pending_confirmation', 'confirmed'] : ['pending_confirmation']), 422, __('This order can no longer be cancelled here.'));
             abort_if(in_array($locked->payment_status, ['pending', 'review', 'paid']), 422, __('Verify or refund the online payment before cancelling this order.'));
@@ -27,8 +27,13 @@ class CancelOrder
                 }
             }
             $locked->update(['status' => 'cancelled']);
-            OrderEvent::create(['order_id' => $locked->id, 'actor_id' => $actorId, 'event' => 'cancelled']);
-            $this->emails->record($locked, 'cancelled');
+            OrderEvent::create([
+                'order_id' => $locked->id,
+                'actor_id' => $actorId,
+                'event' => 'cancelled',
+                'details' => $reason ? ['reason' => $reason] : null,
+            ]);
+            $this->emails->record($locked, $reason === 'payment_expired' ? 'payment_expired' : 'cancelled');
         });
     }
 }
